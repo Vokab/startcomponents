@@ -8,6 +8,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
+import Cards from './src/components/cards';
 import Discover from './src/components/discover';
 import Writing from './src/components/writing';
 const App = () => {
@@ -15,7 +16,8 @@ const App = () => {
     <SafeAreaView style={styles.backgroundStyle}>
       <StatusBar hidden={true} />
       {/* <Discover /> */}
-      <Writing />
+      {/* <Writing /> */}
+      <Cards />
     </SafeAreaView>
   );
 };

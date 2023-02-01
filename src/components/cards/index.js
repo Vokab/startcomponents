@@ -9,7 +9,6 @@ import {
   Alert,
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
-
 import {COLORS_THEME, FONTS} from '../../constants/theme';
 import {SIZES} from '../../constants/theme';
 import Arabic from '../../../assets/sa.png';
@@ -19,12 +18,26 @@ import Icon from 'react-native-vector-icons/Feather';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {wrapper} from '../../besmart/firstAlgo';
 
-const Writing = () => {
+const Cards = () => {
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [text, onChangeText] = React.useState('');
-  const [word, setWord] = useState('Konsens');
+  const [word, setWord] = useState('oussamaabdallahinccccccc');
+  const [wordCards, setWordCards] = useState([]);
+  const cardsPos = [
+    {bottom: '50%', left: '20%'},
+    {bottom: '30%', left: '40%'},
+    {bottom: '60%', left: '60%'},
+    {bottom: '20%', left: '70%'},
+    {bottom: '10%', left: '20%'},
+    {bottom: '00%', left: '50%'},
+    {bottom: '70%', left: '40%'},
+    {bottom: '50%', left: '80%'},
+    {bottom: '70%', left: '5%'},
+    {bottom: '80%', left: '80%'},
+  ];
   const containerBg = {
     backgroundColor: darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite,
   };
@@ -33,34 +46,40 @@ const Writing = () => {
   };
   const color = darkMode ? COLORS_THEME.textWhite : COLORS_THEME.textDark;
 
-  const checkWord = () => {
-    Keyboard.dismiss();
-    console.log('hello there');
-    if (word === text) {
-      alert(`Correct Answer ${text}`);
-    } else {
-      alert(`Wrong answer : ${text}, Correct answer is: ${word}`);
-    }
-  };
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => {
-        setKeyboardVisible(true);
-      },
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
-        setKeyboardVisible(false);
-      },
-    );
-
-    return () => {
-      keyboardDidHideListener.remove();
-      keyboardDidShowListener.remove();
+    const getData = async () => {
+      const data = await wrapper('oussama');
+      wrapper('oussamaaaaa').then(res => {
+        setWordCards(res);
+      });
     };
+    getData().then(() => {
+      console.log(
+        'wordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCards',
+        wordCards,
+      );
+    });
   }, []);
+
+  //   useEffect(() => {
+  //     const keyboardDidShowListener = Keyboard.addListener(
+  //       'keyboardDidShow',
+  //       () => {
+  //         setKeyboardVisible(true);
+  //       },
+  //     );
+  //     const keyboardDidHideListener = Keyboard.addListener(
+  //       'keyboardDidHide',
+  //       () => {
+  //         setKeyboardVisible(false);
+  //       },
+  //     );
+
+  //     return () => {
+  //       keyboardDidHideListener.remove();
+  //       keyboardDidShowListener.remove();
+  //     };
+  //   }, []);
 
   return (
     <View style={[styles.wrapper, containerBg]}>
@@ -81,20 +100,10 @@ const Writing = () => {
               size={30}
               color={'#D2FF00'}
             />
-            <Text style={styles.questionText}>Type what mean</Text>
-            <FontAwesome5 name="keyboard" size={25} color={'#fff'} />
+            <Text style={styles.questionText}>Build with cards what mean</Text>
           </View>
         </View>
       )}
-      <View style={styles.wordImgWrapper}>
-        {/* <Image
-          resizeMethod={'resize'}
-          resizeMode="contain"
-          source={Suceess}
-          style={styles.wordImg}
-        /> */}
-      </View>
-
       <View
         style={[
           styles.nativeWordBox,
@@ -105,47 +114,46 @@ const Writing = () => {
           <Image source={Arabic} style={styles.nativeFlag} />
         </View>
       </View>
-      <View style={styles.foreignWordBox}>
-        <View style={styles.foreignWordBoxContent}>
-          <TouchableOpacity>
-            <Icon name="speaker" size={80} color="#FF4C00" />
-          </TouchableOpacity>
-        </View>
+      <View style={styles.cardsResponseContainer}>
+        <View style={styles.cardsResponse}></View>
       </View>
 
-      <View style={styles.inputBox}>
-        <View style={styles.inputBoxSubBox}>
-          <Image
-            source={English}
-            style={styles.foreignFlag}
-            // resizeMethod="resize"
-            // resizeMode="stretch"
-          />
-          <TextInput
-            style={styles.input}
-            onChangeText={onChangeText}
-            value={text}
-            placeholder="write here"
-            placeholderTextColor="#ffffff40"
-          />
-        </View>
+      <View style={styles.cardsContainer}>
+        {wordCards.map((myCard, index) => {
+          console.log('this index is =>', index);
+          return (
+            <TouchableOpacity key={index} style={[styles.blurParrentCard]}>
+              <Image
+                source={ShadowEffect}
+                style={styles.blurEffectImg}
+                blurRadius={50}
+                resizeMode="stretch"
+              />
+              <View style={[styles.cardBtn, backgroundColor]}>
+                <Text style={[styles.checkBtnTxt, styles.cardBtnTxt]}>
+                  {myCard.word}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </View>
       <View style={styles.btnContainer}>
         <View style={styles.blurParrent}>
           {/* <Image
-            source={ShadowEffect}
-            style={styles.blurEffectImg}
-            blurRadius={50}
-            resizeMode="stretch"
-          /> */}
+              source={ShadowEffect}
+              style={styles.blurEffectImg}
+              blurRadius={50}
+              resizeMode="stretch"
+            /> */}
           <TouchableOpacity
             style={[styles.btnGo, backgroundColor]}
             onPress={() => checkWord()}>
             {/* <Fontisto
-              name="check"
-              size={30}
-              color={darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite}
-            /> */}
+                name="check"
+                size={30}
+                color={darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite}
+              /> */}
             <Text style={styles.checkBtnTxt}>check</Text>
           </TouchableOpacity>
         </View>
@@ -159,9 +167,16 @@ const Writing = () => {
   );
 };
 
-export default Writing;
+export default Cards;
 
 const styles = StyleSheet.create({
+  cardsResponse: {
+    backgroundColor: 'rgba(29,30,55,.40)',
+    width: '90%',
+    height: 70,
+    borderWidth: 2,
+    borderColor: '#FF4C00',
+  },
   foreignFlag: {
     width: 20,
     height: 20,
@@ -189,7 +204,12 @@ const styles = StyleSheet.create({
   checkBtnTxt: {
     fontFamily: FONTS.enFontFamilyBold,
     color: '#000',
-    fontSize: 26,
+    fontSize: 24,
+  },
+  cardBtnTxt: {
+    fontFamily: FONTS.enFontFamilyBold,
+    color: '#000',
+    fontSize: 20,
   },
   questionWrapper: {
     flex: 1,
@@ -241,41 +261,60 @@ const styles = StyleSheet.create({
     position: 'relative',
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     // backgroundColor: 'blue',
     // marginTop: 40,
     flex: 2,
     // //***************
     // backgroundColor: 'red',
     // width: '100%',
-    ////***************
+    // //***************
   },
   blurParrent: {
     position: 'relative',
     // backgroundColor: 'blue',
     width: '100%',
-    height: '100%',
+    height: 70,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  blurParrentCard: {
+    // position: 'absolute',
+    // backgroundColor: 'blue',
+
+    width: 50,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
   },
   blurEffectImg: {
     position: 'absolute',
-    top: '-80%',
-    left: '-60%',
-    width: '220%',
-    height: '260%',
+    top: '-40%',
+    left: '-40%',
+    width: '180%',
+    height: '180%',
     // backgroundColor: 'red',
     zIndex: -1,
-    opacity: 0.25,
+    opacity: 1,
   },
   btnGoTxt: {
     color: '#1D1E37',
     fontSize: 22,
     fontWeight: 'bold',
   },
+  cardBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: 50,
+    // backgroundColor: '#fff',  // Changed To DarkLight Code
+    // marginTop: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   btnGo: {
     width: '80%',
-    height: 70,
+    height: 60,
     borderRadius: 10,
     // backgroundColor: '#fff',  // Changed To DarkLight Code
     // marginTop: 20,
@@ -283,24 +322,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  inputBox: {
+  cardsContainer: {
     // marginTop: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 2.5,
+    flex: 4,
     width: '100%',
+    position: 'relative',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     // //***************
     // backgroundColor: '#00bb0c',
     // width: '100%',
     // //***************
   },
 
-  foreignWordBox: {
+  cardsResponseContainer: {
     width: '100%',
     // marginTop: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    flex: 3,
+    flex: 2,
     // //***************
     // backgroundColor: '#a79d08',
     // width: '100%',
@@ -361,7 +403,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     // backgroundColor: 'blue',
     // height: windowHeight,
-    flex: 11.5,
+    flex: 12,
     width: '100%',
     // backgroundColor: '#181920',  // Changed To DarkLight Code
     alignItems: 'center',
