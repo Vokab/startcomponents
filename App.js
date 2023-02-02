@@ -11,13 +11,16 @@ import {
 import Cards from './src/components/cards';
 import Discover from './src/components/discover';
 import Writing from './src/components/writing';
+import Matching from './src/components/matching';
+
 const App = () => {
   return (
     <SafeAreaView style={styles.backgroundStyle}>
       <StatusBar hidden={true} />
       {/* <Discover /> */}
       {/* <Writing /> */}
-      <Cards />
+      {/* <Cards /> */}
+      <Matching />
     </SafeAreaView>
   );
 };

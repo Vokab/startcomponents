@@ -1,21 +1,9 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  TouchableOpacity,
-  TextInput,
-  Keyboard,
-  Alert,
-} from 'react-native';
+import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import {COLORS_THEME, FONTS} from '../../constants/theme';
 import {SIZES} from '../../constants/theme';
 import Arabic from '../../../assets/sa.png';
-import English from '../../../assets/united-states.png';
 import ShadowEffect from '../../../assets/shadowImg.png';
-import Icon from 'react-native-vector-icons/Feather';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {wrapper} from '../../besmart/firstAlgo';
@@ -23,9 +11,9 @@ import {wrapper} from '../../besmart/firstAlgo';
 const Cards = () => {
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [text, onChangeText] = React.useState('');
-  const [word, setWord] = useState('oussamaabdallahinccccccc');
+  const [word, setWord] = useState('Success');
   const [wordCards, setWordCards] = useState([]);
+  const [respArray, setRespArray] = useState([]);
   const cardsPos = [
     {bottom: '50%', left: '20%'},
     {bottom: '30%', left: '40%'},
@@ -48,38 +36,55 @@ const Cards = () => {
 
   useEffect(() => {
     const getData = async () => {
-      const data = await wrapper('oussama');
-      wrapper('oussamaaaaa').then(res => {
-        setWordCards(res);
-      });
+      const data = await wrapper(word);
+      console.log('cards =>', data);
+      setWordCards(data);
     };
-    getData().then(() => {
-      console.log(
-        'wordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCardswordCards',
-        wordCards,
-      );
-    });
+    getData();
   }, []);
+  const toogleSugResp = myItem => {
+    // showOrNot true => sugg card
+    // showOrNot false => response card
+    console.log('myItem of word =>', myItem);
+    console.log('old wordcards =>', wordCards);
+    const newAr = [];
+    wordCards.forEach(item => {
+      if (item.wordId === myItem.wordId) {
+        item.showOrNot = !item.showOrNot;
+        if (!myItem.showOrNot) {
+          addToRespArray(myItem);
+          console.log('now we need to add it to respo array');
+        } else {
+          setRespArray([]);
+          setRespArray(
+            respArray.filter(itemi => itemi.wordId !== myItem.wordId),
+          );
+          console.log('now we need to remove it to respo array');
+        }
+      }
+      newAr.push(item);
+    });
+    console.log('new wordcards =>', newAr);
+    // addToRespArray(myItem);
+    setWordCards(newAr);
+  };
 
-  //   useEffect(() => {
-  //     const keyboardDidShowListener = Keyboard.addListener(
-  //       'keyboardDidShow',
-  //       () => {
-  //         setKeyboardVisible(true);
-  //       },
-  //     );
-  //     const keyboardDidHideListener = Keyboard.addListener(
-  //       'keyboardDidHide',
-  //       () => {
-  //         setKeyboardVisible(false);
-  //       },
-  //     );
+  const addToRespArray = item => {
+    const newAr = [];
+    setRespArray([...respArray, item]);
+  };
 
-  //     return () => {
-  //       keyboardDidHideListener.remove();
-  //       keyboardDidShowListener.remove();
-  //     };
-  //   }, []);
+  const checkResponse = () => {
+    let respoArToString = '';
+    respArray.forEach(item => {
+      respoArToString = respoArToString + item.word;
+    });
+    if (word === respoArToString) {
+      alert(`Correct Answer ${respoArToString}`);
+    } else {
+      alert(`Wrong answer : ${respoArToString}, Correct answer is: ${word}`);
+    }
+  };
 
   return (
     <View style={[styles.wrapper, containerBg]}>
@@ -115,27 +120,45 @@ const Cards = () => {
         </View>
       </View>
       <View style={styles.cardsResponseContainer}>
-        <View style={styles.cardsResponse}></View>
+        <View style={styles.cardsResponse}>
+          {respArray.map((myCard, index) => {
+            console.log('this index is =>', myCard.showOrNot);
+
+            return (
+              <TouchableOpacity
+                key={index}
+                style={[styles.cardRespStyle]}
+                onPress={() => toogleSugResp(myCard)}>
+                <Text style={[styles.cardRespTxt]}>{myCard.word}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
 
       <View style={styles.cardsContainer}>
         {wordCards.map((myCard, index) => {
-          console.log('this index is =>', index);
-          return (
-            <TouchableOpacity key={index} style={[styles.blurParrentCard]}>
-              <Image
-                source={ShadowEffect}
-                style={styles.blurEffectImg}
-                blurRadius={50}
-                resizeMode="stretch"
-              />
-              <View style={[styles.cardBtn, backgroundColor]}>
-                <Text style={[styles.checkBtnTxt, styles.cardBtnTxt]}>
-                  {myCard.word}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          );
+          console.log('this index is =>', myCard.showOrNot);
+          if (myCard.showOrNot) {
+            return (
+              <TouchableOpacity
+                key={index}
+                style={[styles.blurParrentCard, cardsPos[index]]}
+                onPress={() => toogleSugResp(myCard)}>
+                <Image
+                  source={ShadowEffect}
+                  style={styles.blurEffectImg}
+                  blurRadius={50}
+                  resizeMode="stretch"
+                />
+                <View style={[styles.cardBtn, backgroundColor]}>
+                  <Text style={[styles.checkBtnTxt, styles.cardBtnTxt]}>
+                    {myCard.word}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          }
         })}
       </View>
       <View style={styles.btnContainer}>
@@ -148,7 +171,7 @@ const Cards = () => {
             /> */}
           <TouchableOpacity
             style={[styles.btnGo, backgroundColor]}
-            onPress={() => checkWord()}>
+            onPress={() => checkResponse()}>
             {/* <Fontisto
                 name="check"
                 size={30}
@@ -170,12 +193,28 @@ const Cards = () => {
 export default Cards;
 
 const styles = StyleSheet.create({
+  cardRespTxt: {
+    fontSize: 18,
+    color: '#fff',
+    fontFamily: FONTS.enFontFamilyBold,
+  },
+  cardRespStyle: {
+    backgroundColor: '#FFFFFF20',
+    height: 40,
+    marginHorizontal: 2,
+    marginTop: 15,
+    paddingHorizontal: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   cardsResponse: {
     backgroundColor: 'rgba(29,30,55,.40)',
     width: '90%',
     height: 70,
     borderWidth: 2,
     borderColor: '#FF4C00',
+    flexDirection: 'row',
+    paddingHorizontal: 8,
   },
   foreignFlag: {
     width: 20,
@@ -279,7 +318,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   blurParrentCard: {
-    // position: 'absolute',
+    position: 'absolute',
     // backgroundColor: 'blue',
 
     width: 50,
