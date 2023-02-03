@@ -282,10 +282,10 @@ const styles = StyleSheet.create({
     zIndex: 3,
     elevation: 3,
     backgroundColor: '#fff',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 18,
     fontFamily: FONTS.enFontFamilyBold,
-    fontSize: 16,
+    fontSize: 18,
     borderBottomLeftRadius: 10,
   },
   imgCard: {
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     marginVertical: '2%',
     // paddingHorizontal: 10,
     backgroundColor: '#00000030',
-    borderColor: '#FF4C0020',
+    borderColor: '#FF4C0030',
     borderWidth: 4,
   },
 

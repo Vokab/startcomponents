@@ -12,6 +12,9 @@ import Cards from './src/components/cards';
 import Discover from './src/components/discover';
 import Writing from './src/components/writing';
 import Matching from './src/components/matching';
+import FindIt from './src/components/findit';
+import PlaceHolderComp from './src/components/placeholder';
+import MissedChar from './src/components/missedChar';
 
 const App = () => {
   return (
@@ -20,7 +23,10 @@ const App = () => {
       {/* <Discover /> */}
       {/* <Writing /> */}
       {/* <Cards /> */}
-      <Matching />
+      {/* <Matching /> */}
+      <FindIt />
+      {/* <PlaceHolderComp /> */}
+      {/* <MissedChar /> */}
     </SafeAreaView>
   );
 };
