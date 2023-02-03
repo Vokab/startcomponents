@@ -1,31 +1,30 @@
-import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  TouchableOpacity,
+  TextInput,
+  Keyboard,
+  Alert,
+} from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
+
 import {COLORS_THEME, FONTS} from '../../constants/theme';
 import {SIZES} from '../../constants/theme';
 import Arabic from '../../../assets/sa.png';
+import English from '../../../assets/united-states.png';
 import ShadowEffect from '../../../assets/shadowImg.png';
+import Icon from 'react-native-vector-icons/Feather';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {wrapper} from '../../besmart/firstAlgo';
 
 const PlaceHolderComp = () => {
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [word, setWord] = useState('Success');
-  const [wordCards, setWordCards] = useState([]);
-  const [respArray, setRespArray] = useState([]);
-  const cardsPos = [
-    {bottom: '50%', left: '20%'},
-    {bottom: '30%', left: '40%'},
-    {bottom: '60%', left: '60%'},
-    {bottom: '20%', left: '70%'},
-    {bottom: '10%', left: '20%'},
-    {bottom: '00%', left: '50%'},
-    {bottom: '70%', left: '40%'},
-    {bottom: '50%', left: '80%'},
-    {bottom: '70%', left: '5%'},
-    {bottom: '80%', left: '80%'},
-  ];
+  const [text, onChangeText] = React.useState('');
+  const [word, setWord] = useState('konsens');
   const containerBg = {
     backgroundColor: darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite,
   };
@@ -34,57 +33,34 @@ const PlaceHolderComp = () => {
   };
   const color = darkMode ? COLORS_THEME.textWhite : COLORS_THEME.textDark;
 
-  useEffect(() => {
-    const getData = async () => {
-      const data = await wrapper(word);
-      console.log('cards =>', data);
-      setWordCards(data);
-    };
-    getData();
-  }, []);
-  const toogleSugResp = myItem => {
-    // showOrNot true => sugg card
-    // showOrNot false => response card
-    console.log('myItem of word =>', myItem);
-    console.log('old wordcards =>', wordCards);
-    const newAr = [];
-    wordCards.forEach(item => {
-      if (item.wordId === myItem.wordId) {
-        item.showOrNot = !item.showOrNot;
-        if (!myItem.showOrNot) {
-          addToRespArray(myItem);
-          console.log('now we need to add it to respo array');
-        } else {
-          setRespArray([]);
-          setRespArray(
-            respArray.filter(itemi => itemi.wordId !== myItem.wordId),
-          );
-          console.log('now we need to remove it to respo array');
-        }
-      }
-      newAr.push(item);
-    });
-    console.log('new wordcards =>', newAr);
-    // addToRespArray(myItem);
-    setWordCards(newAr);
-  };
-
-  const addToRespArray = item => {
-    const newAr = [];
-    setRespArray([...respArray, item]);
-  };
-
-  const checkResponse = () => {
-    let respoArToString = '';
-    respArray.forEach(item => {
-      respoArToString = respoArToString + item.word;
-    });
-    if (word === respoArToString) {
-      alert(`Correct Answer ${respoArToString}`);
+  const checkWord = () => {
+    Keyboard.dismiss();
+    console.log('hello there');
+    if (word === text) {
+      alert(`Correct Answer ${text}`);
     } else {
-      alert(`Wrong answer : ${respoArToString}, Correct answer is: ${word}`);
+      alert(`Wrong answer : ${text}, Correct answer is: ${word}`);
     }
   };
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+      },
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      },
+    );
+
+    return () => {
+      keyboardDidHideListener.remove();
+      keyboardDidShowListener.remove();
+    };
+  }, []);
 
   return (
     <View style={[styles.wrapper, containerBg]}>
@@ -105,10 +81,20 @@ const PlaceHolderComp = () => {
               size={30}
               color={'#D2FF00'}
             />
-            <Text style={styles.questionText}>Build with cards what mean</Text>
+            <Text style={styles.questionText}>Rewrite what mean</Text>
+            <FontAwesome5 name="keyboard" size={25} color={'#fff'} />
           </View>
         </View>
       )}
+      <View style={styles.wordImgWrapper}>
+        {/* <Image
+          resizeMethod={'resize'}
+          resizeMode="contain"
+          source={Suceess}
+          style={styles.wordImg}
+        /> */}
+      </View>
+
       <View
         style={[
           styles.nativeWordBox,
@@ -119,12 +105,51 @@ const PlaceHolderComp = () => {
           <Image source={Arabic} style={styles.nativeFlag} />
         </View>
       </View>
-      <View style={styles.cardsResponseContainer}></View>
+      <View style={styles.foreignWordBox}>
+        <View style={styles.foreignWordBoxContent}>
+          <TouchableOpacity>
+            <Icon name="speaker" size={80} color="#FF4C00" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.inputBox}>
+        <View style={styles.inputBoxSubBox}>
+          <Image
+            source={English}
+            style={styles.foreignFlag}
+            // resizeMethod="resize"
+            // resizeMode="stretch"
+          />
+          <View style={styles.pHolder}>
+            <Text style={styles.pHolderTxt}>{word}</Text>
+          </View>
+          <TextInput
+            style={styles.input}
+            onChangeText={onChangeText}
+            value={text}
+            placeholder={word}
+            placeholderTextColor="#ffffff20"
+            keyboardType="visible-password"
+          />
+        </View>
+      </View>
       <View style={styles.btnContainer}>
         <View style={styles.blurParrent}>
+          {/* <Image
+            source={ShadowEffect}
+            style={styles.blurEffectImg}
+            blurRadius={50}
+            resizeMode="stretch"
+          /> */}
           <TouchableOpacity
             style={[styles.btnGo, backgroundColor]}
-            onPress={() => checkResponse()}>
+            onPress={() => checkWord()}>
+            {/* <Fontisto
+              name="check"
+              size={30}
+              color={darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite}
+            /> */}
             <Text style={styles.checkBtnTxt}>check</Text>
           </TouchableOpacity>
         </View>
@@ -141,10 +166,52 @@ const PlaceHolderComp = () => {
 export default PlaceHolderComp;
 
 const styles = StyleSheet.create({
+  pHolderTxt: {
+    color: '#ffffff25',
+    // backgroundColor: 'red',
+    color: '#ffffff25',
+    fontSize: 22,
+    // fontWeight: 'bold',
+    fontFamily: FONTS.enFontFamilyBold,
+    paddingLeft: 4,
+    letterSpacing: 5,
+  },
+  pHolder: {
+    position: 'absolute',
+    backgroundColor: '#707070',
+    width: '80%',
+    left: 55,
+    paddingVertical: 15,
+  },
+  foreignFlag: {
+    width: 20,
+    height: 20,
+    // backgroundColor: 'red',
+    marginRight: 20,
+  },
+  foreignWordBoxContent: {},
+  inputBoxSubBox: {
+    width: '100%',
+    // justifyContent: 'flex-start',
+    alignItems: 'center',
+    flexDirection: 'row',
+    paddingHorizontal: 15,
+  },
+  input: {
+    width: '80%',
+    // backgroundColor: 'red',
+    color: '#fff',
+    fontSize: 22,
+    // fontWeight: 'bold',
+    fontFamily: FONTS.enFontFamilyBold,
+    // borderBottomColor: '#fff',
+    // borderBottomWidth: 2,
+    letterSpacing: 5,
+  },
   checkBtnTxt: {
     fontFamily: FONTS.enFontFamilyBold,
     color: '#000',
-    fontSize: 24,
+    fontSize: 26,
   },
   questionWrapper: {
     flex: 1,
@@ -196,38 +263,66 @@ const styles = StyleSheet.create({
     position: 'relative',
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     // backgroundColor: 'blue',
     // marginTop: 40,
     flex: 2,
     // //***************
     // backgroundColor: 'red',
     // width: '100%',
-    // //***************
+    ////***************
   },
   blurParrent: {
     position: 'relative',
     // backgroundColor: 'blue',
     width: '100%',
-    height: 70,
-    justifyContent: 'flex-end',
+    height: '100%',
+    justifyContent: 'center',
     alignItems: 'center',
+  },
+  blurEffectImg: {
+    position: 'absolute',
+    top: '-80%',
+    left: '-60%',
+    width: '220%',
+    height: '260%',
+    // backgroundColor: 'red',
+    zIndex: -1,
+    opacity: 0.25,
+  },
+  btnGoTxt: {
+    color: '#1D1E37',
+    fontSize: 22,
+    fontWeight: 'bold',
   },
   btnGo: {
     width: '80%',
-    height: 60,
+    height: 70,
     borderRadius: 10,
     // backgroundColor: '#fff',  // Changed To DarkLight Code
     // marginTop: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  cardsResponseContainer: {
+
+  inputBox: {
+    // marginTop: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 2.5,
+    width: '100%',
+    // //***************
+    // backgroundColor: '#00bb0c',
+    // width: '100%',
+    // //***************
+  },
+
+  foreignWordBox: {
     width: '100%',
     // marginTop: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    flex: 6,
+    flex: 3,
     // //***************
     // backgroundColor: '#a79d08',
     // width: '100%',
@@ -275,17 +370,26 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
 
+  wordImg: {
+    width: '100%',
+    height: '100%',
+    // //***************
+    // backgroundColor: '#00e2f7',
+    // width: '100%',
+    // //***************
+  },
   wrapper: {
     // justifyContent: 'space-around',
     alignItems: 'center',
     // backgroundColor: 'blue',
     // height: windowHeight,
-    flex: 12,
+    flex: 11.5,
     width: '100%',
     // backgroundColor: '#181920',  // Changed To DarkLight Code
     alignItems: 'center',
     justifyContent: 'center',
   },
+  conatiner: {},
   shadowImageBg: {
     width: 400,
     height: 500,

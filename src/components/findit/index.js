@@ -103,7 +103,7 @@ const FindIt = () => {
               size={30}
               color={'#D2FF00'}
             />
-            <Text style={styles.questionText}>Build with cards what mean</Text>
+            <Text style={styles.questionText}>Choose what mean</Text>
           </View>
         </View>
       )}

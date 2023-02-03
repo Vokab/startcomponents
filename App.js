@@ -24,8 +24,8 @@ const App = () => {
       {/* <Writing /> */}
       {/* <Cards /> */}
       {/* <Matching /> */}
-      <FindIt />
-      {/* <PlaceHolderComp /> */}
+      {/* <FindIt /> */}
+      <PlaceHolderComp />
       {/* <MissedChar /> */}
     </SafeAreaView>
   );
