@@ -8,8 +8,8 @@ import {
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 
-import {COLORS_THEME, FONTS} from '../../constants/theme';
-import {SIZES} from '../../constants/theme';
+import {COLORS_THEME, FONTS} from '../../../constants/theme';
+import {SIZES} from '../../../constants/theme';
 import Arabic from '../../../assets/sa.png';
 import English from '../../../assets/united-states.png';
 import ShadowEffect from '../../../assets/shadowImg.png';

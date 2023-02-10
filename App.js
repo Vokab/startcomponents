@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler';
 import React from 'react';
 import {
   SafeAreaView,
@@ -8,35 +9,41 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import Cards from './src/components/cards';
-import Discover from './src/components/discover';
-import Writing from './src/components/writing';
-import Matching from './src/components/matching';
-import FindIt from './src/components/findit';
-import PlaceHolderComp from './src/components/placeholder';
-import MissedChar from './src/components/missedChar';
+import {NavigationContainer} from '@react-navigation/native';
+import {createStackNavigator} from '@react-navigation/stack';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+// import Cards from './src/components/loopComponents/cards';
+// import Discover from './src/components/loopComponents/discover';
+// import Writing from './src/components/loopComponents/writing';
+// import Matching from './src/components/loopComponents/matching';
+// import FindIt from './src/components/loopComponents/findit';
+// import PlaceHolderComp from './src/components/loopComponents/placeholder';
+// import MissedChar from './src/components/loopComponents/missedChar';
+import TabScreen from './src/screens/TabScreen';
+import Home from './src/screens/Home';
+
+const Stack = createStackNavigator();
 
 const App = () => {
   return (
-    <SafeAreaView style={styles.backgroundStyle}>
-      <StatusBar hidden={true} />
+    <NavigationContainer>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+        }}>
+        {/* <Stack.Screen name="Home" component={Home} /> */}
+        <Stack.Screen name="TabScreen" component={TabScreen} />
+      </Stack.Navigator>
       {/* <Discover /> */}
       {/* <Writing /> */}
       {/* <Cards /> */}
       {/* <Matching /> */}
       {/* <FindIt /> */}
       {/* <PlaceHolderComp /> */}
-      <MissedChar />
-    </SafeAreaView>
+      {/* <MissedChar /> */}
+    </NavigationContainer>
   );
 };
-const styles = StyleSheet.create({
-  backgroundStyle: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // backgroundColor: '#181920',
-  },
-});
+const styles = StyleSheet.create({});
 
 export default App;

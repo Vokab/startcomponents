@@ -1,5 +1,7 @@
-// const swap = require('../assets/icons/iconsUsed/swap.png');
+// Bottom Tab
+// const home = require('../../assets/icons/BottomTab/home.png');
 
 export default {
-  // swap,
+  // Bottom tab
+  // home,
 };
