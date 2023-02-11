@@ -9,7 +9,7 @@ import {collection, query, where, getDocs, limit} from 'firebase/firestore';
 import {db} from '../firebase/utils';
 import {todayWork} from '../redux/User/user.actions';
 
-const mapState = ({user}) => ({
+const mapState = ({user, words}) => ({
   userId: user.userId,
   userNativeLang: user.userNativeLang,
   userLearnedLang: user.userLearnedLang,
@@ -17,6 +17,8 @@ const mapState = ({user}) => ({
   currentDay: user.currentDay,
   stepOfDefaultWordsBag: user.stepOfDefaultWordsBag,
   defaultWordsBag: user.defaultWordsBag,
+  currentWord: user.currentWord,
+  allWords: words.words,
 });
 const Home = () => {
   const {
@@ -27,28 +29,19 @@ const Home = () => {
     currentDay,
     stepOfDefaultWordsBag,
     defaultWordsBag,
+    allWords,
+    currentWord,
   } = useSelector(mapState);
   const dispatch = useDispatch();
   const [items, setItems] = useState([]);
-  const getWordsOfThisDay = async () => {
-    const q = query(
-      collection(db, 'words'),
-      where('defaultDay', '==', currentDay),
-      limit(3),
-    );
-    const querySnapshot = await getDocs(q);
-    querySnapshot.forEach(doc => {
-      // doc.data() is never undefined for query doc snapshots
-      console.log(doc.id, ' => ', doc.data());
-    });
-  };
+
   const renderDayCard = () => {
     const myItems = [];
     for (let i = 0; i < 7; i++) {
       if (i === currentDay - 1) {
         myItems.push(
           <View key={i} style={styles.todayCardStyle}>
-            <TodayCard defaultWordsBag={defaultWordsBag} />
+            <TodayCard />
           </View>,
         );
       } else {
@@ -72,13 +65,18 @@ const Home = () => {
   useEffect(() => {
     console.log('todayWork wordsBag =>', defaultWordsBag);
     if (defaultWordsBag.length === 0) {
-      dispatch(
-        todayWork(currentDay, defaultWordsBag, userNativeLang, userLearnedLang),
-      );
+      console.log('we dont have YET');
+      dispatch(todayWork(allWords, currentWord));
     } else {
-      console.log('we already have something');
+      console.log('we already have something', currentWord);
     }
   }, []);
+  // useEffect(() => {
+  //   console.log('allWords =>>>>>>>>>>>>: ', allWords);
+  // }, [allWords]);
+  useEffect(() => {
+    console.log('default words bag touched -----', defaultWordsBag);
+  }, [defaultWordsBag]);
 
   return (
     <ScrollView style={styles.container}>

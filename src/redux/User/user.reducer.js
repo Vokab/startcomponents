@@ -8,21 +8,37 @@ const INITIAL_STATE = {
   startDate: null,
   currentWeek: null,
   currentDay: null,
+  currentWord: 0,
   defaultWordsBag: [],
+  defaultWordsBagIds: [],
   stepOfDefaultWordsBag: 0,
 };
 
 const userReducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
+    case userTypes.MODIFY_DEFAULT_WORDS_BAG:
+      const updatedWordsBag = action.payload;
+      return {
+        ...state,
+        defaultWordsBag: [...updatedWordsBag],
+      };
+
+    case userTypes.UPDATE_CURRENT_WORD:
+      return {
+        ...state,
+        currentWord: action.payload,
+      };
     case userTypes.ADD_TODAY_WORDSBAG:
       return {
         ...state,
         defaultWordsBag: action.payload,
+        defaultWordsBagIds: action.arrOfIds,
       };
     case userTypes.CLEAR_TODAY_WORDSBAG:
       return {
         ...state,
         defaultWordsBag: [],
+        defaultWordsBagIds: [],
         stepOfDefaultWordsBag: 0,
       };
 
@@ -38,7 +54,9 @@ const userReducer = (state = INITIAL_STATE, action) => {
         currentWeek: 1,
         currentDay: 1,
         defaultWordsBag: [],
+        defaultWordsBagIds: [],
         stepOfDefaultWordsBag: 0,
+        currentWord: 0,
       };
     case userTypes.REDUX_DATA_CLEARED:
       return {
@@ -51,7 +69,9 @@ const userReducer = (state = INITIAL_STATE, action) => {
         currentWeek: null,
         currentDay: null,
         defaultWordsBag: [],
+        defaultWordsBagIds: [],
         stepOfDefaultWordsBag: 0,
+        currentWord: 0,
       };
 
     default:

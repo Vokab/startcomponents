@@ -5,6 +5,7 @@ import {
   View,
   Modal,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {COLORS_THEME, FONTS, SIZES} from '../../../constants';
@@ -12,17 +13,55 @@ import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {collection, query, where, getDocs, limit} from 'firebase/firestore';
 import {db} from '../../../firebase/utils';
+import {useDispatch, useSelector} from 'react-redux';
+import {modDefWoBag} from '../../../redux/User/user.actions';
+
+const mapState = ({user, words}) => ({
+  userId: user.userId,
+  userNativeLang: user.userNativeLang,
+  userLearnedLang: user.userLearnedLang,
+  currentWeek: user.currentWeek,
+  currentDay: user.currentDay,
+  stepOfDefaultWordsBag: user.stepOfDefaultWordsBag,
+  defaultWordsBag: user.defaultWordsBag,
+  currentWord: user.currentWord,
+  allWords: words.words,
+});
 
 const TodayCard = props => {
-  const {defaultWordsBag} = props;
+  const {
+    userId,
+    userNativeLang,
+    userLearnedLang,
+    currentWeek,
+    currentDay,
+    stepOfDefaultWordsBag,
+    defaultWordsBag,
+    allWords,
+    currentWord,
+  } = useSelector(mapState);
+  const dispatch = useDispatch();
   const [renderWords, setRenderWords] = useState([]);
   const [isLess, setIsLess] = useState(true);
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
+  const [isLoadSugg, setIsLoadSugg] = useState(false);
   const [suggWords, setSuggWords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [indexInDef, setIndexInDef] = useState(null);
+  const [indexNew, setIndexNew] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
   const passedIds = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
   useEffect(() => {
-    setRenderWords([defaultWordsBag[0], defaultWordsBag[1]]);
-  }, []);
+    // console.log('defaultWordsBag =>', defaultWordsBag);
+    if (defaultWordsBag.length > 0) {
+      setRenderWords([defaultWordsBag[0], defaultWordsBag[1]]);
+      setLoading(false);
+    } else {
+      setRenderWords([]);
+    }
+  }, [defaultWordsBag]);
+
   const loadMoreWords = () => {
     if (isLess) {
       setRenderWords(defaultWordsBag);
@@ -32,27 +71,73 @@ const TodayCard = props => {
       setIsLess(true);
     }
   };
-  const changeWord = () => {
+
+  const changeWordModal = async itemIndex => {
     console.log('Start changeWord');
+    loadSugg();
+    setVisible(true);
+    setIndexInDef(itemIndex);
   };
   const disappearWord = () => {
     console.log('Start disappearBtn');
   };
-  const loadSuggFromFirebase = async () => {
-    console.log('Start loadSuggFromFirebase');
-    const ar = [];
-    const q = query(
-      collection(db, 'words'),
-      where('id', 'not-in', passedIds),
-      limit(12),
-    );
-    const querySnapshot = await getDocs(q);
-    querySnapshot.forEach(doc => {
-      // doc.data() is never undefined for query doc snapshots
-      console.log(doc.id, ' => ', doc.data().english.audio);
-      ar.push(doc.data());
+
+  // const changeWord = () => {
+  //   console.log('Start changeWord');
+  //   dispatch(modDefWoBag(defaultWordsBag,allWords, id));
+  // };
+  useEffect(() => {
+    // console.log('defaultWordsBag today card comp =>', renderWords.length);
+    loadSugg();
+  }, []);
+  const getIdsOfWordsBag = async () => {
+    const array = [];
+    defaultWordsBag.forEach(item => {
+      array.push(item.myId);
     });
-    setSuggWords(ar);
+    return array;
+  };
+  const loadSugg = async () => {
+    setIsLoadSugg(true);
+    console.log('Start loadSugg');
+    let counter = 0;
+    const newData = [];
+    const ids = await getIdsOfWordsBag();
+    // console.log('our ids =>', ids);
+    for (let i = 0; i < allWords.length; i++) {
+      // if (!passedIds.includes(allWords[i].id)) {
+      //!defaultWordsBag.inclueds(allWords[i])
+      // console.log('allWords[i].myId =>', allWords[i].id);
+      if (!allWords[i].passed && !ids.includes(allWords[i].id)) {
+        newData.push({
+          myId: allWords[i].id,
+          wordNativeLang: allWords[i].wordNativeLang,
+          wordLearnedLang: allWords[i].wordLearnedLang,
+          wordLevel: allWords[i].wordLevel,
+          audioPath: allWords[i].audioPath,
+          wordImage: allWords[i].wordImage,
+        });
+        counter = counter + 1;
+        if (counter > 5) {
+          break;
+        }
+      }
+    }
+    // console.log('My Suggestion List is', newData);
+    setSuggestions(newData);
+    setIsLoadSugg(false);
+  };
+  const confirmChange = async () => {
+    console.log('Start confirmChange');
+    console.log(
+      'params of confirmChange funct => ',
+      defaultWordsBag,
+      indexInDef,
+      suggestions[selected],
+    );
+    dispatch(modDefWoBag(defaultWordsBag, indexInDef, suggestions[selected]));
+    setSelected(null);
+    setVisible(false);
   };
   return (
     <View style={styles.container}>
@@ -70,29 +155,32 @@ const TodayCard = props => {
         </TouchableOpacity>
       </View>
       <View style={styles.listOfWords}>
-        {renderWords.map((item, index) => {
-          return (
-            <View key={index} style={styles.wordBox}>
-              <Text style={styles.wordTxt}>{item.wordLearnedLang}</Text>
-              <View style={styles.btnBox}>
-                <TouchableOpacity
-                  style={styles.changeBtn}
-                  onPress={() => {
-                    changeWord(item);
-                  }}>
-                  <FontAwesome name={'refresh'} size={20} color={'#000'} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.disappearBtn}
-                  onPress={() => {
-                    disappearWord(item);
-                  }}>
-                  <Feather name={'eye-off'} size={20} color={'#fff'} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          );
-        })}
+        {!loading
+          ? defaultWordsBag?.map((item, index) => {
+              // console.log('item from list', item.myId);
+              return (
+                <View key={index} style={styles.wordBox}>
+                  <Text style={styles.wordTxt}>{item.wordLearnedLang}</Text>
+                  <View style={styles.btnBox}>
+                    <TouchableOpacity
+                      style={styles.changeBtn}
+                      onPress={() => {
+                        changeWordModal(index);
+                      }}>
+                      <FontAwesome name={'refresh'} size={20} color={'#000'} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.disappearBtn}
+                      onPress={() => {
+                        disappearWord(item);
+                      }}>
+                      <Feather name={'eye-off'} size={20} color={'#fff'} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })
+          : null}
       </View>
       <View style={styles.showMoreContainer}>
         <TouchableOpacity style={styles.showMore} onPress={loadMoreWords}>
@@ -113,21 +201,43 @@ const TodayCard = props => {
         }}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <ScrollView style={styles.listOfWord}>
-              {renderWords.map((item, index) => {
-                return (
-                  <TouchableOpacity key={index} style={styles.wordSuggBox}>
-                    <Text style={styles.wordSuggTxt}>
-                      {item.wordLearnedLang}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+            <ScrollView
+              style={styles.listOfWord}
+              contentContainerStyle={{
+                flexGrow: 1,
+                justifyContent: 'center',
+                width: '100%',
+              }}>
+              {!isLoadSugg ? (
+                suggestions.map((item, index) => {
+                  // console.log('item from modal', item.myId);
+                  return (
+                    <TouchableOpacity
+                      onPress={() => {
+                        console.log('selected', item);
+                        setSelected(index);
+                      }}
+                      key={index}
+                      style={[
+                        styles.wordSuggBox,
+                        index === selected ? {backgroundColor: 'red'} : null,
+                      ]}>
+                      <Text style={styles.wordSuggTxt}>
+                        {item.wordLearnedLang}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })
+              ) : (
+                <View style={styles.loaderWrapper}>
+                  <ActivityIndicator size="large" color="#00ff00" />
+                </View>
+              )}
             </ScrollView>
             <View style={styles.btnsWrapper}>
               <TouchableOpacity
                 style={styles.confirmBtnStyle}
-                onPress={loadSuggFromFirebase}>
+                onPress={confirmChange}>
                 <Text style={styles.confirmBtnTxtStyle}>Confirm</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.cancelBtnStyle}>
@@ -144,6 +254,13 @@ const TodayCard = props => {
 export default TodayCard;
 
 const styles = StyleSheet.create({
+  loaderWrapper: {
+    width: '100%',
+    height: '100%',
+    // backgroundColor: 'red',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   wordSuggTxt: {
     color: '#000',
     fontSize: 22,
@@ -192,7 +309,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  listOfWord: {},
+  listOfWord: {
+    // backgroundColor: 'blue',
+  },
   // Modal Style
   modalView: {
     width: '90%',

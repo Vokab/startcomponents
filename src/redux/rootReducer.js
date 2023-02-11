@@ -2,6 +2,8 @@ import {combineReducers} from 'redux';
 import {persistReducer} from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import userReducer from './User/user.reducer';
+import wordsReducer from './Words/words.reducer';
+
 // import loopReducer from './Loop/loop.reducer';
 
 const persistConfig = {
@@ -12,5 +14,6 @@ const persistConfig = {
 
 export default combineReducers({
   user: persistReducer(persistConfig, userReducer),
+  words: persistReducer(persistConfig, wordsReducer),
   //   loop: loopReducer,
 });
