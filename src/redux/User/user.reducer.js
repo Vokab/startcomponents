@@ -10,6 +10,7 @@ const INITIAL_STATE = {
   currentDay: null,
   currentWord: 0,
   defaultWordsBag: [],
+  subList: [],
   defaultWordsBagIds: [],
   stepOfDefaultWordsBag: 0,
 };
@@ -27,6 +28,18 @@ const userReducer = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         currentWord: action.payload,
+      };
+
+    case userTypes.MODIFY_SUB_LIST:
+      const updatedSubList = action.payload;
+      return {
+        ...state,
+        subList: [...updatedSubList],
+      };
+    case userTypes.ADD_SUBLIST:
+      return {
+        ...state,
+        subList: action.payload,
       };
     case userTypes.ADD_TODAY_WORDSBAG:
       return {
@@ -57,6 +70,7 @@ const userReducer = (state = INITIAL_STATE, action) => {
         defaultWordsBagIds: [],
         stepOfDefaultWordsBag: 0,
         currentWord: 0,
+        subList: [],
       };
     case userTypes.REDUX_DATA_CLEARED:
       return {
@@ -72,6 +86,7 @@ const userReducer = (state = INITIAL_STATE, action) => {
         defaultWordsBagIds: [],
         stepOfDefaultWordsBag: 0,
         currentWord: 0,
+        subList: [],
       };
 
     default:

@@ -14,7 +14,12 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {collection, query, where, getDocs, limit} from 'firebase/firestore';
 import {db} from '../../../firebase/utils';
 import {useDispatch, useSelector} from 'react-redux';
-import {modDefWoBag} from '../../../redux/User/user.actions';
+import {
+  loadSubList,
+  modDefWoBag,
+  modDefWoBagChange,
+  modDefWoBagDelete,
+} from '../../../redux/User/user.actions';
 
 const mapState = ({user, words}) => ({
   userId: user.userId,
@@ -24,7 +29,7 @@ const mapState = ({user, words}) => ({
   currentDay: user.currentDay,
   stepOfDefaultWordsBag: user.stepOfDefaultWordsBag,
   defaultWordsBag: user.defaultWordsBag,
-  currentWord: user.currentWord,
+  subList: user.subList,
   allWords: words.words,
 });
 
@@ -38,12 +43,13 @@ const TodayCard = props => {
     stepOfDefaultWordsBag,
     defaultWordsBag,
     allWords,
-    currentWord,
+    subList,
   } = useSelector(mapState);
   const dispatch = useDispatch();
   const [renderWords, setRenderWords] = useState([]);
   const [isLess, setIsLess] = useState(true);
   const [visible, setVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [isLoadSugg, setIsLoadSugg] = useState(false);
   const [suggWords, setSuggWords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,9 +84,6 @@ const TodayCard = props => {
     setVisible(true);
     setIndexInDef(itemIndex);
   };
-  const disappearWord = () => {
-    console.log('Start disappearBtn');
-  };
 
   // const changeWord = () => {
   //   console.log('Start changeWord');
@@ -90,9 +93,16 @@ const TodayCard = props => {
     // console.log('defaultWordsBag today card comp =>', renderWords.length);
     loadSugg();
   }, []);
+  useEffect(() => {
+    console.log('subList =>', subList);
+  }, [subList]);
+
   const getIdsOfWordsBag = async () => {
     const array = [];
     defaultWordsBag.forEach(item => {
+      array.push(item.myId);
+    });
+    subList.forEach(item => {
       array.push(item.myId);
     });
     return array;
@@ -108,7 +118,11 @@ const TodayCard = props => {
       // if (!passedIds.includes(allWords[i].id)) {
       //!defaultWordsBag.inclueds(allWords[i])
       // console.log('allWords[i].myId =>', allWords[i].id);
-      if (!allWords[i].passed && !ids.includes(allWords[i].id)) {
+      if (
+        !allWords[i].passed &&
+        !allWords[i].deleted &&
+        !ids.includes(allWords[i].id)
+      ) {
         newData.push({
           myId: allWords[i].id,
           wordNativeLang: allWords[i].wordNativeLang,
@@ -116,9 +130,10 @@ const TodayCard = props => {
           wordLevel: allWords[i].wordLevel,
           audioPath: allWords[i].audioPath,
           wordImage: allWords[i].wordImage,
+          indexInAllWords: i,
         });
         counter = counter + 1;
-        if (counter > 5) {
+        if (counter > 3) {
           break;
         }
       }
@@ -127,18 +142,46 @@ const TodayCard = props => {
     setSuggestions(newData);
     setIsLoadSugg(false);
   };
+  const disappearWordModal = itemIndex => {
+    console.log('Start disappearWord');
+    setDeleteModalVisible(true);
+    setIndexInDef(itemIndex);
+  };
+  const confirmDisappear = async () => {
+    console.log('Start confirmDisappear');
+    dispatch(modDefWoBagDelete(defaultWordsBag, indexInDef, subList, allWords));
+    setDeleteModalVisible(false);
+  };
   const confirmChange = async () => {
     console.log('Start confirmChange');
-    console.log(
-      'params of confirmChange funct => ',
-      defaultWordsBag,
-      indexInDef,
-      suggestions[selected],
+    dispatch(
+      modDefWoBagChange(defaultWordsBag, indexInDef, suggestions[selected]),
     );
-    dispatch(modDefWoBag(defaultWordsBag, indexInDef, suggestions[selected]));
     setSelected(null);
     setVisible(false);
   };
+
+  const getIdsOfWordsBagForDelete = async () => {
+    const array = [];
+    defaultWordsBag.forEach(item => {
+      array.push(item.myId);
+    });
+    return array;
+  };
+  useEffect(() => {
+    if (allWords.length > 0) {
+      if (subList.length === 0) {
+        getIdsOfWordsBagForDelete()
+          .then(res => {
+            dispatch(loadSubList(allWords, res));
+          })
+          .catch(err => {
+            console.log('error', err);
+          });
+      }
+    }
+  }, [subList]);
+
   return (
     <View style={styles.container}>
       <View style={styles.titleWrapper}>
@@ -172,7 +215,7 @@ const TodayCard = props => {
                     <TouchableOpacity
                       style={styles.disappearBtn}
                       onPress={() => {
-                        disappearWord(item);
+                        disappearWordModal(index);
                       }}>
                       <Feather name={'eye-off'} size={20} color={'#fff'} />
                     </TouchableOpacity>
@@ -191,7 +234,7 @@ const TodayCard = props => {
           />
         </TouchableOpacity>
       </View>
-
+      {/* Change Modal Start */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -236,6 +279,7 @@ const TodayCard = props => {
             </ScrollView>
             <View style={styles.btnsWrapper}>
               <TouchableOpacity
+                disabled={selected === null}
                 style={styles.confirmBtnStyle}
                 onPress={confirmChange}>
                 <Text style={styles.confirmBtnTxtStyle}>Confirm</Text>
@@ -247,13 +291,64 @@ const TodayCard = props => {
           </View>
         </View>
       </Modal>
+      {/* Delete Modal Start */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={deleteModalVisible}
+        onRequestClose={() => {
+          setDeleteModalVisible(!deleteModalVisible);
+        }}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            {subList.length === 0 ? (
+              <View style={styles.loaderWrapperDelete}>
+                <ActivityIndicator size="large" color="#00ff00" />
+              </View>
+            ) : (
+              <View style={styles.deleteView}>
+                <Text>Are you sure you already know this word</Text>
+              </View>
+            )}
+
+            <View style={styles.btnsWrapper}>
+              <TouchableOpacity
+                disabled={subList.length === 0}
+                style={[
+                  styles.confirmBtnStyle,
+                  {opacity: subList.length === 0 ? 0.5 : 1},
+                ]}
+                onPress={confirmDisappear}>
+                <Text style={styles.confirmBtnTxtStyle}>Confirm</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelBtnStyle}>
+                <Text style={styles.cancelBtTxtnStyle}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
+  // return <></>;
 };
 
 export default TodayCard;
 
 const styles = StyleSheet.create({
+  deleteView: {
+    height: '50%',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loaderWrapperDelete: {
+    width: '100%',
+    height: '50%',
+    // backgroundColor: 'red',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   loaderWrapper: {
     width: '100%',
     height: '100%',

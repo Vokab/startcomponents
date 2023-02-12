@@ -24,6 +24,7 @@ export const addAllUserWords = () => async dispatch => {
         defaultDay: item.defaultDay,
         defaultWeek: item.defaultWeek,
         passed: false,
+        deleted: false,
       });
     });
     dispatch({
@@ -42,6 +43,12 @@ export const addAllUserWords = () => async dispatch => {
 export const clearAllWords = () => async dispatch => {
   dispatch({
     type: wordsTypes.CLEAR_ALL_WORDS,
+  });
+};
+export const modifAllWords = updatedWords => async dispatch => {
+  dispatch({
+    type: wordsTypes.CLEAR_ALL_WORDS,
+    payload: updatedWords,
   });
 };
 

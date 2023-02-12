@@ -2,6 +2,7 @@ import userTypes from './user.types';
 import {collection, query, where, getDocs, limit} from 'firebase/firestore';
 import {db} from '../../firebase/utils';
 import RNFetchBlob from 'rn-fetch-blob';
+import wordsTypes from '../Words/words.types';
 
 const passedIds = [0, 2, 3, 5, 6];
 export const addUserData = () => ({
@@ -15,52 +16,122 @@ export const clearUserData = () => ({
 export const clearTodayWordsBag = () => ({
   type: userTypes.CLEAR_TODAY_WORDSBAG,
 });
-export const modDefWoBag =
+
+export const modDefWoBagChange =
   (defWordsBag, indexDef, selected) => async dispatch => {
-    console.log('modDefWoBag start');
+    console.log('modDefWoBagChange start');
+    console.log('we will change the words bag right now');
     let oldWordsBag = defWordsBag;
-    // defWordsBag.forEach((element,index) => {
-    //   if (element.myId === indexDef){
-    //     oldWordsBag[index] = selected
-    //   }
-    // });
+    // console.log('new words bag as well', oldWordsBag);
     oldWordsBag[indexDef] = selected;
-    // for (let i = 0; i < defWordsBag.length; i++) {
-    //   if (defWordsBag[i].myId === indexDef) {
-    //     oldWordsBag[i] = selected;
-    //   }
-    //   break;
-    // }
-    console.log('new words bag as well', oldWordsBag);
     dispatch({
       type: userTypes.MODIFY_DEFAULT_WORDS_BAG,
       payload: oldWordsBag,
     });
   };
 
+export const modDefWoBagDelete =
+  (defWordsBag, indexDef, subList, allWords) => async dispatch => {
+    console.log('modDefWoBagDelete start', defWordsBag, indexDef);
+
+    allWords[defWordsBag[indexDef].indexInAllWords].deleted = true;
+    dispatch({
+      type: wordsTypes.MODIF_ALL_WORDS,
+      payload: allWords,
+    });
+
+    let oldWordsBag = defWordsBag;
+    let oldSubList = subList;
+    oldWordsBag[indexDef] = subList[0];
+    oldSubList.splice(0, 1);
+    dispatch({
+      type: userTypes.MODIFY_DEFAULT_WORDS_BAG,
+      payload: oldWordsBag,
+    });
+    dispatch({
+      type: userTypes.MODIFY_SUB_LIST,
+      payload: oldSubList,
+    });
+    // console.log(
+    //   'allWords[defWordsBag[indexDef].indexInAllWords].deleted =>',
+    //   allWords[defWordsBag[indexDef].indexInAllWords],
+    //   allWords[defWordsBag[indexDef].indexInAllWords].deleted,
+    // );
+  };
+
+export const loadSubList = (allWords, idsOfWordsBag) => async dispatch => {
+  console.log('start loadSubList');
+  let counter = 0;
+  const mySubList = [];
+
+  for (let i = 0; i < allWords.length; i++) {
+    console.log('nooon');
+    if (
+      !allWords[i].passed &&
+      !allWords[i].deleted &&
+      !idsOfWordsBag.includes(allWords[i].id)
+    ) {
+      console.log('yeah we are here');
+      if (counter < 3) {
+        mySubList.push({
+          myId: allWords[i].id,
+          wordNativeLang: allWords[i].wordNativeLang,
+          wordLearnedLang: allWords[i].wordLearnedLang,
+          wordLevel: allWords[i].wordLevel,
+          audioPath: allWords[i].audioPath,
+          wordImage: allWords[i].wordImage,
+          indexInAllWords: i,
+        });
+        counter = counter + 1;
+      } else {
+        break;
+      }
+    }
+  }
+  dispatch({
+    type: userTypes.ADD_SUBLIST,
+    payload: mySubList,
+  });
+};
 export const todayWork = (allWords, currentWord) => async dispatch => {
   let counter = 0;
   const newData = [];
+  const mySubList = [];
   const arrOfIds = [];
-  console.log('We dont have any word in the default words bag', currentWord);
+  // console.log('We dont have any word in the default words bag', currentWord);
   console.log('allWords from user action', allWords);
   dispatch({
     type: userTypes.CLEAR_TODAY_WORDSBAG,
   });
   for (let i = 0; i < allWords.length; i++) {
     // if (!passedIds.includes(allWords[i].id)) {
-    if (!allWords[i].passed) {
-      newData.push({
-        myId: allWords[i].id,
-        wordNativeLang: allWords[i].wordNativeLang,
-        wordLearnedLang: allWords[i].wordLearnedLang,
-        wordLevel: allWords[i].wordLevel,
-        audioPath: allWords[i].audioPath,
-        wordImage: allWords[i].wordImage,
-      });
-      arrOfIds.push(allWords[i].id);
-      counter = counter + 1;
-      if (counter > 4) {
+    if (!allWords[i].passed && !allWords[i].deleted) {
+      /* it will be 13 to count 12 words for the words bag*/
+      if (counter < 3) {
+        newData.push({
+          myId: allWords[i].id,
+          wordNativeLang: allWords[i].wordNativeLang,
+          wordLearnedLang: allWords[i].wordLearnedLang,
+          wordLevel: allWords[i].wordLevel,
+          audioPath: allWords[i].audioPath,
+          wordImage: allWords[i].wordImage,
+          indexInAllWords: i,
+        });
+        arrOfIds.push(allWords[i].id);
+        counter = counter + 1;
+        /* it will be 23 to count 10 words for the sub list when user remove a word we can replace by a word from it*/
+      } else if (counter < 6) {
+        mySubList.push({
+          myId: allWords[i].id,
+          wordNativeLang: allWords[i].wordNativeLang,
+          wordLearnedLang: allWords[i].wordLearnedLang,
+          wordLevel: allWords[i].wordLevel,
+          audioPath: allWords[i].audioPath,
+          wordImage: allWords[i].wordImage,
+          indexInAllWords: i,
+        });
+        counter = counter + 1;
+      } else {
         break;
       }
     }
@@ -70,6 +141,10 @@ export const todayWork = (allWords, currentWord) => async dispatch => {
     type: userTypes.ADD_TODAY_WORDSBAG,
     payload: newData,
     ourIds: arrOfIds,
+  });
+  dispatch({
+    type: userTypes.ADD_SUBLIST,
+    payload: mySubList,
   });
   dispatch({
     type: userTypes.UPDATE_CURRENT_WORD,
