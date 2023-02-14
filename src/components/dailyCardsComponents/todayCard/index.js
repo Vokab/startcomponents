@@ -20,6 +20,7 @@ import {
   modDefWoBagChange,
   modDefWoBagDelete,
 } from '../../../redux/User/user.actions';
+import {useNavigation} from '@react-navigation/native';
 
 const mapState = ({user, words}) => ({
   userId: user.userId,
@@ -46,6 +47,7 @@ const TodayCard = props => {
     subList,
   } = useSelector(mapState);
   const dispatch = useDispatch();
+  const navigation = useNavigation();
   const [renderWords, setRenderWords] = useState([]);
   const [isLess, setIsLess] = useState(true);
   const [visible, setVisible] = useState(false);
@@ -67,7 +69,6 @@ const TodayCard = props => {
       setRenderWords([]);
     }
   }, [defaultWordsBag]);
-
   const loadMoreWords = () => {
     if (isLess) {
       setRenderWords(defaultWordsBag);
@@ -77,26 +78,29 @@ const TodayCard = props => {
       setIsLess(true);
     }
   };
-
+  useEffect(() => {
+    // console.log('defaultWordsBag today card comp =>', renderWords.length);
+    loadSugg();
+  }, []);
+  useEffect(() => {
+    if (allWords.length > 0) {
+      if (subList.length === 0) {
+        getIdsOfWordsBagForDelete()
+          .then(res => {
+            dispatch(loadSubList(allWords, res));
+          })
+          .catch(err => {
+            console.log('error', err);
+          });
+      }
+    }
+  }, [subList]);
   const changeWordModal = async itemIndex => {
     console.log('Start changeWord');
     loadSugg();
     setVisible(true);
     setIndexInDef(itemIndex);
   };
-
-  // const changeWord = () => {
-  //   console.log('Start changeWord');
-  //   dispatch(modDefWoBag(defaultWordsBag,allWords, id));
-  // };
-  useEffect(() => {
-    // console.log('defaultWordsBag today card comp =>', renderWords.length);
-    loadSugg();
-  }, []);
-  useEffect(() => {
-    console.log('subList =>', subList);
-  }, [subList]);
-
   const getIdsOfWordsBag = async () => {
     const array = [];
     defaultWordsBag.forEach(item => {
@@ -160,7 +164,6 @@ const TodayCard = props => {
     setSelected(null);
     setVisible(false);
   };
-
   const getIdsOfWordsBagForDelete = async () => {
     const array = [];
     defaultWordsBag.forEach(item => {
@@ -168,20 +171,11 @@ const TodayCard = props => {
     });
     return array;
   };
-  useEffect(() => {
-    if (allWords.length > 0) {
-      if (subList.length === 0) {
-        getIdsOfWordsBagForDelete()
-          .then(res => {
-            dispatch(loadSubList(allWords, res));
-          })
-          .catch(err => {
-            console.log('error', err);
-          });
-      }
-    }
-  }, [subList]);
-
+  const goToLoop = () => {
+    navigation.navigate('Loop', {
+      idType: 0,
+    });
+  };
   return (
     <View style={styles.container}>
       <View style={styles.titleWrapper}>
@@ -193,7 +187,11 @@ const TodayCard = props => {
         <Text style={styles.stepTitle}>Master</Text>
       </View>
       <View style={styles.buttonWrapper}>
-        <TouchableOpacity style={styles.buttonStyle}>
+        <TouchableOpacity
+          style={styles.buttonStyle}
+          onPress={() => {
+            goToLoop();
+          }}>
           <Text style={styles.buttonTxtStyle}>Start</Text>
         </TouchableOpacity>
       </View>

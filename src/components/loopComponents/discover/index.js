@@ -1,16 +1,28 @@
 import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
-import ShadowEffect from '../../../assets/shadowImg.png';
-import Suceess from '../../../assets/suceess.png';
-import Arabic from '../../../assets/sa.png';
-import English from '../../../assets/united-states.png';
+import ShadowEffect from '../../../../assets/shadowImg.png';
+import Suceess from '../../../../assets/suceess.png';
+import Arabic from '../../../../assets/sa.png';
+import English from '../../../../assets/united-states.png';
 import Icon from 'react-native-vector-icons/Feather';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {COLORS_THEME} from '../../constants/theme';
-import {SIZES} from '../../constants/theme';
+import {COLORS_THEME} from '../../../constants/theme';
+import {SIZES} from '../../../constants/theme';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  goNextRedux,
+  resetLoopStepRedux,
+} from '../../../redux/Loop/loop.actions';
+
+const mapState = ({user, words, loop}) => ({
+  loopStep: loop.loopStep,
+  loopRoad: loop.loopRoad,
+});
 
 const Discover = () => {
+  const {loopStep, loopRoad} = useSelector(mapState);
+  const dispatch = useDispatch();
   var wordSpellVariable = '';
   const [darkMode, setDarkMode] = useState(true);
   const [wordSpell, setWordSpell] = useState('');
@@ -40,6 +52,19 @@ const Discover = () => {
     backgroundColor: darkMode ? COLORS_THEME.bgWhite : COLORS_THEME.bgDark,
   };
   const color = darkMode ? COLORS_THEME.textWhite : COLORS_THEME.textDark;
+  const resetLoopStep = async () => {
+    console.log('resetLoopStep start');
+    dispatch(resetLoopStepRedux());
+  };
+
+  const gotoNext = () => {
+    console.log('gotNext start');
+    if (loopStep < loopRoad.length) {
+      dispatch(goNextRedux(loopStep));
+    } else {
+      resetLoopStep().then(navigation.navigate('Home'));
+    }
+  };
 
   return (
     // <ScrollView style={styles.conatiner}>
@@ -96,7 +121,11 @@ const Discover = () => {
             style={styles.blurEffectImg}
             blurRadius={50}
           />
-          <TouchableOpacity style={[styles.btnGo, backgroundColor]}>
+          <TouchableOpacity
+            style={[styles.btnGo, backgroundColor]}
+            onPress={() => {
+              gotoNext();
+            }}>
             <Fontisto
               name="check"
               size={30}

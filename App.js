@@ -21,6 +21,8 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler';
 // import MissedChar from './src/components/loopComponents/missedChar';
 import TabScreen from './src/screens/TabScreen';
 import Home from './src/screens/Home';
+import Loop from './src/screens/Loop';
+import Discover from './src/components/loopComponents/discover';
 
 const Stack = createStackNavigator();
 
@@ -31,8 +33,9 @@ const App = () => {
         screenOptions={{
           headerShown: false,
         }}>
-        {/* <Stack.Screen name="Home" component={Home} /> */}
+        {/* <Stack.Screen name="Home" component={Discover} /> */}
         <Stack.Screen name="TabScreen" component={TabScreen} />
+        <Stack.Screen name="Loop" component={Loop} />
       </Stack.Navigator>
       {/* <Discover /> */}
       {/* <Writing /> */}

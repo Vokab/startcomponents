@@ -9,10 +9,16 @@ const INITIAL_STATE = {
   currentWeek: null,
   currentDay: null,
   currentWord: 0,
-  defaultWordsBag: [],
   subList: [],
   defaultWordsBagIds: [],
+  // Words Bags
+  defaultWordsBag: [],
+  customWordsBag: [],
+  reviewWordsBag: [],
+  // Steps Of Words Bags
   stepOfDefaultWordsBag: 0,
+  stepOfCustomWordsBag: 0,
+  stepOfReviewWordsBag: 0,
 };
 
 const userReducer = (state = INITIAL_STATE, action) => {

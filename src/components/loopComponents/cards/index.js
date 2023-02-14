@@ -1,19 +1,35 @@
 import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
-import {COLORS_THEME, FONTS} from '../../constants/theme';
-import {SIZES} from '../../constants/theme';
-import Arabic from '../../../assets/sa.png';
-import ShadowEffect from '../../../assets/shadowImg.png';
+import {COLORS_THEME, FONTS} from '../../../constants/theme';
+import {SIZES} from '../../../constants/theme';
+import Arabic from '../../../../assets/sa.png';
+import ShadowEffect from '../../../../assets/shadowImg.png';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {wrapper} from '../../besmart/firstAlgo';
+import {wrapper} from '../../../besmart/firstAlgo';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  goNextRedux,
+  resetLoopStepRedux,
+} from '../../../redux/Loop/loop.actions';
+import {useNavigation} from '@react-navigation/native';
+
+const mapState = ({user, words, loop}) => ({
+  loopStep: loop.loopStep,
+  loopRoad: loop.loopRoad,
+});
 
 const Cards = () => {
+  const navigation = useNavigation();
+  const {loopStep, loopRoad} = useSelector(mapState);
+  const dispatch = useDispatch();
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [word, setWord] = useState('Success');
   const [wordCards, setWordCards] = useState([]);
   const [respArray, setRespArray] = useState([]);
+  const [isChecked, setIsChecked] = useState(false);
+
   const cardsPos = [
     {bottom: '50%', left: '20%'},
     {bottom: '30%', left: '40%'},
@@ -83,6 +99,21 @@ const Cards = () => {
       alert(`Correct Answer ${respoArToString}`);
     } else {
       alert(`Wrong answer : ${respoArToString}, Correct answer is: ${word}`);
+    }
+    setIsChecked(true);
+  };
+
+  const resetLoopStep = async () => {
+    console.log('resetLoopStep start');
+    dispatch(resetLoopStepRedux());
+  };
+
+  const goToNext = () => {
+    console.log('goToNext start');
+    if (loopStep < loopRoad.length - 1) {
+      dispatch(goNextRedux(loopStep));
+    } else {
+      resetLoopStep().then(navigation.navigate('Home'));
     }
   };
 
@@ -169,16 +200,29 @@ const Cards = () => {
               blurRadius={50}
               resizeMode="stretch"
             /> */}
-          <TouchableOpacity
-            style={[styles.btnGo, backgroundColor]}
-            onPress={() => checkResponse()}>
-            {/* <Fontisto
-                name="check"
-                size={30}
-                color={darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite}
-              /> */}
-            <Text style={styles.checkBtnTxt}>check</Text>
-          </TouchableOpacity>
+          {!isChecked ? (
+            <TouchableOpacity
+              style={[styles.btnGo, backgroundColor]}
+              onPress={() => checkResponse()}>
+              {/* <Fontisto
+                  name="check"
+                  size={30}
+                  color={darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite}
+                /> */}
+              <Text style={styles.checkBtnTxt}>check</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.btnGo, backgroundColor]}
+              onPress={() => goToNext()}>
+              {/* <Fontisto
+                 name="check"
+                 size={30}
+                 color={darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite}
+               /> */}
+              <Text style={styles.checkBtnTxt}>Next</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
       <View style={styles.footer}>
