@@ -6,23 +6,61 @@ const INITIAL_STATE = {
   userLearnedLang: null,
   userLevel: null,
   startDate: null,
+  passedWordsIds: [],
+  deletedWordsIds: [],
   currentWeek: null,
   currentDay: null,
   currentWord: 0,
   subList: [],
   defaultWordsBagIds: [],
+
   // Words Bags
   defaultWordsBag: [],
   customWordsBag: [],
   reviewWordsBag: [],
+
   // Steps Of Words Bags
   stepOfDefaultWordsBag: 0,
   stepOfCustomWordsBag: 0,
   stepOfReviewWordsBag: 0,
+
+  // this for default and custom wordsbag // we can set 0 if discover 1 if practice 2 if master 3 if review and we can change it on the finishLoop function
+  isDefaultDiscover: 0,
+  isCustomDiscover: 0,
+  isDefaultPractice: 0,
+  isDefaultMaster: 0,
+  isDefaultReview: 0,
+  defaultDiscPracMastPercentage: 0,
 };
 
 const userReducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
+    case userTypes.RESET_IS_DEFAULT_DISCOVER:
+      return {
+        ...state,
+        isDefaultDiscover: 0,
+      };
+    case userTypes.RESET_DEFAULT_STEP:
+      return {
+        ...state,
+        stepOfDefaultWordsBag: 0,
+      };
+    case userTypes.UPDATE_STEP_OF_DEFAULT_WORDS_BAG:
+      return {
+        ...state,
+        stepOfDefaultWordsBag: state.stepOfDefaultWordsBag + 1,
+      };
+    case userTypes.UPDATE_IS_CUSTOM_DISCOVER:
+      return {
+        ...state,
+        isCustomDiscover: state.isCustomDiscover + 1,
+      };
+    case userTypes.UPDATE_IS_DEFAULT_DISCOVER:
+      return {
+        ...state,
+        isDefaultDiscover: state.isDefaultDiscover + 1,
+      };
+
     case userTypes.MODIFY_DEFAULT_WORDS_BAG:
       const updatedWordsBag = action.payload;
       return {
@@ -66,9 +104,9 @@ const userReducer = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         userId: '1255',
-        userNativeLang: 5,
+        userNativeLang: 0,
         userLearnedLang: 1,
-        userLevel: 1,
+        userLevel: 4,
         startDate: '8-2-2023',
         currentWeek: 1,
         currentDay: 1,

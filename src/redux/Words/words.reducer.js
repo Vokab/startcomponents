@@ -3,6 +3,7 @@ import wordsTypes from './words.types';
 const INITIAL_STATE = {
   words: [],
   wordsLoading: false,
+  audioLoading: false,
 };
 
 const wordsReducer = (state = INITIAL_STATE, action) => {
@@ -28,6 +29,11 @@ const wordsReducer = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         wordsLoading: action.payload,
+      };
+    case wordsTypes.AUDIO_LOADING:
+      return {
+        ...state,
+        audioLoading: action.payload,
       };
 
     default:

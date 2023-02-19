@@ -26,18 +26,20 @@ const Discover = () => {
   var wordSpellVariable = '';
   const [darkMode, setDarkMode] = useState(true);
   const [wordSpell, setWordSpell] = useState('');
-  const [word, setWord] = useState('Konsens');
+  const [word, setWord] = useState(loopRoad[loopStep].wordObj.wordLearnedLang);
+  loopRoad[loopStep].wordObj.wordLearnedLang;
+  const wordVar = loopRoad[loopStep].wordObj.wordLearnedLang;
   const displayChar = () => {
-    if (wordSpellVariable.length === word.length) {
-      console.log('yess');
+    if (wordSpellVariable.length === wordVar.length) {
+      // console.log('yess');
       setWordSpell('');
       wordSpellVariable = '';
     } else {
-      console.log('Else', wordSpellVariable.length);
-      wordSpellVariable = wordSpellVariable + word[wordSpellVariable.length];
+      // console.log('Else', wordSpellVariable.length);
+      wordSpellVariable = wordSpellVariable + wordVar[wordSpellVariable.length];
     }
     setWordSpell(wordSpellVariable);
-    console.log('hi mela', wordSpellVariable, 'wordSpell =>', wordSpell);
+    // console.log('hi mela', wordSpellVariable, 'wordSpell =>', wordSpell);
   };
 
   useEffect(() => {
@@ -90,14 +92,18 @@ const Discover = () => {
           {backgroundColor: darkMode ? '#00000040' : '#ffffff50'},
         ]}>
         <View style={styles.nativeWordBoxContent}>
-          <Text style={[styles.nativeWordTxt, {color: color}]}>نجاح</Text>
+          <Text style={[styles.nativeWordTxt, {color: color}]}>
+            {loopRoad[loopStep].wordObj.wordNativeLang}
+          </Text>
           <Image source={Arabic} style={styles.nativeFlag} />
         </View>
       </View>
       <View style={styles.foreignWordBox}>
         <View style={styles.foreignWordBoxContent}>
           <Image source={English} style={styles.foreignFlag} />
-          <Text style={[styles.foreignWordTxt, {color: color}]}>Konsens</Text>
+          <Text style={[styles.foreignWordTxt, {color: color}]}>
+            {loopRoad[loopStep].wordObj.wordLearnedLang}
+          </Text>
         </View>
         <View style={styles.foreignSpellingBox}>
           <Text style={styles.foreignSpellingTxt}>kənˈsensəs</Text>

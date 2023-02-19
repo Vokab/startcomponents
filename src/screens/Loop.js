@@ -10,12 +10,17 @@ import {useDispatch, useSelector} from 'react-redux';
 import {
   clearDefaultRoadRedux,
   constructDefaultBagRoad,
+  continueDefaultBagRoad,
   resetLoopState,
   resetLoopStepRedux,
 } from '../redux/Loop/loop.actions';
 import {FONTS} from '../constants';
 import Discover from '../components/loopComponents/discover';
 import Cards from '../components/loopComponents/cards';
+import loopTypes from '../redux/Loop/loop.types';
+import userTypes from '../redux/User/user.types';
+import MissedChar from '../components/loopComponents/missedChar';
+import FindIt from '../components/loopComponents/findit';
 
 const mapState = ({user, words, loop}) => ({
   isReady: loop.isReady,
@@ -33,6 +38,8 @@ const mapState = ({user, words, loop}) => ({
   stepOfDefaultWordsBag: user.stepOfDefaultWordsBag,
   stepOfCustomWordsBag: user.stepOfCustomWordsBag,
   stepOfReviewWordsBag: user.stepOfReviewWordsBag,
+
+  isDefaultDiscover: user.isDefaultDiscover,
 });
 
 const Loop = ({route, navigation}) => {
@@ -51,6 +58,8 @@ const Loop = ({route, navigation}) => {
     stepOfDefaultWordsBag,
     stepOfCustomWordsBag,
     stepOfReviewWordsBag,
+
+    isDefaultDiscover,
   } = useSelector(mapState);
   const dispatch = useDispatch();
 
@@ -58,8 +67,35 @@ const Loop = ({route, navigation}) => {
     // console.log('idType =>', idType);
     // console.log('defaultWordsBag =>', defaultWordsBag);
     // console.log('stepOfDefaultWordsBag =>', stepOfDefaultWordsBag);
-    if (idType === 0 && stepOfDefaultWordsBag === 0) {
-      dispatch(constructDefaultBagRoad(defaultWordsBag, stepOfDefaultWordsBag));
+    if (idType === 0) {
+      if (stepOfDefaultWordsBag === 0) {
+        // we started now and we dont see those words before
+        console.log(
+          'Hello From constructDefaultBagRoad',
+          stepOfDefaultWordsBag,
+        );
+        dispatch(
+          constructDefaultBagRoad(
+            defaultWordsBag,
+            stepOfDefaultWordsBag,
+            isDefaultDiscover,
+          ),
+        );
+      } else {
+        // we continue what we already started
+        console.log('Hello From Continue', defaultWordsBagRoad);
+        // dispatch({
+        //   type: userTypes.RESET_DEFAULT_STEP,
+        // });
+        dispatch(
+          continueDefaultBagRoad(
+            defaultWordsBag,
+            stepOfDefaultWordsBag,
+            defaultWordsBagRoad,
+          ),
+        );
+      }
+
       //   console.log(
       //     'defaultWordsBagRoad =>',
       //     defaultWordsBagRoad[loopStep].screen,
@@ -78,8 +114,13 @@ const Loop = ({route, navigation}) => {
   }, []);
 
   useEffect(() => {
-    console.log('loopStep =>', loopStep);
-  }, [loopStep]);
+    console.log('loop Step =>', loopStep);
+    console.log('default Step =>', stepOfDefaultWordsBag);
+  }, [loopStep, stepOfDefaultWordsBag]);
+
+  useEffect(() => {
+    console.log('Default Road *-**--- =>', defaultWordsBagRoad);
+  }, [defaultWordsBagRoad]);
 
   const clearDefaultRoad = () => {
     console.log('clearDefaultRoad start');
@@ -120,6 +161,20 @@ const Loop = ({route, navigation}) => {
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
                       <Cards />
+                    </View>
+                  );
+                case 3:
+                  return (
+                    <View style={{width: '100%', height: '100%'}}>
+                      {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
+                      <MissedChar />
+                    </View>
+                  );
+                case 4:
+                  return (
+                    <View style={{width: '100%', height: '100%'}}>
+                      {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
+                      <FindIt />
                     </View>
                   );
                 default:

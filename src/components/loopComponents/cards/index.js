@@ -9,27 +9,33 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {wrapper} from '../../../besmart/firstAlgo';
 import {useDispatch, useSelector} from 'react-redux';
 import {
+  finishLoop,
   goNextRedux,
   resetLoopStepRedux,
+  updateLoopRoad,
 } from '../../../redux/Loop/loop.actions';
 import {useNavigation} from '@react-navigation/native';
 
 const mapState = ({user, words, loop}) => ({
   loopStep: loop.loopStep,
   loopRoad: loop.loopRoad,
+  loopId: loop.loopId,
+  isDefaultDiscover: user.isDefaultDiscover,
+  isCustomDiscover: user.isCustomDiscover,
 });
 
 const Cards = () => {
   const navigation = useNavigation();
-  const {loopStep, loopRoad} = useSelector(mapState);
+  const {loopStep, loopRoad, loopId, isDefaultDiscover, isCustomDiscover} =
+    useSelector(mapState);
   const dispatch = useDispatch();
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [word, setWord] = useState('Success');
+  const [word, setWord] = useState('');
   const [wordCards, setWordCards] = useState([]);
   const [respArray, setRespArray] = useState([]);
   const [isChecked, setIsChecked] = useState(false);
-
+  const wordVar = loopRoad[loopStep].wordObj.wordLearnedLang;
   const cardsPos = [
     {bottom: '50%', left: '20%'},
     {bottom: '30%', left: '40%'},
@@ -51,13 +57,14 @@ const Cards = () => {
   const color = darkMode ? COLORS_THEME.textWhite : COLORS_THEME.textDark;
 
   useEffect(() => {
+    // let wordVariable = loopRoad[loopStep].wordObj.wordLearnedLang;
     const getData = async () => {
-      const data = await wrapper(word);
+      const data = await wrapper(wordVar);
       console.log('cards =>', data);
       setWordCards(data);
     };
     getData();
-  }, []);
+  }, [loopStep]);
   const toogleSugResp = myItem => {
     // showOrNot true => sugg card
     // showOrNot false => response card
@@ -95,11 +102,17 @@ const Cards = () => {
     respArray.forEach(item => {
       respoArToString = respoArToString + item.word;
     });
-    if (word === respoArToString) {
+    if (wordVar === respoArToString) {
+      setRespArray([]);
       alert(`Correct Answer ${respoArToString}`);
     } else {
-      alert(`Wrong answer : ${respoArToString}, Correct answer is: ${word}`);
+      alert(`Wrong answer : ${respoArToString}, Correct answer is: ${wordVar}`);
+      setRespArray([]);
+      if (loopId != 3 && loopId != 4) {
+        dispatch(updateLoopRoad(loopRoad, loopStep, loopId));
+      }
     }
+
     setIsChecked(true);
   };
 
@@ -110,12 +123,28 @@ const Cards = () => {
 
   const goToNext = () => {
     console.log('goToNext start');
+    setIsChecked(false);
     if (loopStep < loopRoad.length - 1) {
       dispatch(goNextRedux(loopStep));
     } else {
+      // if custom or default words bag we need to update the isDefaultDiscover variable by add 1
+      // console.log('loopStep =>', loopStep);
+      if (loopId === 0 && isDefaultDiscover < 3) {
+        dispatch(finishLoop(loopId));
+      } else if (loopId === 1 && isCustomDiscover < 3) {
+        dispatch(finishLoop(loopId));
+      }
       resetLoopStep().then(navigation.navigate('Home'));
     }
   };
+
+  useEffect(() => {
+    console.log(
+      'we are in the step number',
+      loopRoad[loopStep].wordObj.wordLearnedLang,
+      // setWord(loopRoad[loopStep].wordObj.wordLearnedLang),
+    );
+  }, [loopStep]);
 
   return (
     <View style={[styles.wrapper, containerBg]}>
@@ -146,7 +175,9 @@ const Cards = () => {
           {backgroundColor: darkMode ? '#00000040' : '#ffffff50'},
         ]}>
         <View style={styles.nativeWordBoxContent}>
-          <Text style={[styles.nativeWordTxt, {color: color}]}>نجاح</Text>
+          <Text style={[styles.nativeWordTxt, {color: color}]}>
+            {loopRoad[loopStep].wordObj.wordNativeLang}
+          </Text>
           <Image source={Arabic} style={styles.nativeFlag} />
         </View>
       </View>
@@ -194,32 +225,16 @@ const Cards = () => {
       </View>
       <View style={styles.btnContainer}>
         <View style={styles.blurParrent}>
-          {/* <Image
-              source={ShadowEffect}
-              style={styles.blurEffectImg}
-              blurRadius={50}
-              resizeMode="stretch"
-            /> */}
           {!isChecked ? (
             <TouchableOpacity
               style={[styles.btnGo, backgroundColor]}
               onPress={() => checkResponse()}>
-              {/* <Fontisto
-                  name="check"
-                  size={30}
-                  color={darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite}
-                /> */}
               <Text style={styles.checkBtnTxt}>check</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
               style={[styles.btnGo, backgroundColor]}
               onPress={() => goToNext()}>
-              {/* <Fontisto
-                 name="check"
-                 size={30}
-                 color={darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite}
-               /> */}
               <Text style={styles.checkBtnTxt}>Next</Text>
             </TouchableOpacity>
           )}

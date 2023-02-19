@@ -1,7 +1,7 @@
 import loopTypes from './loop.types';
 
 const INITIAL_STATE = {
-  loopId: null,
+  loopId: null, // 0 if default 1 if custom 2 if review 3 if daily test 4 if weekly test
   loopStep: 0,
   loopRoad: [],
   isReady: false,
@@ -27,12 +27,12 @@ const loopReducer = (state = INITIAL_STATE, action) => {
     case loopTypes.UPDATE_REVIEW_ROAD:
       return {
         ...state,
-        reviewWordsBagRoad: action.payload,
+        reviewWordsBagRoad: [...action.payload],
       };
     case loopTypes.UPDATE_CUSTOM_ROAD:
       return {
         ...state,
-        customWordsBagRoad: action.payload,
+        customWordsBagRoad: [...action.payload],
       };
     case loopTypes.CLEAR_DEFAULT_ROAD:
       return {
@@ -40,9 +40,10 @@ const loopReducer = (state = INITIAL_STATE, action) => {
         defaultWordsBagRoad: [],
       };
     case loopTypes.UPDATE_DEFAULT_ROAD:
+      console.log('UPDATE_DEFAULT_ROAD', action.payload);
       return {
         ...state,
-        defaultWordsBagRoad: action.payload,
+        defaultWordsBagRoad: [...action.payload],
       };
     case loopTypes.RESET_LOOP_STATE:
       return {
@@ -58,8 +59,13 @@ const loopReducer = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         loopRoad: action.payload,
+        loopId: action.thisLoopId,
       };
-
+    case loopTypes.UPDATE_LOOP_ROAD:
+      return {
+        ...state,
+        loopRoad: [...action.payload],
+      };
     case loopTypes.UPDATE_LOOP_STATE:
       return {
         ...state,

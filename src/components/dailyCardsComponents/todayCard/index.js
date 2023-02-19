@@ -22,7 +22,7 @@ import {
 } from '../../../redux/User/user.actions';
 import {useNavigation} from '@react-navigation/native';
 
-const mapState = ({user, words}) => ({
+const mapState = ({user, words, loop}) => ({
   userId: user.userId,
   userNativeLang: user.userNativeLang,
   userLearnedLang: user.userLearnedLang,
@@ -30,8 +30,10 @@ const mapState = ({user, words}) => ({
   currentDay: user.currentDay,
   stepOfDefaultWordsBag: user.stepOfDefaultWordsBag,
   defaultWordsBag: user.defaultWordsBag,
+  defaultWordsBagRoad: loop.defaultWordsBagRoad,
   subList: user.subList,
   allWords: words.words,
+  isDefaultDiscover: user.isDefaultDiscover,
 });
 
 const TodayCard = props => {
@@ -43,8 +45,10 @@ const TodayCard = props => {
     currentDay,
     stepOfDefaultWordsBag,
     defaultWordsBag,
+    defaultWordsBagRoad,
     allWords,
     subList,
+    isDefaultDiscover,
   } = useSelector(mapState);
   const dispatch = useDispatch();
   const navigation = useNavigation();
@@ -186,13 +190,38 @@ const TodayCard = props => {
         <Text style={styles.stepTitle}>Practice</Text>
         <Text style={styles.stepTitle}>Master</Text>
       </View>
+      <View style={styles.stepsShapeWrapper}>
+        <View style={styles.stepsShape}>
+          <View
+            style={[
+              styles.stepCircle,
+              {backgroundColor: isDefaultDiscover === 0 ? '#000' : '#fff'},
+            ]}></View>
+          <View
+            style={[
+              styles.stepCircle,
+              {backgroundColor: isDefaultDiscover === 1 ? '#000' : '#fff'},
+            ]}></View>
+          <View
+            style={[
+              styles.stepCircle,
+              {backgroundColor: isDefaultDiscover === 2 ? '#000' : '#fff'},
+            ]}></View>
+        </View>
+      </View>
       <View style={styles.buttonWrapper}>
         <TouchableOpacity
           style={styles.buttonStyle}
           onPress={() => {
             goToLoop();
           }}>
-          <Text style={styles.buttonTxtStyle}>Start</Text>
+          <Text style={styles.buttonTxtStyle}>
+            {stepOfDefaultWordsBag === 0
+              ? isDefaultDiscover < 3
+                ? 'Start' + isDefaultDiscover
+                : 'Review' + isDefaultDiscover
+              : 'Continue' + isDefaultDiscover}
+          </Text>
         </TouchableOpacity>
       </View>
       <View style={styles.listOfWords}>
@@ -334,6 +363,28 @@ const TodayCard = props => {
 export default TodayCard;
 
 const styles = StyleSheet.create({
+  masterCircle: {},
+  practiceCircle: {},
+  discoverCircle: {},
+  stepsShapeWrapper: {
+    paddingHorizontal: 10,
+  },
+  stepsShape: {
+    backgroundColor: 'red',
+    // width: '100%',
+    height: 10,
+    marginVertical: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#ffffff50',
+  },
+  stepCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+  },
   deleteView: {
     height: '50%',
     width: '100%',

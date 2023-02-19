@@ -7,22 +7,46 @@ import {
   Alert,
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
-import {COLORS_THEME, FONTS} from '../../constants/theme';
-import {SIZES} from '../../constants/theme';
-import Arabic from '../../../assets/sa.png';
-import ShadowEffect from '../../../assets/shadowImg.png';
+import {COLORS_THEME, FONTS} from '../../../constants/theme';
+import {SIZES} from '../../../constants/theme';
+import Arabic from '../../../../assets/sa.png';
+import ShadowEffect from '../../../../assets/shadowImg.png';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {wrapper} from '../../besmart/firstAlgo';
+import {useDispatch, useSelector} from 'react-redux';
+import {useNavigation} from '@react-navigation/native';
+import {
+  finishLoop,
+  goNextRedux,
+  resetLoopStepRedux,
+  updateLoopRoad,
+} from '../../../redux/Loop/loop.actions';
+
+const mapState = ({user, words, loop}) => ({
+  loopStep: loop.loopStep,
+  loopRoad: loop.loopRoad,
+  loopId: loop.loopId,
+  isDefaultDiscover: user.isDefaultDiscover,
+  isCustomDiscover: user.isCustomDiscover,
+});
 
 const MissedChar = () => {
+  const navigation = useNavigation();
+  const {loopStep, loopRoad, loopId, isDefaultDiscover, isCustomDiscover} =
+    useSelector(mapState);
+  const dispatch = useDispatch();
+
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [word, setWord] = useState('Success');
+  const [words, setWord] = useState('Success');
   const [wordMissed, setWordMissed] = useState();
   const [missedChars, setMissedChars] = useState([]);
   const [arrayOfSuggChars, setArayOfSuggChars] = useState([]);
   const [myIndex, setMyIndex] = useState(0);
+  const [isChecked, setIsChecked] = useState(false);
+  const word = loopRoad[loopStep].wordObj.wordLearnedLang;
+
   const containerBg = {
     backgroundColor: darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite,
   };
@@ -110,20 +134,44 @@ const MissedChar = () => {
     // missedChars
     // wordMissed
   };
+
+  useEffect(() => {
+    buildTheMissedWord();
+  }, []);
+
   const checkResponse = () => {
-    // console.log('wordMissed =>', wordMissed.join(''));
-    // console.log('word =>', word);
-    // console.log('wordMissed.length =>', wordMissed.length);
-    // console.log('word.length =>', word.length);
     if (word === wordMissed.join('')) {
       Alert.alert('Correct Answer');
     } else {
       Alert.alert('Wrong Answer -- Correct answer is ', word);
+      if (loopId != 3 && loopId != 4) {
+        dispatch(updateLoopRoad(loopRoad, loopStep, loopId));
+      }
+    }
+    setIsChecked(true);
+  };
+
+  const resetLoopStep = async () => {
+    console.log('resetLoopStep start');
+    dispatch(resetLoopStepRedux());
+  };
+
+  const goToNext = () => {
+    console.log('goToNext start');
+    setIsChecked(false);
+    if (loopStep < loopRoad.length - 1) {
+      dispatch(goNextRedux(loopStep));
+    } else {
+      // if custom or default words bag we need to update the isDefaultDiscover variable by add 1
+      // console.log('loopStep =>', loopStep);
+      if (loopId === 0 && isDefaultDiscover < 3) {
+        dispatch(finishLoop(loopId));
+      } else if (loopId === 1 && isCustomDiscover < 3) {
+        dispatch(finishLoop(loopId));
+      }
+      resetLoopStep().then(navigation.navigate('Home'));
     }
   };
-  useEffect(() => {
-    buildTheMissedWord();
-  }, []);
 
   return (
     <View style={[styles.wrapper, containerBg]}>
@@ -156,7 +204,9 @@ const MissedChar = () => {
           {backgroundColor: darkMode ? '#00000040' : '#ffffff50'},
         ]}>
         <View style={styles.nativeWordBoxContent}>
-          <Text style={[styles.nativeWordTxt, {color: color}]}>نجاح</Text>
+          <Text style={[styles.nativeWordTxt, {color: color}]}>
+            {loopRoad[loopStep].wordObj.wordNativeLang}
+          </Text>
           <Image source={Arabic} style={styles.nativeFlag} />
         </View>
       </View>
@@ -199,11 +249,19 @@ const MissedChar = () => {
       </View>
       <View style={styles.btnContainer}>
         <View style={styles.blurParrent}>
-          <TouchableOpacity
-            style={[styles.btnGo, backgroundColor]}
-            onPress={() => checkResponse()}>
-            <Text style={styles.checkBtnTxt}>check</Text>
-          </TouchableOpacity>
+          {!isChecked ? (
+            <TouchableOpacity
+              style={[styles.btnGo, backgroundColor]}
+              onPress={() => checkResponse()}>
+              <Text style={styles.checkBtnTxt}>check</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.btnGo, backgroundColor]}
+              onPress={() => goToNext()}>
+              <Text style={styles.checkBtnTxt}>Next</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
       <View style={styles.footer}>

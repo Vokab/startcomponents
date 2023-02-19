@@ -3,6 +3,7 @@ import {collection, query, where, getDocs, limit} from 'firebase/firestore';
 import {db} from '../../firebase/utils';
 import RNFetchBlob from 'rn-fetch-blob';
 import wordsTypes from '../Words/words.types';
+import loopTypes from '../Loop/loop.types';
 
 const passedIds = [0, 2, 3, 5, 6];
 export const addUserData = () => ({
@@ -16,6 +17,27 @@ export const clearUserData = () => ({
 export const clearTodayWordsBag = () => ({
   type: userTypes.CLEAR_TODAY_WORDSBAG,
 });
+export const resetIsDiscover = () => async dispatch => {
+  console.log('reset Is Discover start');
+  dispatch({
+    type: userTypes.RESET_IS_DEFAULT_DISCOVER,
+  });
+  dispatch({
+    type: loopTypes.SET_LOOP_STEP,
+    payload: 0,
+  });
+  dispatch({
+    type: userTypes.RESET_DEFAULT_STEP,
+  });
+};
+
+export const updateStepOfDefaultWordsBag =
+  (defWordsBag, indexDef, selected) => async dispatch => {
+    console.log('updateStepOfDefaultWordsBag start');
+    dispatch({
+      type: userTypes.UPDATE_STEP_OF_DEFAULT_WORDS_BAG,
+    });
+  };
 
 export const modDefWoBagChange =
   (defWordsBag, indexDef, selected) => async dispatch => {

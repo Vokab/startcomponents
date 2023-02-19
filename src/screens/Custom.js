@@ -12,6 +12,7 @@ import {
   addUserData,
   clearTodayWordsBag,
   clearUserData,
+  resetIsDiscover,
 } from '../redux/User/user.actions';
 import {addAllUserWords, clearAllWords} from '../redux/Words/words.actions';
 
@@ -19,12 +20,14 @@ const mapState = ({user, words}) => ({
   userId: user.userId,
   userNativeLang: user.userNativeLang,
   userLearnedLang: user.userLearnedLang,
+  userLevel: user.userLevel,
   currentWeek: user.currentWeek,
   currentDay: user.currentDay,
   stepOfDefaultWordsBag: user.stepOfDefaultWordsBag,
   defaultWordsBag: user.defaultWordsBag,
   allWords: words.words,
   wordsLoading: words.wordsLoading,
+  audioLoading: words.audioLoading,
 });
 
 const Custom = () => {
@@ -32,18 +35,20 @@ const Custom = () => {
     userId,
     userNativeLang,
     userLearnedLang,
+    userLevel,
     currentWeek,
     currentDay,
     stepOfDefaultWordsBag,
     defaultWordsBag,
     allWords,
     wordsLoading,
+    audioLoading,
   } = useSelector(mapState);
 
   const dispatch = useDispatch();
 
   const addWordsToRedux = () => {
-    dispatch(addAllUserWords());
+    dispatch(addAllUserWords(userNativeLang, userLearnedLang, userLevel));
     console.log('addDataToRedux');
   };
 
@@ -64,7 +69,10 @@ const Custom = () => {
     dispatch(clearTodayWordsBag());
     console.log('clearTodayWords');
   };
-
+  const resetIsDefaultDiscover = () => {
+    console.log('resetIsDefaultDiscover');
+    dispatch(resetIsDiscover());
+  };
   return (
     <View style={styles.container}>
       {wordsLoading ? (
@@ -74,6 +82,14 @@ const Custom = () => {
           size={'large'}
         />
       ) : null}
+      {audioLoading ? (
+        <ActivityIndicator
+          color={COLORS_THEME.textWhite}
+          style={{marginVertical: 11}}
+          size={'large'}
+        />
+      ) : null}
+
       <TouchableOpacity style={styles.addBtn} onPress={addWordsToRedux}>
         <Text style={styles.addBtnTxt}>Add Words to Redux</Text>
       </TouchableOpacity>
@@ -85,6 +101,12 @@ const Custom = () => {
       </TouchableOpacity>
       <TouchableOpacity style={styles.clearBtn} onPress={clearWords}>
         <Text style={styles.clearBtnTxt}>Clear Words From Redux</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.clearBtn}
+        onPress={resetIsDefaultDiscover}>
+        <Text style={styles.clearBtnTxt}>Clear IsDefaultDiscover</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.clearBtn} onPress={clearTodayWords}>

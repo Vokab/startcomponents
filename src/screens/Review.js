@@ -8,6 +8,7 @@ import {
   Image,
   Dimensions,
   StyleSheet,
+  ScrollView,
 } from 'react-native';
 import RNFetchBlob from 'rn-fetch-blob';
 import {collection, query, where, getDocs, limit} from 'firebase/firestore';
@@ -59,7 +60,7 @@ const Review = () => {
 
   const downloadAudioOfLearnedLanguage = async () => {
     console.log('Start Download Audio Of Learned Language');
-    const destinationPath = RNFetchBlob.fs.dirs.DocumentDir + '/' + 'MyApp';
+    const destinationPath = RNFetchBlob.fs.dirs.DocumentDir + '/' + 'vokab';
     urls.forEach(item => {
       const fileName = item.itemId;
       // const fileExtention = url.split('.').pop();
@@ -106,7 +107,7 @@ const Review = () => {
   }, []);
 
   async function handleGetFileList() {
-    const path = RNFetchBlob.fs.dirs.DocumentDir + '/' + 'MyApp';
+    const path = RNFetchBlob.fs.dirs.DocumentDir + '/' + 'vokab';
 
     await RNFetchBlob.fs
       .isDir(path)
@@ -131,7 +132,7 @@ const Review = () => {
 
   function handleDownloadFile() {
     console.log('Hiii');
-    const destinationPath = RNFetchBlob.fs.dirs.DocumentDir + '/' + 'MyApp';
+    const destinationPath = RNFetchBlob.fs.dirs.DocumentDir + '/' + 'vokab';
     const url =
       'https://shotkit.com/wp-content/uploads/2021/06/cool-profile-pic-matheus-ferrero.jpeg';
     const fileName = Date.now();
@@ -152,7 +153,7 @@ const Review = () => {
   }
 
   function handleDeleteFiles() {
-    const path = RNFetchBlob.fs.dirs.DocumentDir + '/' + 'MyApp';
+    const path = RNFetchBlob.fs.dirs.DocumentDir + '/' + 'vokab';
     console.log('path =>', path);
     RNFetchBlob.fs
       .unlink(path)
@@ -227,7 +228,7 @@ const Review = () => {
 
         {/* <View style={{ height: '100%', width: 10 }} /> */}
       </View>
-      <View style={{flex: 6}}>
+      <ScrollView style={{flex: 6}}>
         {files?.map((item, index) => {
           return (
             <TouchableOpacity
@@ -238,7 +239,7 @@ const Review = () => {
               style={styles.audioItem}></TouchableOpacity>
           );
         })}
-      </View>
+      </ScrollView>
 
       {/* <View style={{flex: 6}}>
         <FlatList
