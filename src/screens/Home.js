@@ -71,9 +71,9 @@ const Home = () => {
       console.log('we already have something', currentWord);
     }
   }, []);
-  useEffect(() => {
-    console.log('allWords =>>>>>>>>>>>>: ', allWords);
-  }, [allWords]);
+  // useEffect(() => {
+  //   console.log('allWords =>>>>>>>>>>>>: ', allWords);
+  // }, [allWords]);
   useEffect(() => {
     console.log('default words bag touched -----', defaultWordsBag);
   }, [defaultWordsBag]);

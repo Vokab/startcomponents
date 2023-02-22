@@ -1,15 +1,18 @@
 import {
   ActivityIndicator,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {COLORS_THEME, FONTS} from '../constants';
 import {useDispatch, useSelector} from 'react-redux';
 import {
+  addThisBagToDaysBags,
   addUserData,
+  clearDaysBags,
   clearTodayWordsBag,
   clearUserData,
   resetIsDiscover,
@@ -28,6 +31,9 @@ const mapState = ({user, words}) => ({
   allWords: words.words,
   wordsLoading: words.wordsLoading,
   audioLoading: words.audioLoading,
+  daysBags: user.daysBags,
+  currentWeek: user.currentWeek,
+  currentDay: user.currentDay,
 });
 
 const Custom = () => {
@@ -38,6 +44,7 @@ const Custom = () => {
     userLevel,
     currentWeek,
     currentDay,
+    daysBags,
     stepOfDefaultWordsBag,
     defaultWordsBag,
     allWords,
@@ -73,46 +80,72 @@ const Custom = () => {
     console.log('resetIsDefaultDiscover');
     dispatch(resetIsDiscover());
   };
+  const addBagToDaysBags = () => {
+    dispatch(
+      addThisBagToDaysBags(daysBags, defaultWordsBag, currentDay, currentWeek),
+    );
+  };
+  const clearDaysBagsFunc = () => {
+    dispatch(clearDaysBags());
+  };
+
+  useEffect(() => {
+    console.log('daysBags =>', daysBags);
+  }, [daysBags]);
+
   return (
-    <View style={styles.container}>
-      {wordsLoading ? (
-        <ActivityIndicator
-          color={COLORS_THEME.bgDark}
-          style={{marginVertical: 11}}
-          size={'large'}
-        />
-      ) : null}
-      {audioLoading ? (
-        <ActivityIndicator
-          color={COLORS_THEME.textWhite}
-          style={{marginVertical: 11}}
-          size={'large'}
-        />
-      ) : null}
+    <ScrollView>
+      <View style={styles.container}>
+        {wordsLoading ? (
+          <ActivityIndicator
+            color={COLORS_THEME.bgDark}
+            style={{marginVertical: 11}}
+            size={'large'}
+          />
+        ) : null}
+        {audioLoading ? (
+          <ActivityIndicator
+            color={COLORS_THEME.textWhite}
+            style={{marginVertical: 11}}
+            size={'large'}
+          />
+        ) : null}
 
-      <TouchableOpacity style={styles.addBtn} onPress={addWordsToRedux}>
-        <Text style={styles.addBtnTxt}>Add Words to Redux</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.addBtn} onPress={addDataToRedux}>
-        <Text style={styles.addBtnTxt}>Add Data to Redux</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.clearBtn} onPress={clearRedux}>
-        <Text style={styles.clearBtnTxt}>Clear Redux</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.clearBtn} onPress={clearWords}>
-        <Text style={styles.clearBtnTxt}>Clear Words From Redux</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.addBtn} onPress={addWordsToRedux}>
+          <Text style={styles.addBtnTxt}>Add Words to Redux</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.addBtn} onPress={addDataToRedux}>
+          <Text style={styles.addBtnTxt}>Add Data to Redux</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.clearBtn}
-        onPress={resetIsDefaultDiscover}>
-        <Text style={styles.clearBtnTxt}>Clear IsDefaultDiscover</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.addBtn} onPress={addBagToDaysBags}>
+          <Text style={styles.addBtnTxt}>Add Bag to DaysBags</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.clearBtn} onPress={clearTodayWords}>
-        <Text style={styles.clearBtnTxt}>Clear Today Words Bag</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity style={styles.clearBtn} onPress={clearDaysBagsFunc}>
+          <Text style={styles.clearBtnTxt}>Clear DaysBags</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.clearBtn} onPress={clearRedux}>
+          <Text style={styles.clearBtnTxt}>Clear DaysBags</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.clearBtn} onPress={clearRedux}>
+          <Text style={styles.clearBtnTxt}>Clear Redux</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.clearBtn} onPress={clearWords}>
+          <Text style={styles.clearBtnTxt}>Clear Words From Redux</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.clearBtn}
+          onPress={resetIsDefaultDiscover}>
+          <Text style={styles.clearBtnTxt}>Clear IsDefaultDiscover</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.clearBtn} onPress={clearTodayWords}>
+          <Text style={styles.clearBtnTxt}>Clear Today Words Bag</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 };
 
@@ -153,6 +186,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'red',
+    paddingVertical: 20,
+    // paddingHorizontal: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },

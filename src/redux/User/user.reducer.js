@@ -27,14 +27,25 @@ const INITIAL_STATE = {
   // this for default and custom wordsbag // we can set 0 if discover 1 if practice 2 if master 3 if review and we can change it on the finishLoop function
   isDefaultDiscover: 0,
   isCustomDiscover: 0,
-  isDefaultPractice: 0,
-  isDefaultMaster: 0,
-  isDefaultReview: 0,
   defaultDiscPracMastPercentage: 0,
+
+  // days and review
+  daysBags: [],
 };
 
 const userReducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
+    case userTypes.CLEAR_DAYS_BAGS:
+      return {
+        ...state,
+        daysBags: [],
+      };
+    case userTypes.MODIFY_DAYS_BAGS:
+      return {
+        ...state,
+        daysBags: [...action.payload],
+      };
+
     case userTypes.RESET_IS_DEFAULT_DISCOVER:
       return {
         ...state,

@@ -21,6 +21,7 @@ import loopTypes from '../redux/Loop/loop.types';
 import userTypes from '../redux/User/user.types';
 import MissedChar from '../components/loopComponents/missedChar';
 import FindIt from '../components/loopComponents/findit';
+import {addThisBagToDaysBags} from '../redux/User/user.actions';
 
 const mapState = ({user, words, loop}) => ({
   isReady: loop.isReady,
@@ -40,6 +41,10 @@ const mapState = ({user, words, loop}) => ({
   stepOfReviewWordsBag: user.stepOfReviewWordsBag,
 
   isDefaultDiscover: user.isDefaultDiscover,
+
+  daysBags: user.daysBags,
+  currentWeek: user.currentWeek,
+  currentDay: user.currentDay,
 });
 
 const Loop = ({route, navigation}) => {
@@ -60,6 +65,9 @@ const Loop = ({route, navigation}) => {
     stepOfReviewWordsBag,
 
     isDefaultDiscover,
+    currentWeek,
+    currentDay,
+    daysBags,
   } = useSelector(mapState);
   const dispatch = useDispatch();
 
@@ -70,6 +78,15 @@ const Loop = ({route, navigation}) => {
     if (idType === 0) {
       if (stepOfDefaultWordsBag === 0) {
         // we started now and we dont see those words before
+        // here we need to add this words bag to the daysBags array
+        // dispatch(
+        //   addThisBagToDaysBags(
+        //     daysBags,
+        //     defaultWordsBag,
+        //     currentDay,
+        //     currentWeek,
+        //   ),
+        // );
         console.log(
           'Hello From constructDefaultBagRoad',
           stepOfDefaultWordsBag,
@@ -104,8 +121,12 @@ const Loop = ({route, navigation}) => {
       //   );
     } else if (idType === 1 && stepOfCustomWordsBag === 0) {
       // We need to construct the custom words bag road
-    } else if (idType === 2 && stepOfReviewWordsBag === 0) {
-      // We need to construct the Review words bag road
+    } else if (idType === 2) {
+      if (stepOfReviewWordsBag === 0) {
+        // We need to construct the Review words bag road
+      } else {
+        // we continue what we already started in review bag
+      }
     } else if (idType === 3) {
       // We need to build the daily test road
     } else if (idType === 4) {

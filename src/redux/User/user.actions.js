@@ -173,3 +173,67 @@ export const todayWork = (allWords, currentWord) => async dispatch => {
     payload: counter,
   });
 };
+
+export const addThisBagToDaysBags =
+  (daysBags, defaultWordsBag, currentDay, currentWeek) => async dispatch => {
+    console.log('daysBags =>', daysBags[daysBags.length]?.day);
+    console.log('defaultWordsBag =>', defaultWordsBag);
+    console.log('currentDay =>', currentDay);
+    console.log('currentWeek =>', currentWeek);
+    bagObj = {};
+    bagObj.day = currentDay;
+    bagObj.week = currentWeek;
+    bagObj.step = 0;
+    const ar = [];
+    defaultWordsBag.forEach(element => {
+      ar.push({
+        id: element.myId,
+        type: 0,
+      });
+    });
+    bagObj.words = ar;
+    console.log('this day"s bag =>', bagObj);
+    const oldDayBags = daysBags;
+    if (daysBags.length !== 0) {
+      // console.log(
+      //   'daysBags[daysBags.length][0]',
+      //   daysBags[daysBags.length - 1][0],
+      // );
+      if (daysBags[daysBags.length - 1][0]?.day === currentDay) {
+        console.log('yes we have today array');
+        // here we have an array for today and we need to push on it
+        const oldThisDayArray = daysBags[daysBags.length - 1];
+        oldThisDayArray.push(bagObj);
+        // const newDayBags = daysBags[daysBags.length]
+
+        oldDayBags[daysBags.length - 1] = oldThisDayArray;
+        dispatch({
+          type: userTypes.MODIFY_DAYS_BAGS,
+          payload: oldDayBags,
+        });
+      } else {
+        console.log('No we dont have today array and we need to create it');
+        // here we dont have a day array yet for today and we need to create it
+        oldDayBags.push([bagObj]);
+        dispatch({
+          type: userTypes.MODIFY_DAYS_BAGS,
+          payload: oldDayBags,
+        });
+      }
+    } else {
+      console.log('No we dont have today array and we need to create it');
+      // here we dont have a day array yet for today and we need to create it
+      oldDayBags.push([bagObj]);
+      dispatch({
+        type: userTypes.MODIFY_DAYS_BAGS,
+        payload: oldDayBags,
+      });
+    }
+  };
+
+export const clearDaysBags = () => async dispatch => {
+  console.log('Start clearDaysBags');
+  dispatch({
+    type: userTypes.CLEAR_DAYS_BAGS,
+  });
+};
