@@ -18,7 +18,7 @@ export const clearTodayWordsBag = () => ({
   type: userTypes.CLEAR_TODAY_WORDSBAG,
 });
 export const resetIsDiscover = () => async dispatch => {
-  console.log('reset Is Discover start');
+  console.log('resetIsDiscover start');
   dispatch({
     type: userTypes.RESET_IS_DEFAULT_DISCOVER,
   });
@@ -54,7 +54,7 @@ export const modDefWoBagChange =
 
 export const modDefWoBagDelete =
   (defWordsBag, indexDef, subList, allWords) => async dispatch => {
-    console.log('modDefWoBagDelete start', defWordsBag, indexDef);
+    console.log('modDefWoBagDelete start');
 
     allWords[defWordsBag[indexDef].indexInAllWords].deleted = true;
     dispatch({
@@ -87,13 +87,13 @@ export const loadSubList = (allWords, idsOfWordsBag) => async dispatch => {
   const mySubList = [];
 
   for (let i = 0; i < allWords.length; i++) {
-    console.log('nooon');
+    // console.log('nooon');
     if (
       !allWords[i].passed &&
       !allWords[i].deleted &&
       !idsOfWordsBag.includes(allWords[i].id)
     ) {
-      console.log('yeah we are here');
+      // console.log('yeah we are here');
       if (counter < 3) {
         mySubList.push({
           myId: allWords[i].id,
@@ -121,7 +121,7 @@ export const todayWork = (allWords, currentWord) => async dispatch => {
   const mySubList = [];
   const arrOfIds = [];
   // console.log('We dont have any word in the default words bag', currentWord);
-  console.log('allWords from user action', allWords);
+  // console.log('allWords from user action', allWords);
   dispatch({
     type: userTypes.CLEAR_TODAY_WORDSBAG,
   });
@@ -158,7 +158,7 @@ export const todayWork = (allWords, currentWord) => async dispatch => {
       }
     }
   }
-  console.log('newData =>', newData);
+  // console.log('newData =>', newData);
   dispatch({
     type: userTypes.ADD_TODAY_WORDSBAG,
     payload: newData,
@@ -176,10 +176,11 @@ export const todayWork = (allWords, currentWord) => async dispatch => {
 
 export const addThisBagToDaysBags =
   (daysBags, defaultWordsBag, currentDay, currentWeek) => async dispatch => {
-    console.log('daysBags =>', daysBags[daysBags.length]?.day);
-    console.log('defaultWordsBag =>', defaultWordsBag);
-    console.log('currentDay =>', currentDay);
-    console.log('currentWeek =>', currentWeek);
+    console.log('addThisBagToDaysBags start');
+    // console.log('daysBags =>', daysBags[daysBags.length]?.day);
+    // console.log('defaultWordsBag =>', defaultWordsBag);
+    // console.log('currentDay =>', currentDay);
+    // console.log('currentWeek =>', currentWeek);
     bagObj = {};
     bagObj.day = currentDay;
     bagObj.week = currentWeek;
@@ -189,46 +190,15 @@ export const addThisBagToDaysBags =
       ar.push({
         id: element.myId,
         type: 0,
+        // prog: 0,
       });
     });
     bagObj.words = ar;
-    console.log('this day"s bag =>', bagObj);
-    const oldDayBags = daysBags;
-    if (daysBags.length !== 0) {
-      // console.log(
-      //   'daysBags[daysBags.length][0]',
-      //   daysBags[daysBags.length - 1][0],
-      // );
-      if (daysBags[daysBags.length - 1][0]?.day === currentDay) {
-        console.log('yes we have today array');
-        // here we have an array for today and we need to push on it
-        const oldThisDayArray = daysBags[daysBags.length - 1];
-        oldThisDayArray.push(bagObj);
-        // const newDayBags = daysBags[daysBags.length]
-
-        oldDayBags[daysBags.length - 1] = oldThisDayArray;
-        dispatch({
-          type: userTypes.MODIFY_DAYS_BAGS,
-          payload: oldDayBags,
-        });
-      } else {
-        console.log('No we dont have today array and we need to create it');
-        // here we dont have a day array yet for today and we need to create it
-        oldDayBags.push([bagObj]);
-        dispatch({
-          type: userTypes.MODIFY_DAYS_BAGS,
-          payload: oldDayBags,
-        });
-      }
-    } else {
-      console.log('No we dont have today array and we need to create it');
-      // here we dont have a day array yet for today and we need to create it
-      oldDayBags.push([bagObj]);
-      dispatch({
-        type: userTypes.MODIFY_DAYS_BAGS,
-        payload: oldDayBags,
-      });
-    }
+    // console.log('this day"s bag =>', bagObj);
+    dispatch({
+      type: userTypes.MODIFY_DAYS_BAGS,
+      payload: bagObj,
+    });
   };
 
 export const clearDaysBags = () => async dispatch => {

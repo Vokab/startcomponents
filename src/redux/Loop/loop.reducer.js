@@ -40,7 +40,7 @@ const loopReducer = (state = INITIAL_STATE, action) => {
         defaultWordsBagRoad: [],
       };
     case loopTypes.UPDATE_DEFAULT_ROAD:
-      console.log('UPDATE_DEFAULT_ROAD', action.payload);
+      // console.log('UPDATE_DEFAULT_ROAD', action.payload);
       return {
         ...state,
         defaultWordsBagRoad: [...action.payload],
@@ -65,6 +65,12 @@ const loopReducer = (state = INITIAL_STATE, action) => {
       return {
         ...state,
         loopRoad: [...action.payload],
+      };
+
+    case loopTypes.RESET_LOOP_ROAD:
+      return {
+        ...state,
+        loopRoad: [],
       };
     case loopTypes.UPDATE_LOOP_STATE:
       return {

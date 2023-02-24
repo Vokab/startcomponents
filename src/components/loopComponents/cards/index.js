@@ -125,6 +125,11 @@ const Cards = () => {
     console.log('goToNext start');
     setIsChecked(false);
     if (loopStep < loopRoad.length - 1) {
+      console.log(
+        '----- NOW WE WILL INCREMENT THE ISDISCOVER ',
+        loopStep,
+        loopRoad.length,
+      );
       dispatch(goNextRedux(loopStep));
     } else {
       // if custom or default words bag we need to update the isDefaultDiscover variable by add 1

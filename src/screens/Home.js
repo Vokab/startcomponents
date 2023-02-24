@@ -9,7 +9,7 @@ import {collection, query, where, getDocs, limit} from 'firebase/firestore';
 import {db} from '../firebase/utils';
 import {todayWork} from '../redux/User/user.actions';
 
-const mapState = ({user, words}) => ({
+const mapState = ({user, words, loop}) => ({
   userId: user.userId,
   userNativeLang: user.userNativeLang,
   userLearnedLang: user.userLearnedLang,
@@ -19,6 +19,13 @@ const mapState = ({user, words}) => ({
   defaultWordsBag: user.defaultWordsBag,
   currentWord: user.currentWord,
   allWords: words.words,
+  defaultWordsBagRoad: loop.defaultWordsBagRoad,
+  isDefaultDiscover: user.isDefaultDiscover,
+  daysBags: user.daysBags,
+  loopId: loop.loopId,
+  loopStep: loop.loopStep,
+  loopRoad: loop.loopRoad,
+  isReady: loop.isReady,
 });
 const Home = () => {
   const {
@@ -31,6 +38,13 @@ const Home = () => {
     defaultWordsBag,
     allWords,
     currentWord,
+    defaultWordsBagRoad,
+    isDefaultDiscover,
+    daysBags,
+    loopId,
+    loopStep,
+    loopRoad,
+    isReady,
   } = useSelector(mapState);
   const dispatch = useDispatch();
   const [items, setItems] = useState([]);
@@ -63,20 +77,39 @@ const Home = () => {
   }, [currentDay]);
   // Clean Code
   useEffect(() => {
-    console.log('todayWork wordsBag =>', defaultWordsBag);
+    // console.log('todayWork wordsBag =>', defaultWordsBag);
     if (defaultWordsBag.length === 0) {
-      console.log('we dont have YET');
+      // console.log('we dont have YET');
       dispatch(todayWork(allWords, currentWord));
     } else {
-      console.log('we already have something', currentWord);
+      // console.log('we already have something', currentWord);
     }
   }, []);
   // useEffect(() => {
   //   console.log('allWords =>>>>>>>>>>>>: ', allWords);
   // }, [allWords]);
   useEffect(() => {
-    console.log('default words bag touched -----', defaultWordsBag);
-  }, [defaultWordsBag]);
+    // console.log('default words bag from Home -----', defaultWordsBag);
+    // console.log('defaultWordsBagRoad from Home -----', defaultWordsBagRoad);
+    console.log('stepOfDefaultWordsBag from Home -----', stepOfDefaultWordsBag);
+    console.log('isDefaultDiscover from Home -----', isDefaultDiscover);
+    console.log('daysBags from Home -----', daysBags);
+    console.log('loopId from Home -----', loopId);
+    console.log('loopStep from Home -----', loopStep);
+    console.log('loopRoad from Home -----', loopRoad);
+    console.log('isReady from Home -----', isReady);
+    console.log('allWords from Home -----', allWords);
+    console.log('defaultWordsBagRoad from Home -----', defaultWordsBagRoad);
+  }, [
+    stepOfDefaultWordsBag,
+    isDefaultDiscover,
+    daysBags,
+    loopId,
+    loopStep,
+    loopRoad,
+    isReady,
+    defaultWordsBagRoad,
+  ]);
 
   return (
     <ScrollView style={styles.container}>

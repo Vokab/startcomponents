@@ -43,7 +43,7 @@ const userReducer = (state = INITIAL_STATE, action) => {
     case userTypes.MODIFY_DAYS_BAGS:
       return {
         ...state,
-        daysBags: [...action.payload],
+        daysBags: [action.payload, ...state.daysBags],
       };
 
     case userTypes.RESET_IS_DEFAULT_DISCOVER:
@@ -57,6 +57,10 @@ const userReducer = (state = INITIAL_STATE, action) => {
         stepOfDefaultWordsBag: 0,
       };
     case userTypes.UPDATE_STEP_OF_DEFAULT_WORDS_BAG:
+      // console.log(
+      //   'UPDATE_STEP_OF_DEFAULT_WORDS_BAG =>',
+      //   state.stepOfDefaultWordsBag,
+      // );
       return {
         ...state,
         stepOfDefaultWordsBag: state.stepOfDefaultWordsBag + 1,

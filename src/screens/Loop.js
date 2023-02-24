@@ -79,18 +79,25 @@ const Loop = ({route, navigation}) => {
       if (stepOfDefaultWordsBag === 0) {
         // we started now and we dont see those words before
         // here we need to add this words bag to the daysBags array
-        // dispatch(
-        //   addThisBagToDaysBags(
-        //     daysBags,
-        //     defaultWordsBag,
-        //     currentDay,
-        //     currentWeek,
-        //   ),
+
+        if (isDefaultDiscover === 0) {
+          // console.log(
+          //   '      // here we need to add this words bag to the daysBags array',
+          // );
+          dispatch(
+            addThisBagToDaysBags(
+              daysBags,
+              defaultWordsBag,
+              currentDay,
+              currentWeek,
+            ),
+          );
+        }
+
+        // console.log(
+        //   'Hello From constructDefaultBagRoad',
+        //   stepOfDefaultWordsBag,
         // );
-        console.log(
-          'Hello From constructDefaultBagRoad',
-          stepOfDefaultWordsBag,
-        );
         dispatch(
           constructDefaultBagRoad(
             defaultWordsBag,
@@ -100,7 +107,7 @@ const Loop = ({route, navigation}) => {
         );
       } else {
         // we continue what we already started
-        console.log('Hello From Continue', defaultWordsBagRoad);
+        // console.log('Hello From Continue', defaultWordsBagRoad);
         // dispatch({
         //   type: userTypes.RESET_DEFAULT_STEP,
         // });
@@ -135,12 +142,12 @@ const Loop = ({route, navigation}) => {
   }, []);
 
   useEffect(() => {
-    console.log('loop Step =>', loopStep);
-    console.log('default Step =>', stepOfDefaultWordsBag);
-  }, [loopStep, stepOfDefaultWordsBag]);
+    // console.log('loop Step =>', loopStep);
+    // console.log('default Step =>', stepOfDefaultWordsBag);
+  }, [stepOfDefaultWordsBag]);
 
   useEffect(() => {
-    console.log('Default Road *-**--- =>', defaultWordsBagRoad);
+    // console.log('Default Road *-**--- =>', defaultWordsBagRoad);
   }, [defaultWordsBagRoad]);
 
   const clearDefaultRoad = () => {
@@ -168,7 +175,7 @@ const Loop = ({route, navigation}) => {
           {/* {loopStep <= defaultWordsBagRoad.length ? {renderSwitch()} : null} */}
           {(() => {
             if (loopStep < loopRoad.length) {
-              console.log('loopStep =>', loopStep);
+              // console.log('loopStep =>', loopStep);
               switch (loopRoad[loopStep].screen) {
                 case 0:
                   return (

@@ -117,7 +117,7 @@ const TodayCard = props => {
   };
   const loadSugg = async () => {
     setIsLoadSugg(true);
-    console.log('Start loadSugg');
+    // console.log('Start loadSugg');
     let counter = 0;
     const newData = [];
     const ids = await getIdsOfWordsBag();

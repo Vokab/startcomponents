@@ -48,14 +48,14 @@ const downloadAudioOfLearnedLanguage = async (urls, dispatch) => {
 
 export const addAllUserWords =
   (nativeLang, learnedLang, level) => async dispatch => {
-    console.log(
-      ' getAllTheWords params : nativeLang : ',
-      nativeLang,
-      'learnedLang : ',
-      learnedLang,
-      'level : ',
-      level,
-    );
+    // console.log(
+    //   ' getAllTheWords params : nativeLang : ',
+    //   nativeLang,
+    //   'learnedLang : ',
+    //   learnedLang,
+    //   'level : ',
+    //   level,
+    // );
     const newData = [];
     const allUrlsToDownload = [];
     dispatch({
@@ -79,36 +79,40 @@ export const addAllUserWords =
           defaultDay: item.defaultDay,
           defaultWeek: item.defaultWeek,
           passed: false,
+          passedDate: null,
           deleted: false,
+          score: 0,
+          viewNbr: 0,
+          prog: 0,
         });
         allUrlsToDownload.push(item[learnedLang].audio);
       });
-      console.log('words =>>>>>>>>>>>>', newData);
-      console.log('audiosUrls =>>>>>>>>>>>>', allUrlsToDownload);
+      // console.log('words =>>>>>>>>>>>>', newData);
+      // console.log('audiosUrls =>>>>>>>>>>>>', allUrlsToDownload);
       dispatch({
         type: wordsTypes.ADD_ALL_WORDS,
         payload: newData,
       });
     } catch (error) {
-      console.log('error addAllUserWords', error);
+      // console.log('error addAllUserWords', error);
     }
     dispatch({
       type: wordsTypes.WORDS_LOADING,
       payload: false,
     });
-    dispatch({
-      type: wordsTypes.AUDIO_LOADING,
-      payload: true,
-    });
-    console.log('words =>>>>>>>>>>>>', newData);
-    try {
-      await downloadAudioOfLearnedLanguage(newData, dispatch);
-    } catch (error) {
-      dispatch({
-        type: wordsTypes.AUDIO_LOADING,
-        payload: false,
-      });
-    }
+    // dispatch({
+    //   type: wordsTypes.AUDIO_LOADING,
+    //   payload: true,
+    // });
+    // console.log('words =>>>>>>>>>>>>', newData);
+    // try {
+    //   await downloadAudioOfLearnedLanguage(newData, dispatch);
+    // } catch (error) {
+    //   dispatch({
+    //     type: wordsTypes.AUDIO_LOADING,
+    //     payload: false,
+    //   });
+    // }
     // dispatch({
     //   type: wordsTypes.AUDIO_LOADING,
     //   payload: false,
@@ -128,7 +132,7 @@ export const modifAllWords = updatedWords => async dispatch => {
 };
 
 const getAllTheWords = async level => {
-  console.log(' getAllTheWords params : level : ', level);
+  console.log(' getAllTheWords params start');
   const ar = [];
   const q = query(
     collection(db, 'words'),

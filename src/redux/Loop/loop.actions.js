@@ -16,15 +16,15 @@ const constructDef = async (defaultWordsBag, isDefaultDiscover) => {
   const roadArray = [];
 
   defaultWordsBag.forEach(item => {
-    console.log('this item =>', item);
+    // console.log('this item =>', item);
     screens.forEach(screenItem => {
       let newObj = {};
-      console.log('this screenItem =>', screenItem);
+      // console.log('this screenItem =>', screenItem);
       newObj.wordObj = item;
       newObj.screen = screenItem;
       roadArray.push(newObj);
     });
-    console.log('roadArray =>', roadArray);
+    // console.log('roadArray =>', roadArray);
   });
   return roadArray;
 };
@@ -51,7 +51,7 @@ export const constructDefaultBagRoad =
       thisLoopId: 0,
     });
     await sleep(3000);
-    console.log('sleep end');
+    // console.log('sleep end');
     dispatch({
       type: loopTypes.UPDATE_LOOP_STATE,
     });
@@ -102,6 +102,9 @@ export const resetLoopStepRedux = loopStep => async dispatch => {
     payload: 0,
   });
   dispatch({
+    type: loopTypes.RESET_LOOP_ROAD,
+  });
+  dispatch({
     type: userTypes.RESET_DEFAULT_STEP,
   });
 };
@@ -133,14 +136,14 @@ export const updateLoopRoad =
     });
     if (loopId === 0) {
       // default words bag
-      console.log('we will update the default road now');
+      // console.log('we will update the default road now');
       dispatch({
         type: loopTypes.UPDATE_DEFAULT_ROAD,
         payload: loopRoad,
       });
     } else if (loopId === 1) {
       // custom words bag
-      console.log('we will update the custom road now');
+      // console.log('we will update the custom road now');
       dispatch({
         type: loopTypes.UPDATE_CUSTOM_ROAD,
         payload: loopRoad,

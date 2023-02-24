@@ -18,6 +18,8 @@ import {
   resetIsDiscover,
 } from '../redux/User/user.actions';
 import {addAllUserWords, clearAllWords} from '../redux/Words/words.actions';
+import {clearDefaultRoadRedux} from '../redux/Loop/loop.actions';
+import loopTypes from '../redux/Loop/loop.types';
 
 const mapState = ({user, words}) => ({
   userId: user.userId,
@@ -88,9 +90,22 @@ const Custom = () => {
   const clearDaysBagsFunc = () => {
     dispatch(clearDaysBags());
   };
+  const clearDefaultRoadFunc = () => {
+    dispatch(clearDaysBags());
+  };
+  const clearDefaultRoad = () => {
+    console.log('clearDefaultRoad start');
+    dispatch(clearDefaultRoadRedux());
+  };
+  const clearLoopRoad = () => {
+    console.log('clearLoopRoad start');
+    dispatch({
+      type: loopTypes.RESET_LOOP_ROAD,
+    });
+  };
 
   useEffect(() => {
-    console.log('daysBags =>', daysBags);
+    // console.log('daysBags =>', daysBags);
   }, [daysBags]);
 
   return (
@@ -122,10 +137,15 @@ const Custom = () => {
           <Text style={styles.addBtnTxt}>Add Bag to DaysBags</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.clearBtn} onPress={clearDaysBagsFunc}>
-          <Text style={styles.clearBtnTxt}>Clear DaysBags</Text>
+        <TouchableOpacity style={styles.clearBtn} onPress={clearLoopRoad}>
+          <Text style={styles.clearBtnTxt}>Clear LOOP ROAD</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.clearBtn} onPress={clearRedux}>
+
+        <TouchableOpacity style={styles.clearBtn} onPress={clearDefaultRoad}>
+          <Text style={styles.clearBtnTxt}>Clear DEFAULT ROAD</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.clearBtn} onPress={clearDaysBagsFunc}>
           <Text style={styles.clearBtnTxt}>Clear DaysBags</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.clearBtn} onPress={clearRedux}>
