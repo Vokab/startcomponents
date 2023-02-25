@@ -131,13 +131,14 @@ export const modifAllWords = updatedWords => async dispatch => {
   });
 };
 
-const getAllTheWords = async level => {
+export const getAllTheWords = async level => {
   console.log(' getAllTheWords params start');
   const ar = [];
   const q = query(
     collection(db, 'words'),
     where('level', '==', level),
     orderBy('id'),
+    limit(20),
   );
   const querySnapshot = await getDocs(q);
   querySnapshot.forEach(doc => {

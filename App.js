@@ -25,7 +25,6 @@ import Loop from './src/screens/Loop';
 import Discover from './src/components/loopComponents/discover';
 
 const Stack = createStackNavigator();
-
 const App = () => {
   return (
     <NavigationContainer>

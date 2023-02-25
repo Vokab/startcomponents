@@ -8,6 +8,7 @@ import {Image, StyleSheet, View} from 'react-native';
 import {icons} from '../constants';
 import {COLORS_THEME} from '../constants';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Test from './Test';
 const Tab = createBottomTabNavigator();
 
 const TabScreen = () => {
@@ -35,7 +36,23 @@ const TabScreen = () => {
           null,
         ],
       }}
-      initialRouteName="Home">
+      initialRouteName="Tes">
+      <Tab.Screen
+        name="Test"
+        component={Test}
+        options={{
+          tabBarLabel: 'Test',
+          tabBarIcon: ({focused}) => (
+            <View style={focused ? styles.shadow_o : styles.shadow_w}>
+              <MaterialCommunityIcons
+                name={focused ? 'lightbulb' : 'lightbulb-outline'}
+                size={30}
+                color={focused ? COLORS_THEME.primary : '#fff'}
+              />
+            </View>
+          ),
+        }}
+      />
       <Tab.Screen
         name="Home"
         component={Home}

@@ -21,6 +21,12 @@ import {
   modDefWoBagDelete,
 } from '../../../redux/User/user.actions';
 import {useNavigation} from '@react-navigation/native';
+import {RealmContext} from '../../../realm/models';
+import {User} from '../../../realm/models/User';
+import {Loop} from '../../../realm/models/Loop';
+import {Word} from '../../../realm/models/Word';
+
+const {useQuery, useRealm} = RealmContext;
 
 const mapState = ({user, words, loop}) => ({
   userId: user.userId,
@@ -37,6 +43,13 @@ const mapState = ({user, words, loop}) => ({
 });
 
 const TodayCard = props => {
+  const realm = useRealm();
+  const user = useQuery(User);
+  const loop = useQuery(Loop);
+  const words = useQuery(Word).sorted('_id');
+  let ids = loop[0].defaultWordsBag;
+  // console.log('ids =>', ids);
+  const wordsBag = useQuery(Word).filtered('_id IN $0', ['0', '1', '10']);
   const {
     userId,
     userNativeLang,
@@ -44,12 +57,13 @@ const TodayCard = props => {
     currentWeek,
     currentDay,
     stepOfDefaultWordsBag,
-    defaultWordsBag,
+
     defaultWordsBagRoad,
     allWords,
     subList,
     isDefaultDiscover,
   } = useSelector(mapState);
+  const {defaultWordsBag} = props;
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const [renderWords, setRenderWords] = useState([]);
@@ -83,8 +97,8 @@ const TodayCard = props => {
     }
   };
   useEffect(() => {
-    // console.log('defaultWordsBag today card comp =>', renderWords.length);
-    loadSugg();
+    console.log('defaultWordsBag today card comp =>', loop[0].defaultWordsBag);
+    // loadSugg();
   }, []);
   useEffect(() => {
     if (allWords.length > 0) {
@@ -225,32 +239,30 @@ const TodayCard = props => {
         </TouchableOpacity>
       </View>
       <View style={styles.listOfWords}>
-        {!loading
-          ? defaultWordsBag?.map((item, index) => {
-              // console.log('item from list', item.myId);
-              return (
-                <View key={index} style={styles.wordBox}>
-                  <Text style={styles.wordTxt}>{item.wordLearnedLang}</Text>
-                  <View style={styles.btnBox}>
-                    <TouchableOpacity
-                      style={styles.changeBtn}
-                      onPress={() => {
-                        changeWordModal(index);
-                      }}>
-                      <FontAwesome name={'refresh'} size={20} color={'#000'} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.disappearBtn}
-                      onPress={() => {
-                        disappearWordModal(index);
-                      }}>
-                      <Feather name={'eye-off'} size={20} color={'#fff'} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })
-          : null}
+        {loop[0].defaultWordsBag.map((item, index) => {
+          // console.log('item from list', item.myId);
+          return (
+            <View key={index} style={styles.wordBox}>
+              <Text style={styles.wordTxt}>{item.wordLearnedLang}</Text>
+              <View style={styles.btnBox}>
+                <TouchableOpacity
+                  style={styles.changeBtn}
+                  onPress={() => {
+                    changeWordModal(index);
+                  }}>
+                  <FontAwesome name={'refresh'} size={20} color={'#000'} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.disappearBtn}
+                  onPress={() => {
+                    disappearWordModal(index);
+                  }}>
+                  <Feather name={'eye-off'} size={20} color={'#fff'} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          );
+        })}
       </View>
       <View style={styles.showMoreContainer}>
         <TouchableOpacity style={styles.showMore} onPress={loadMoreWords}>
@@ -279,7 +291,7 @@ const TodayCard = props => {
                 width: '100%',
               }}>
               {!isLoadSugg ? (
-                suggestions.map((item, index) => {
+                loop[0].defaultWordsBag.map((item, index) => {
                   // console.log('item from modal', item.myId);
                   return (
                     <TouchableOpacity

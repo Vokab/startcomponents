@@ -1,35 +1,32 @@
 import {StyleSheet, Text, View} from 'react-native';
-import React from 'react';
+import React, {useEffect} from 'react';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {FONTS} from '../../constants';
 import {useSelector} from 'react-redux';
+import {RealmContext} from '../../realm/models';
+import {User} from '../../realm/models/User';
 
-const mapState = ({user}) => ({
-  userId: user.userId,
-  userLearnedLang: user.userLearnedLang,
-  currentWeek: user.currentWeek,
-  currentDay: user.currentDay,
-  stepOfDefaultWordsBag: user.stepOfDefaultWordsBag,
-});
+const {useQuery, useRealm} = RealmContext;
 
 const HomeHeader = () => {
-  const {
-    userId,
-    userLearnedLang,
-    currentWeek,
-    currentDay,
-    stepOfDefaultWordsBag,
-  } = useSelector(mapState);
+  const realm = useRealm();
+
+  const user = useQuery(User);
+  useEffect(() => {
+    console.log('usersList from HomeHeader =>', user);
+  }, [user]);
 
   return (
     <View style={styles.container}>
       <View style={styles.learnedLang}>
         <Text style={styles.learnedLangTxt}>
-          {userLearnedLang ? userLearnedLang : '99'}
+          {user[0].userLearnedLang ? user[0].userLearnedLang : '99'}
         </Text>
       </View>
       <View style={styles.week}>
-        <Text style={styles.weekTxt}>{currentWeek ? currentWeek : 'WW'}</Text>
+        <Text style={styles.weekTxt}>
+          {user[0].currentWeek ? user[0].currentWeek : 'WW'}
+        </Text>
       </View>
       <View style={styles.user}>
         <FontAwesome name="user" size={26} color="#fff" />

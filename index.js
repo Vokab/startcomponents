@@ -18,6 +18,9 @@ import store, {persistor} from './src/redux/createStore';
 import {Provider} from 'react-redux';
 import {PersistGate} from 'redux-persist/integration/react';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {runMigration, RealmContext} from './src/realm/models';
+
+const {RealmProvider, useQuery} = RealmContext;
 
 const RNapp = () => {
   return (
@@ -33,7 +36,9 @@ const RNapp = () => {
           />
           <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
-              <App />
+              <RealmProvider>
+                <App />
+              </RealmProvider>
             </PersistGate>
           </Provider>
         </GestureHandlerRootView>
@@ -41,5 +46,5 @@ const RNapp = () => {
     </>
   );
 };
-
+// runMigration();
 AppRegistry.registerComponent(appName, () => RNapp);

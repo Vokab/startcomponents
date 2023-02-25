@@ -1,0 +1,329 @@
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import React, {useEffect, useState, useMemo} from 'react';
+import Realm, {BSON} from 'realm';
+import {RealmContext} from '../realm/models';
+import {TaskV4} from '../realm/models/Task';
+import {Word} from '../realm/models/Word';
+
+import {useCallback} from 'react';
+import {getAllTheWords} from '../redux/Words/words.actions';
+import RNFetchBlob from 'rn-fetch-blob';
+import {User} from '../realm/models/User';
+
+const {useQuery, useRealm} = RealmContext;
+const Test = () => {
+  const realm = useRealm();
+  const [myTasks, setMyTasks] = useState([]);
+  const [text, onChangeText] = React.useState('');
+  const [loading, setLoading] = useState(false);
+  // const realm = useRealm();
+  const result = useQuery(TaskV4);
+  const words = useQuery(Word).sorted('_id');
+  const usersList = useQuery(User);
+  const tasks = useMemo(() => result.sorted('createdAt'), [result]);
+  const ourWords = useMemo(() => words.sorted('_id'), [words]);
+  const getData = async () => {
+    // Open a local realm file with a particular path & predefined Car schema
+    try {
+      const realm = await Realm.open({
+        path: 'myrealm',
+        schema: [TaskSchema],
+      });
+      // Add a couple of Tasks in a single, atomic transaction
+      let task1, task2;
+      realm.write(() => {
+        task1 = realm.create('Task', {
+          _id: 4,
+          name: 'go grocery shopping',
+          status: 'Open',
+        });
+        task2 = realm.create('Task', {
+          _id: 5,
+          name: 'go exercise',
+          status: 'Open',
+        });
+        console.log(`created two tasks: ${task1.name} & ${task2.name}`);
+      });
+      // use task1 and task2
+      realm.close();
+    } catch (err) {
+      console.error('Failed to open the realm', err.message);
+    }
+  };
+  const alertData = async () => {
+    try {
+      const realm = await Realm.open({
+        path: 'myrealm',
+        schema: [TaskSchema],
+      });
+      // query realm for all instances of the "Task" type.
+      const tasks = realm.objects('Task');
+      console.log('now we will affect tasks to array', tasks);
+      setMyTasks(tasks);
+      console.log(`The lists of tasks are: ${tasks.map(task => task.name)}`);
+      //   realm.close();
+    } catch (err) {
+      console.error('Failed to open the realm', err.message);
+    }
+  };
+
+  const addTask = () => {
+    try {
+      let codeTask;
+      realm.write(() => {
+        codeTask = realm.create('TaskV4', {
+          description: text,
+          createdAt: new Date(),
+          userId: 'oussama',
+        });
+      });
+      console.log('new item created:', codeTask);
+    } catch (err) {
+      console.error('Failed to open the realm', err.message);
+    }
+  };
+
+  const deleteThisItem = element => {
+    console.log('item to delelted =>', element);
+    try {
+      realm.write(() => {
+        // Delete the task from the realm.
+        realm.delete(element);
+      });
+    } catch (error) {
+      console.log('error while deleting =>', error);
+    }
+  };
+
+  const updateThisItem = element => {
+    realm.write(() => {
+      element.wordLearnedLang = 'Updated';
+    });
+  };
+  useEffect(() => {
+    // console.log('usersList from useQuery =>', ourWords);
+    // addWords();
+  }, [usersList]);
+
+  const addWords = async () => {
+    setLoading(true);
+    try {
+      const firebaseWords = await getAllTheWords(4);
+      const destinationPath = RNFetchBlob.fs.dirs.DocumentDir + '/' + 'vokab';
+      firebaseWords.forEach(item => {
+        realm.write(() => {
+          realm.create('Word', {
+            _id: item.id.toString(),
+            wordNativeLang: item[0].word,
+            wordLearnedLang: item[1].word,
+            wordLevel: item.level,
+            audioPath: destinationPath + '/' + item.id + '.mp3',
+            remoteUrl: item[0].audio,
+            wordImage: item.image,
+            defaultDay: item.defaultDay,
+            defaultWeek: item.defaultWeek,
+            passed: false,
+            passedDate: new Date(),
+            deleted: false,
+            score: 0,
+            viewNbr: 0,
+            prog: 0,
+          });
+        });
+        console.log('firebaseWord =>', item);
+      });
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      console.log('error occured =>', error);
+    }
+  };
+  const addUser = async () => {
+    try {
+      let user;
+      realm.write(() => {
+        user = realm.create('User', {
+          _id: 'user1',
+          userNativeLang: 0,
+          userLearnedLang: 1,
+          userLevel: 4,
+          startDate: new Date(),
+          passedWordsIds: [],
+          deletedWordsIds: [],
+          currentWeek: 1,
+          currentDay: 1,
+        });
+      });
+      console.log('new user created:', user);
+    } catch (err) {
+      console.error('Failed to create the user', err.message);
+    }
+  };
+  const addLoop = async () => {
+    try {
+      let loop;
+      realm.write(() => {
+        loop = realm.create('Loop', {
+          _id: 'userLoop',
+        });
+      });
+      console.log('new lopp created:', loop);
+    } catch (err) {
+      console.error('Failed to create the loop', err.message);
+    }
+  };
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.addWrapper}>
+        <TouchableOpacity
+          style={styles.functionBtn}
+          onPress={() => {
+            addLoop();
+          }}>
+          <Text style={styles.functionBtnTxt}>Add Loop</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.functionBtn}
+          onPress={() => {
+            addUser();
+          }}>
+          <Text style={styles.functionBtnTxt}>Add User</Text>
+        </TouchableOpacity>
+      </View>
+
+      {!loading ? (
+        ourWords?.map((element, index) => {
+          return (
+            <View key={index} style={styles.taskStyle}>
+              <Text style={styles.taskName}>{element.wordLearnedLang}</Text>
+              <View style={{flexDirection: 'row'}}>
+                <TouchableOpacity
+                  style={styles.taskUpdateStyle}
+                  onPress={() => {
+                    updateThisItem(element);
+                  }}>
+                  <Text style={styles.taskUpdateTxtStyle}>Update</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.taskDeleteStyle}
+                  onPress={() => {
+                    deleteThisItem(element);
+                  }}>
+                  <Text style={styles.taskDeleteTxtStyle}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          );
+        })
+      ) : (
+        <ActivityIndicator size="large" color="#00ff00" />
+      )}
+
+      <View style={styles.addWrapper}>
+        <TextInput
+          style={styles.input}
+          onChangeText={onChangeText}
+          value={text}
+        />
+        <TouchableOpacity
+          style={styles.addBtn}
+          onPress={() => {
+            addWords();
+          }}>
+          <Text style={styles.addBtnTxt}>Add</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.addBtn}
+          onPress={() => {
+            deleteWords();
+          }}>
+          <Text style={styles.addBtnTxt}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+};
+
+export default Test;
+
+const styles = StyleSheet.create({
+  functionBtn: {
+    padding: 20,
+    backgroundColor: 'green',
+    width: '80%',
+    marginHorizontal: '10%',
+    marginVertical: 10,
+  },
+  functionBtnTxt: {
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center',
+  },
+  addBtnTxt: {
+    fontSize: 18,
+    color: '#fff',
+  },
+  addWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addBtn: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: 'red',
+    marginHorizontal: 10,
+  },
+  input: {
+    width: '90%',
+    height: 40,
+    margin: 12,
+    borderWidth: 1,
+    padding: 10,
+  },
+  taskDeleteTxtStyle: {
+    color: '#fff',
+  },
+  taskDeleteStyle: {
+    backgroundColor: 'red',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    marginHorizontal: 5,
+  },
+  taskUpdateTxtStyle: {
+    color: '#000',
+  },
+  taskUpdateStyle: {
+    backgroundColor: 'yellow',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    marginHorizontal: 5,
+  },
+  taskName: {
+    color: '#fff',
+  },
+  taskStyle: {
+    backgroundColor: '#430996',
+    marginVertical: 10,
+    flexDirection: 'row',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    justifyContent: 'space-between',
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 20,
+    // justifyContent: 'center',
+    // alignItems: 'center',
+  },
+});
