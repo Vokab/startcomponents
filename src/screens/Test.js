@@ -17,10 +17,12 @@ import {useCallback} from 'react';
 import {getAllTheWords} from '../redux/Words/words.actions';
 import RNFetchBlob from 'rn-fetch-blob';
 import {User} from '../realm/models/User';
+import {Loop} from '../realm/models/Loop';
 
 const {useQuery, useRealm} = RealmContext;
 const Test = () => {
   const realm = useRealm();
+  const loop = useQuery(Loop);
   const [myTasks, setMyTasks] = useState([]);
   const [text, onChangeText] = React.useState('');
   const [loading, setLoading] = useState(false);
@@ -180,9 +182,26 @@ const Test = () => {
       console.error('Failed to create the loop', err.message);
     }
   };
+  const resetDefaultRoadAndStep = async () => {
+    try {
+      realm.write(() => {
+        loop[0].defaultWordsBagRoad = [];
+        loop[0].isDefaultDiscover = 0;
+      });
+    } catch (err) {
+      console.error('Failed to reset the default road and step', err.message);
+    }
+  };
   return (
     <ScrollView style={styles.container}>
       <View style={styles.addWrapper}>
+        <TouchableOpacity
+          style={styles.functionBtn}
+          onPress={() => {
+            resetDefaultRoadAndStep();
+          }}>
+          <Text style={styles.functionBtnTxt}>Reset Default Road and Step</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.functionBtn}
           onPress={() => {

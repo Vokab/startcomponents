@@ -9,6 +9,7 @@ import React, {useState, useEffect} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {
   clearDefaultRoadRedux,
+  constructDef,
   constructDefaultBagRoad,
   continueDefaultBagRoad,
   resetLoopState,
@@ -22,157 +23,169 @@ import userTypes from '../redux/User/user.types';
 import MissedChar from '../components/loopComponents/missedChar';
 import FindIt from '../components/loopComponents/findit';
 import {addThisBagToDaysBags} from '../redux/User/user.actions';
+import {RealmContext} from '../realm/models';
+import {User} from '../realm/models/User';
+import {Word} from '../realm/models/Word';
+import {Loop} from '../realm/models/Loop';
+import loopReduxTypes from '../redux/LoopRedux/loopRedux.types';
 
-const mapState = ({user, words, loop}) => ({
-  isReady: loop.isReady,
-  loopStep: loop.loopStep,
-  loopRoad: loop.loopRoad,
+const {useQuery, useObject, useRealm} = RealmContext;
+const mapState = ({user, loopRedux, loop}) => ({
+  isReady: loopRedux.isReady,
+  loopStep: loopRedux.loopStep,
+  loopRoad: loopRedux.loopRoad,
+  loopId: loopRedux.loopRoad,
 
-  defaultWordsBag: user.defaultWordsBag,
-  customWordsBag: user.customWordsBag,
-  reviewWordsBag: user.reviewWordsBag,
-
-  defaultWordsBagRoad: loop.defaultWordsBagRoad,
-  customWordsBagRoad: loop.customWordsBagRoad,
-  reviewWordsBagRoad: loop.reviewWordsBagRoad,
-
-  stepOfDefaultWordsBag: user.stepOfDefaultWordsBag,
   stepOfCustomWordsBag: user.stepOfCustomWordsBag,
-  stepOfReviewWordsBag: user.stepOfReviewWordsBag,
-
-  isDefaultDiscover: user.isDefaultDiscover,
-
-  daysBags: user.daysBags,
-  currentWeek: user.currentWeek,
-  currentDay: user.currentDay,
 });
 
-const Loop = ({route, navigation}) => {
+const LoopManager = ({route, navigation}) => {
+  const realm = useRealm();
+  const user = useQuery(User);
+  const loop = useQuery(Loop);
+  const words = useQuery(Word);
+
+  let defaultWordsBag = loop[0].defaultWordsBag;
+  let defaultWordsBagRoad = loop[0].defaultWordsBagRoad;
+  let stepOfDefaultWordsBag = loop[0].stepOfDefaultWordsBag;
+  let isDefaultDiscover = loop[0].isDefaultDiscover;
+
   const {idType} = route.params;
-  const {
-    isReady,
-    loopStep,
-    loopRoad,
-
-    defaultWordsBag,
-    customWordsBag,
-    reviewWordsBag,
-    defaultWordsBagRoad,
-    customWordsBagRoad,
-    reviewWordsBagRoad,
-    stepOfDefaultWordsBag,
-    stepOfCustomWordsBag,
-    stepOfReviewWordsBag,
-
-    isDefaultDiscover,
-    currentWeek,
-    currentDay,
-    daysBags,
-  } = useSelector(mapState);
+  const {isReady, loopStep, loopRoad, loopId, stepOfCustomWordsBag} =
+    useSelector(mapState);
   const dispatch = useDispatch();
 
+  const buildLoopRoad = async (roadArray, step) => {
+    dispatch({
+      type: loopReduxTypes.SET_LOOP_ROAD,
+      payload: roadArray,
+      thisLoopId: 0,
+    });
+    dispatch({
+      type: loopReduxTypes.SET_LOOP_STEP,
+      payload: step,
+    });
+    dispatch({
+      type: loopReduxTypes.UPDATE_LOOP_STATE,
+    });
+  };
   useEffect(() => {
-    // console.log('idType =>', idType);
-    // console.log('defaultWordsBag =>', defaultWordsBag);
-    // console.log('stepOfDefaultWordsBag =>', stepOfDefaultWordsBag);
     if (idType === 0) {
       if (stepOfDefaultWordsBag === 0) {
         // we started now and we dont see those words before
         // here we need to add this words bag to the daysBags array
-
-        if (isDefaultDiscover === 0) {
-          // console.log(
-          //   '      // here we need to add this words bag to the daysBags array',
-          // );
-          dispatch(
-            addThisBagToDaysBags(
-              daysBags,
-              defaultWordsBag,
-              currentDay,
-              currentWeek,
-            ),
-          );
-        }
-
-        // console.log(
-        //   'Hello From constructDefaultBagRoad',
-        //   stepOfDefaultWordsBag,
+        // if (isDefaultDiscover === 0) {
+        //   dispatch(
+        //     addThisBagToDaysBags(
+        //       daysBags,
+        //       defaultWordsBag,
+        //       currentDay,
+        //       currentWeek,
+        //     ),
+        //   );
+        // }
+        //--------------------------------------------
+        // dispatch(
+        //   constructDefaultBagRoad(
+        //     defaultWordsBag,
+        //     stepOfDefaultWordsBag,
+        //     isDefaultDiscover,
+        //   ),
         // );
-        dispatch(
-          constructDefaultBagRoad(
-            defaultWordsBag,
-            stepOfDefaultWordsBag,
-            isDefaultDiscover,
-          ),
-        );
-      } else {
-        // we continue what we already started
-        // console.log('Hello From Continue', defaultWordsBagRoad);
-        // dispatch({
-        //   type: userTypes.RESET_DEFAULT_STEP,
-        // });
-        dispatch(
-          continueDefaultBagRoad(
-            defaultWordsBag,
-            stepOfDefaultWordsBag,
+        updateDefaultRoad().then(() => {
+          const arr = [];
+          console.log(
+            'default Words Bag Road as Strings =>',
             defaultWordsBagRoad,
-          ),
-        );
+          );
+          // const myObjFromJson = JSON.parse(defaultWordsBagRoad);
+          defaultWordsBagRoad.forEach(item => {
+            arr.push(JSON.parse(item));
+          });
+          console.log('default Words Bag Road as Objects', arr);
+          buildLoopRoad(arr, 0).then(() => {
+            console.log('isReady =>', isReady);
+            console.log('loopStep =>', loopStep);
+            console.log('loopRoad =>', loopRoad);
+          });
+        });
+      } else {
+        // we continue what we already started.
+        //--------------------------------------------
+        // dispatch(
+        //   continueDefaultBagRoad(
+        //     defaultWordsBag,
+        //     stepOfDefaultWordsBag,
+        //     defaultWordsBagRoad,
+        //   ),
+        // );
+        const arr = [];
+        defaultWordsBagRoad.forEach(item => {
+          arr.push(JSON.parse(item));
+        });
+        console.log('default Words Bag Road as Objects', arr);
+        buildLoopRoad(arr, stepOfDefaultWordsBag);
       }
-
-      //   console.log(
-      //     'defaultWordsBagRoad =>',
-      //     defaultWordsBagRoad[loopStep].screen,
-      //     'loopStep =>',
-      //     loopStep,
-      //   );
     } else if (idType === 1 && stepOfCustomWordsBag === 0) {
       // We need to construct the custom words bag road
-    } else if (idType === 2) {
-      if (stepOfReviewWordsBag === 0) {
-        // We need to construct the Review words bag road
-      } else {
-        // we continue what we already started in review bag
-      }
-    } else if (idType === 3) {
-      // We need to build the daily test road
-    } else if (idType === 4) {
-      // We need to build the weekly test road
     }
+    //  else if (idType === 2) {
+    //   if (stepOfReviewWordsBag === 0) {
+    //     // We need to construct the Review words bag road
+    //   } else {
+    //     // we continue what we already started in review bag
+    //   }
+    // } else if (idType === 3) {
+    //   // We need to build the daily test road
+    // } else if (idType === 4) {
+    //   // We need to build the weekly test road
+    // }
   }, []);
 
-  useEffect(() => {
-    // console.log('loop Step =>', loopStep);
-    // console.log('default Step =>', stepOfDefaultWordsBag);
-  }, [stepOfDefaultWordsBag]);
+  const updateDefaultRoad = async () => {
+    try {
+      const road = await constructDef(defaultWordsBag, isDefaultDiscover);
+      realm.write(() => {
+        loop[0].defaultWordsBagRoad = road;
+      });
+    } catch (error) {
+      console.log('error in updating Default Road =>', error);
+    }
+  };
+  const deleteOldRoad = async () => {
+    realm.write(() => {
+      // Delete all instances of Cat from the realm.
 
-  useEffect(() => {
-    // console.log('Default Road *-**--- =>', defaultWordsBagRoad);
-  }, [defaultWordsBagRoad]);
+      loop[0].defaultWordsBagRoad = [];
+    });
+  };
+
+  // useEffect(() => {
+  //   const arr = [];
+  //   console.log('default Words Bag Road as Strings =>', defaultWordsBagRoad);
+  //   // const myObjFromJson = JSON.parse(defaultWordsBagRoad);
+  //   defaultWordsBagRoad.forEach(item => {
+  //     arr.push(JSON.parse(item));
+  //   });
+  //   console.log('default Words Bag Road as Objects', arr);
+
+  //   if (defaultWordsBagRoad.length === 0) {
+  //     updateDefaultRoad();
+  //   }
+  //   // if (defaultWordsBagRoad.length != 0) {
+  //   //   console.log('yes we will deltete it now');
+  //   //   deleteOldRoad();
+  //   // }
+  // }, [defaultWordsBagRoad]);
 
   const clearDefaultRoad = () => {
     console.log('clearDefaultRoad start');
-    dispatch(clearDefaultRoadRedux());
-  };
-  const resetStateOfLoop = () => {
-    console.log('clearDefaultRoad start');
-    dispatch(resetLoopState());
-  };
-  //   useEffect(() => {
-  //     if (loopStep === loopRoad.length) {
-  //       navigation.navigate('Home');
-  //     }
-  //   }, [loopStep]);
-  const resetLoopStep = async () => {
-    console.log('resetLoopStep start');
-    dispatch(resetLoopStepRedux());
   };
 
   return (
     <View style={styles.container}>
       {isReady ? (
         <View>
-          {/* {loopStep <= defaultWordsBagRoad.length ? {renderSwitch()} : null} */}
           {(() => {
             if (loopStep < loopRoad.length) {
               // console.log('loopStep =>', loopStep);
@@ -181,28 +194,28 @@ const Loop = ({route, navigation}) => {
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
-                      <Discover />
+                      <Discover loopType={idType} />
                     </View>
                   );
                 case 1:
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
-                      <Cards />
+                      <Cards loopType={idType} />
                     </View>
                   );
                 case 3:
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
-                      <MissedChar />
+                      <MissedChar loopType={idType} />
                     </View>
                   );
                 case 4:
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
-                      <FindIt />
+                      <FindIt loopType={idType} />
                     </View>
                   );
                 default:
@@ -214,15 +227,6 @@ const Loop = ({route, navigation}) => {
               }
             }
           })()}
-
-          {/* <Text>Yes We Are Good To Go</Text>
-          <TouchableOpacity
-            style={styles.clearBtn}
-            onPress={() => {
-              resetStateOfLoop();
-            }}>
-            <Text style={styles.clearBtnTxt}>CLEAR</Text>
-          </TouchableOpacity> */}
         </View>
       ) : (
         <View>
@@ -242,7 +246,7 @@ const Loop = ({route, navigation}) => {
   );
 };
 
-export default Loop;
+export default LoopManager;
 
 const styles = StyleSheet.create({
   clearBtn: {

@@ -53,11 +53,11 @@ const Home = () => {
   useEffect(() => {
     // console.log('todayWork wordsBag =>', defaultWordsBag);
     if (loop[0].defaultWordsBag.length === 0) {
-      console.log('we dont have YET', loop[0].defaultWordsBag);
+      // console.log('we dont have YET', loop[0].defaultWordsBag);
       addDefaultWordsBag();
       // dispatch(todayWork(allWords, currentWord));
     } else {
-      console.log('we already have something', loop[0].defaultWordsBag);
+      // console.log('we already have something', loop[0].defaultWordsBag);
     }
   }, [loop]);
   useEffect(() => {

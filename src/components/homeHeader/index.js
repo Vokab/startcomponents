@@ -13,7 +13,7 @@ const HomeHeader = () => {
 
   const user = useQuery(User);
   useEffect(() => {
-    console.log('usersList from HomeHeader =>', user);
+    // console.log('usersList from HomeHeader =>', user);
   }, [user]);
 
   return (

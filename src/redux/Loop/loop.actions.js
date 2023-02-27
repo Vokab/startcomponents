@@ -1,33 +1,48 @@
 import loopTypes from './loop.types';
 import userTypes from '../User/user.types';
 
+import {TaskV4} from '../../realm/models/Task';
+import {Word} from '../../realm/models/Word';
+import {User} from '../../realm/models/User';
+import {Loop, Road} from '../../realm/models/Loop';
+
 export const loopFunct = () => async dispatch => {
   console.log('loopFunct start');
 };
 
-const constructDef = async (defaultWordsBag, isDefaultDiscover) => {
+export const constructDef = async (defaultWordsBag, isDefaultDiscover) => {
+  // const realm = await Realm.open({
+  //   schema: [TaskV4, Word, User, Loop, Road],
+  //   schemaVersion: 13,
+  // });
   let screens = [];
   if (isDefaultDiscover === 0) {
     screens = [0, 1];
   } else {
     screens = [3, 4];
+    // screens = [0, 1];
   }
-
   const roadArray = [];
 
   defaultWordsBag.forEach(item => {
-    // console.log('this item =>', item);
     screens.forEach(screenItem => {
+      // roadItem = realm.create('Road', {
+      //   _id: `${item._id + screenItem}${Date.now()}`,
+      //   screen: screenItem,
+      //   wordObj: item,
+      // });
       let newObj = {};
-      // console.log('this screenItem =>', screenItem);
       newObj.wordObj = item;
       newObj.screen = screenItem;
-      roadArray.push(newObj);
+      newObj.string;
+      const myJSON_Object = JSON.stringify(newObj);
+      roadArray.push(myJSON_Object);
     });
-    // console.log('roadArray =>', roadArray);
   });
+
   return roadArray;
 };
+
 function sleep(ms) {
   console.log('sleep start');
   return new Promise(resolve => setTimeout(resolve, ms));

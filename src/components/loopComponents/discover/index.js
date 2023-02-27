@@ -14,13 +14,23 @@ import {
   goNextRedux,
   resetLoopStepRedux,
 } from '../../../redux/Loop/loop.actions';
+import {RealmContext} from '../../../realm/models';
+import {Loop} from '../../../realm/models/Loop';
+import {Word} from '../../../realm/models/Word';
+import {User} from '../../../realm/models/User';
+import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
 
-const mapState = ({user, words, loop}) => ({
-  loopStep: loop.loopStep,
-  loopRoad: loop.loopRoad,
+const {useQuery, useObject, useRealm} = RealmContext;
+
+const mapState = ({loopRedux}) => ({
+  loopStep: loopRedux.loopStep,
+  loopRoad: loopRedux.loopRoad,
 });
 
-const Discover = () => {
+const Discover = props => {
+  const realm = useRealm();
+  const loop = useQuery(Loop);
+  const {loopType} = props;
   const {loopStep, loopRoad} = useSelector(mapState);
   const dispatch = useDispatch();
   var wordSpellVariable = '';
@@ -54,17 +64,37 @@ const Discover = () => {
     backgroundColor: darkMode ? COLORS_THEME.bgWhite : COLORS_THEME.bgDark,
   };
   const color = darkMode ? COLORS_THEME.textWhite : COLORS_THEME.textDark;
-  const resetLoopStep = async () => {
-    console.log('resetLoopStep start');
-    dispatch(resetLoopStepRedux());
-  };
 
+  const loopExit = async () => {
+    // reset loopRedux Step
+    // reset loopRedux Road
+    // reset loopRedux isReady
+    dispatch({
+      type: loopReduxTypes.RESET_LOOP,
+    });
+    if (loopType === 0) {
+      // update default wordsBag road in the real DB
+      realm.write(() => {
+        loop[0].stepOfDefaultWordsBag = 0;
+      });
+    }
+  };
   const gotoNext = () => {
     console.log('gotNext start');
     if (loopStep < loopRoad.length) {
-      dispatch(goNextRedux(loopStep));
+      // update loopRedux Step
+      dispatch({
+        type: loopReduxTypes.SET_LOOP_STEP,
+        payload: loopStep + 1,
+      });
+      if (loopType === 0) {
+        // update default wordsBag step in the real DB
+        realm.write(() => {
+          loop[0].stepOfDefaultWordsBag = loop[0].stepOfDefaultWordsBag + 1;
+        });
+      }
     } else {
-      resetLoopStep().then(navigation.navigate('Home'));
+      loopExit().then(navigation.navigate('Home'));
     }
   };
 

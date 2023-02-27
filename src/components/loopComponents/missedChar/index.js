@@ -22,19 +22,24 @@ import {
   resetLoopStepRedux,
   updateLoopRoad,
 } from '../../../redux/Loop/loop.actions';
+import {RealmContext} from '../../../realm/models';
+import {Loop} from '../../../realm/models/Loop';
+import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
 
-const mapState = ({user, words, loop}) => ({
-  loopStep: loop.loopStep,
-  loopRoad: loop.loopRoad,
-  loopId: loop.loopId,
-  isDefaultDiscover: user.isDefaultDiscover,
-  isCustomDiscover: user.isCustomDiscover,
+const {useQuery, useObject, useRealm} = RealmContext;
+const mapState = ({loopRedux}) => ({
+  loopStep: loopRedux.loopStep,
+  loopRoad: loopRedux.loopRoad,
 });
 
-const MissedChar = () => {
+const MissedChar = props => {
+  const realm = useRealm();
+  const loop = useQuery(Loop);
+  let isDefaultDiscover = loop[0].isDefaultDiscover;
+  let isCustomDiscover = loop[0].isCustomDiscover;
+  const {loopType} = props;
   const navigation = useNavigation();
-  const {loopStep, loopRoad, loopId, isDefaultDiscover, isCustomDiscover} =
-    useSelector(mapState);
+  const {loopStep, loopRoad} = useSelector(mapState);
   const dispatch = useDispatch();
 
   const [darkMode, setDarkMode] = useState(true);
@@ -144,32 +149,88 @@ const MissedChar = () => {
       Alert.alert('Correct Answer');
     } else {
       Alert.alert('Wrong Answer -- Correct answer is ', word);
-      if (loopId != 3 && loopId != 4) {
-        dispatch(updateLoopRoad(loopRoad, loopStep, loopId));
+      if (loopType != 3 && loopType != 4) {
+        updateLoopRoad();
       }
     }
     setIsChecked(true);
   };
 
-  const resetLoopStep = async () => {
-    console.log('resetLoopStep start');
-    dispatch(resetLoopStepRedux());
+  const updateLoopRoad = () => {
+    // update redux Loop Road
+    loopRoad.push(loopRoad[loopStep]);
+    dispatch({
+      type: loopReduxTypes.UPDATE_LOOP_ROAD,
+      payload: loopRoad,
+    });
+    // update the right road if its default custom or review
+    const newRoad = [];
+    loopRoad.forEach(item => {
+      const myJSON_Object = JSON.stringify(item);
+      newRoad.push(myJSON_Object);
+    });
+
+    if (loopType === 0) {
+      // it means discover
+      realm.write(() => {
+        loop[0].defaultWordsBagRoad = newRoad;
+      });
+    } else if (loopType === 1) {
+      // it means Practice
+      realm.write(() => {
+        loop[0].customWordsBagRoad = newRoad;
+      });
+    } else if (loopType === 2) {
+      // it means Master
+      realm.write(() => {
+        loop[0].reviewWordsBagRoad = newRoad;
+      });
+    }
+  };
+
+  const loopExit = async () => {
+    // reset loopRedux Step
+    // reset loopRedux Road
+    // reset loopRedux isReady
+    dispatch({
+      type: loopReduxTypes.RESET_LOOP,
+    });
+    if (loopType === 0) {
+      // update default wordsBag road in the real DB
+      realm.write(() => {
+        loop[0].stepOfDefaultWordsBag = 0;
+      });
+    }
   };
 
   const goToNext = () => {
     console.log('goToNext start');
     setIsChecked(false);
     if (loopStep < loopRoad.length - 1) {
-      dispatch(goNextRedux(loopStep));
+      dispatch({
+        type: loopReduxTypes.SET_LOOP_STEP,
+        payload: loopStep + 1,
+      });
+      if (loopType === 0) {
+        // update default wordsBag step in the real DB
+        realm.write(() => {
+          loop[0].stepOfDefaultWordsBag = loop[0].stepOfDefaultWordsBag + 1;
+        });
+      }
     } else {
       // if custom or default words bag we need to update the isDefaultDiscover variable by add 1
       // console.log('loopStep =>', loopStep);
-      if (loopId === 0 && isDefaultDiscover < 3) {
-        dispatch(finishLoop(loopId));
-      } else if (loopId === 1 && isCustomDiscover < 3) {
-        dispatch(finishLoop(loopId));
+      if (loopType === 0 && isDefaultDiscover < 3) {
+        // add 1 to isDefaultDiscover in the realm DB
+        realm.write(() => {
+          loop[0].isDefaultDiscover = loop[0].isDefaultDiscover + 1;
+        });
+      } else if (loopType === 1 && isCustomDiscover < 3) {
+        realm.write(() => {
+          loop[0].isCustomDiscover = loop[0].isCustomDiscover + 1;
+        });
       }
-      resetLoopStep().then(navigation.navigate('Home'));
+      loopExit().then(navigation.navigate('Home'));
     }
   };
 
