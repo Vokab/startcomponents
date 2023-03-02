@@ -163,6 +163,21 @@ const Review = () => {
       .catch(err => {});
   }
 
+  const sortArray = () => {
+    const passedWords = [
+      {wordId: 0, score: 100, viewNbr: 1},
+      {wordId: 1, score: 100, viewNbr: 1},
+      {wordId: 2, score: 98, viewNbr: 1},
+      {wordId: 3, score: 99, viewNbr: 1},
+      {wordId: 4, score: 100, viewNbr: 1},
+      {wordId: 5, score: 100, viewNbr: 1},
+    ];
+    console.log('passedWords before sorting =>', passedWords);
+    passedWords.sort(function (a, b) {
+      return a.score - b.score || a.viewNbr - b.viewNbr;
+    });
+    console.log('passedWords After sorting ++ =>', passedWords);
+  };
   function renderItem({item, index}) {
     return (
       <Image
@@ -184,6 +199,19 @@ const Review = () => {
       style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
       <View
         style={{flex: 4, alignItems: 'center', justifyContent: 'space-around'}}>
+        <TouchableOpacity
+          onPress={sortArray}
+          style={{
+            height: 45,
+            width: 150,
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: 'black',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+          <Text>Sort Array</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           onPress={handleGetFileList}
           style={{

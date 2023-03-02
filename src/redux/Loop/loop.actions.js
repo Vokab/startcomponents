@@ -11,32 +11,55 @@ export const loopFunct = () => async dispatch => {
 };
 
 export const constructDef = async (defaultWordsBag, isDefaultDiscover) => {
-  // const realm = await Realm.open({
-  //   schema: [TaskV4, Word, User, Loop, Road],
-  //   schemaVersion: 13,
-  // });
   let screens = [];
   if (isDefaultDiscover === 0) {
     screens = [0, 1];
   } else {
     screens = [3, 4];
-    // screens = [0, 1];
   }
   const roadArray = [];
 
   defaultWordsBag.forEach(item => {
     screens.forEach(screenItem => {
-      // roadItem = realm.create('Road', {
-      //   _id: `${item._id + screenItem}${Date.now()}`,
-      //   screen: screenItem,
-      //   wordObj: item,
-      // });
       let newObj = {};
       newObj.wordObj = item;
       newObj.screen = screenItem;
       newObj.string;
       const myJSON_Object = JSON.stringify(newObj);
       roadArray.push(myJSON_Object);
+    });
+  });
+
+  return roadArray;
+};
+
+export const constructReview = async reviewWordsBag => {
+  let screens = [3, 4];
+  const roadArray = [];
+  reviewWordsBag.forEach(item => {
+    screens.forEach(screenItem => {
+      let newObj = {};
+      newObj.wordObj = item;
+      newObj.screen = screenItem;
+      newObj.string;
+      const myJSON_Object = JSON.stringify(newObj);
+      roadArray.push(myJSON_Object);
+    });
+  });
+
+  return roadArray;
+};
+
+export const constructReadyReview = async reviewWordsBag => {
+  let screens = [1, 3];
+  const roadArray = [];
+  reviewWordsBag.forEach(item => {
+    screens.forEach(screenItem => {
+      let newObj = {};
+      newObj.wordObj = item;
+      newObj.screen = screenItem;
+      newObj.string;
+      roadArray.push(newObj);
     });
   });
 

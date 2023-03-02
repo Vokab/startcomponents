@@ -15,89 +15,97 @@ import ReviewWordComp from '../components/screensComponents/reviewWord';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useDispatch, useSelector} from 'react-redux';
+import {RealmContext} from '../realm/models';
+import {DaysBags} from '../realm/models/DaysBags';
+import {Word} from '../realm/models/Word';
+import {Loop} from '../realm/models/Loop';
+import {useNavigation} from '@react-navigation/native';
+import loopReduxTypes from '../redux/LoopRedux/loopRedux.types';
 
-const mapState = ({user, words}) => ({
-  userId: user.userId,
-  userNativeLang: user.userNativeLang,
-  userLearnedLang: user.userLearnedLang,
-  userLevel: user.userLevel,
-  currentWeek: user.currentWeek,
-  currentDay: user.currentDay,
-  stepOfDefaultWordsBag: user.stepOfDefaultWordsBag,
-  defaultWordsBag: user.defaultWordsBag,
-  allWords: words.words,
-  wordsLoading: words.wordsLoading,
-  audioLoading: words.audioLoading,
-  daysBags: user.daysBags,
-  currentWeek: user.currentWeek,
-  currentDay: user.currentDay,
+const {useQuery, useObject, useRealm} = RealmContext;
+const mapState = ({loopRedux}) => ({
+  reviewBagArray: loopRedux.reviewBagArray,
+  isReady: loopRedux.isReady,
 });
 
 const Profile = () => {
-  const {
-    userId,
-    userNativeLang,
-    userLearnedLang,
-    userLevel,
-    currentWeek,
-    currentDay,
-    daysBags,
-    stepOfDefaultWordsBag,
-    defaultWordsBag,
-    allWords,
-    wordsLoading,
-    audioLoading,
-  } = useSelector(mapState);
-
+  const realm = useRealm();
+  const words = useQuery(Word);
+  const loop = useQuery(Loop);
+  //
+  const {reviewBagArray, isReady} = useSelector(mapState);
   const dispatch = useDispatch();
+  let reviewWordsBag = loop[0].reviewWordsBag;
+  let reviewWordsBagRoad = loop[0].reviewWordsBagRoad;
+  let stepOfReviewWordsBag = loop[0].stepOfReviewWordsBag;
+  // const reviewWordsBagRoadValidArr = JSON.parse(loop[0].reviewWordsBagRoad);
+  const [validArr, setValidArr] = useState([]);
+  const navigation = useNavigation();
+  const myDaysBags = useQuery(DaysBags);
+  // const [reviewBagArray, setReviewBagArray] = useState([]);
 
-  const [items, setItems] = useState([]);
-  const arr = [];
-  const buildBags = () => {
-    for (let i = 0; i < daysBags.length; i++) {
-      arr.push(
-        <View key={i} style={[styles.reviewBagsContainer]}>
-          <View style={styles.leftLine}></View>
-          <View style={{width: '100%'}}>
-            <View style={styles.reviewBagHeader}>
-              <View style={styles.bagTitle}>
-                <Text style={styles.bagTitleTxt}>Bag {i}</Text>
-              </View>
-              <View style={styles.bagActions}>
-                <View style={styles.btnActionWrapper}>
-                  <TouchableOpacity style={styles.reviewBtnStyle}>
-                    <Text style={styles.reviewBtnStyleTxt}>Review</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.closeBagStyle}>
-                    <MaterialIcons name="expand-more" size={28} color="#fff" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.reviewWordsContainer}>
-              <ReviewWordComp word={'candlelight'} />
-              <ReviewWordComp word={'eagle'} />
-              <ReviewWordComp word={'bell'} />
-              <ReviewWordComp word={'victory'} />
-              <ReviewWordComp word={'candlelight'} />
-              <ReviewWordComp word={'eagle'} />
-              <ReviewWordComp word={'bell'} />
-              <ReviewWordComp word={'victory'} />
-              <ReviewWordComp word={'candlelight'} />
-              <ReviewWordComp word={'eagle'} />
-              <ReviewWordComp word={'bell'} />
-              <ReviewWordComp word={'victory'} />
-            </View>
-          </View>
-        </View>,
-      );
-    }
-    setItems(arr);
+  const buildValidArray = () => {
+    const arr = [];
+    reviewWordsBagRoad.forEach(item => {
+      arr.push(JSON.parse(item).wordObj);
+    });
+    console.log('validArray', arr);
+    setValidArr(arr);
   };
   useEffect(() => {
-    // console.log('Our review content =>', daysBags[0]);
-    buildBags();
+    // buildValidArray();
+    // console.log('reviewWordsBagRoad.length >', reviewWordsBagRoad.length);
+  }, []);
+
+  const removeWordFromReviewArray = item => {
+    const indexOfItem = reviewBagArray.indexOf(item);
+    console.log('The indexOfItem is :', indexOfItem);
+    let oldArray = reviewBagArray;
+    const removedItem = oldArray.splice(indexOfItem, 1);
+    console.log('oldArray =>', oldArray);
+    dispatch({
+      type: loopReduxTypes.REMOVE_FROM_REVIEW_BAG_ARRAY,
+      payload: [...oldArray],
+    });
+  };
+  const updateReviewWordsBag = async () => {
+    realm.write(() => {
+      loop[0].reviewWordsBag = reviewBagArray;
+    });
+  };
+  const goToLoop = () => {
+    console.log('goToLoop ===');
+    navigation.navigate('Loop', {
+      idType: 2,
+    });
+  };
+  const reviewReadyBag = words => {
+    console.log('goToLoop from reviewReadyBag');
+    navigation.navigate('Loop', {
+      idType: 5,
+      readyReviewBag: words,
+    });
+  };
+  const affichReviewBagContent = array => {
+    console.log('array from affichReviewBagContent =>', array);
+    array.map((item, index) => {
+      return (
+        <View key={index} style={styles.wordInBagBox}>
+          <Text style={styles.wordInBagTxt}>{item.wordLearnedLang}</Text>
+          <TouchableOpacity
+            style={styles.removeWord}
+            disabled={reviewWordsBagRoad.length > 0}
+            onPress={() => {
+              removeWordFromReviewArray(item);
+            }}>
+            <Ionicons name="ios-close-circle" size={20} color="#000" />
+          </TouchableOpacity>
+        </View>
+      );
+    });
+  };
+  useEffect(() => {
+    console.log('isReady now is =>', isReady);
   }, []);
 
   return (
@@ -109,26 +117,88 @@ const Profile = () => {
         <View style={styles.bagContainer}>
           <View style={styles.bagContent}>
             <HintHeader
-              text={'Add at least 6 words to start your review bag'}
+              text={
+                reviewWordsBagRoad.length > 0
+                  ? 'You are reviewing those words'
+                  : 'Add at least 6 words to start your review bag'
+              }
             />
-            {/* <View style={styles.wordInBagBox}>
-              <Text style={styles.wordInBagTxt}>eagle</Text>
-              <TouchableOpacity style={styles.removeWord}>
-                <Ionicons name="ios-close-circle" size={24} color="#000" />
-              </TouchableOpacity>
-            </View> */}
+            {reviewWordsBagRoad.length !== 0
+              ? reviewWordsBag.map((item, index) => {
+                  console.log('here is reviewBagArray');
+                  return (
+                    <View key={index} style={styles.wordInBagBox}>
+                      <Text style={styles.wordInBagTxt}>
+                        {item.wordLearnedLang}
+                      </Text>
+
+                      {/* <TouchableOpacity
+                        style={styles.removeWord}
+                        disabled={reviewWordsBagRoad.length > 0}
+                        onPress={() => {
+                          removeWordFromReviewArray(item);
+                        }}>
+                        <Ionicons
+                          name="ios-close-circle"
+                          size={20}
+                          color="#000"
+                        />
+                      </TouchableOpacity> */}
+                    </View>
+                  );
+                })
+              : reviewBagArray.map((item, index) => {
+                  console.log('here is validArr');
+                  return (
+                    <View key={index} style={styles.wordInBagBox}>
+                      <Text style={styles.wordInBagTxt}>
+                        {item.wordLearnedLang}
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.removeWord}
+                        disabled={reviewWordsBagRoad.length > 0}
+                        onPress={() => {
+                          removeWordFromReviewArray(item);
+                        }}>
+                        <Ionicons
+                          name="ios-close-circle"
+                          size={20}
+                          color="#000"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
           </View>
         </View>
         <View style={styles.btnWrapper}>
-          <TouchableOpacity style={styles.goBtnStyle}>
-            <Text style={styles.goBtnStyleTxt}>Start</Text>
+          <TouchableOpacity
+            style={[
+              styles.goBtnStyle,
+              {
+                backgroundColor:
+                  reviewWordsBagRoad.length === 0 && reviewBagArray.length === 0
+                    ? '#FF4C0040'
+                    : '#FF4C00',
+              },
+            ]}
+            disabled={
+              reviewWordsBagRoad.length === 0 && reviewBagArray.length === 0
+            }
+            onPress={() => {
+              goToLoop();
+            }}>
+            <Text style={styles.goBtnStyleTxt}>
+              {loop[0].reviewWordsBagRoad.length === 0 ? 'Start' : 'Continue'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
 
       <ScrollView>
         {/* {items} */}
-        {daysBags.map((bag, index) => {
+        {myDaysBags.map((bag, index) => {
+          let words = JSON.parse(bag.words);
           return (
             <View key={index} style={[styles.reviewBagsContainer]}>
               <View style={styles.leftLine}></View>
@@ -139,7 +209,11 @@ const Profile = () => {
                   </View>
                   <View style={styles.bagActions}>
                     <View style={styles.btnActionWrapper}>
-                      <TouchableOpacity style={styles.reviewBtnStyle}>
+                      <TouchableOpacity
+                        style={styles.reviewBtnStyle}
+                        onPress={() => {
+                          reviewReadyBag(words);
+                        }}>
                         <Text style={styles.reviewBtnStyleTxt}>Review</Text>
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.closeBagStyle}>
@@ -153,7 +227,7 @@ const Profile = () => {
                   </View>
                 </View>
                 <View style={styles.reviewWordsContainer}>
-                  {bag.words.map((item, index) => {
+                  {words.map((item, index) => {
                     return (
                       <ReviewWordComp
                         key={index}
@@ -181,8 +255,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   wordInBagTxt: {
-    fontSize: 18,
-    fontFamily: FONTS.enFontFamilyMedium,
+    fontSize: 16,
+    fontFamily: FONTS.enFontFamilyRegular,
     color: '#1D1E37',
   },
   removeWord: {
@@ -286,7 +360,7 @@ const styles = StyleSheet.create({
   bagContainer: {
     width: '94%',
     marginHorizontal: '3%',
-    height: 120,
+    minHeight: 120,
     marginVertical: 15,
     backgroundColor: '#1D1E37',
     borderRadius: 10,

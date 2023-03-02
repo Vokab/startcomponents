@@ -18,11 +18,15 @@ import {getAllTheWords} from '../redux/Words/words.actions';
 import RNFetchBlob from 'rn-fetch-blob';
 import {User} from '../realm/models/User';
 import {Loop} from '../realm/models/Loop';
+import {DaysBags} from '../realm/models/DaysBags';
+import {PassedWords} from '../realm/models/PassedWords';
 
 const {useQuery, useRealm} = RealmContext;
 const Test = () => {
   const realm = useRealm();
   const loop = useQuery(Loop);
+  const daysBags = useQuery(DaysBags);
+  const passedWords = useQuery(PassedWords);
   const [myTasks, setMyTasks] = useState([]);
   const [text, onChangeText] = React.useState('');
   const [loading, setLoading] = useState(false);
@@ -187,14 +191,71 @@ const Test = () => {
       realm.write(() => {
         loop[0].defaultWordsBagRoad = [];
         loop[0].isDefaultDiscover = 0;
+        loop[0].stepOfDefaultWordsBag = 0;
       });
+      // console.log(
+      //   'defaultWordsBagRoad length =>',
+      //   loop[0].defaultWordsBagRoad.length,
+      // );
     } catch (err) {
       console.error('Failed to reset the default road and step', err.message);
     }
   };
+  const showDaysBagsContent = async () => {
+    daysBags.forEach(item => {
+      console.log('new DayBag =>', item);
+    });
+  };
+  const showPassedWordsContent = async () => {
+    passedWords.forEach(item => {
+      console.log('new passedWords =>', item);
+    });
+  };
+
+  const resetDaysBags = async () => {
+    realm.write(() => {
+      // Delete all instances of Cat from the realm.
+      realm.delete(realm.objects('DaysBags'));
+    });
+  };
+  const resetPassedWords = async () => {
+    realm.write(() => {
+      // Delete all instances of Cat from the realm.
+      realm.delete(realm.objects('PassedWords'));
+    });
+  };
   return (
     <ScrollView style={styles.container}>
       <View style={styles.addWrapper}>
+        <TouchableOpacity
+          style={[styles.functionBtn, {backgroundColor: 'red'}]}
+          onPress={() => {
+            resetDaysBags();
+          }}>
+          <Text style={styles.functionBtnTxt}>Reset DaysBags Content</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.functionBtn, {backgroundColor: 'red'}]}
+          onPress={() => {
+            resetPassedWords();
+          }}>
+          <Text style={styles.functionBtnTxt}>Reset PassedWords Content</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.functionBtn}
+          onPress={() => {
+            showPassedWordsContent();
+          }}>
+          <Text style={styles.functionBtnTxt}>Show DaysBags Content</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.functionBtn}
+          onPress={() => {
+            showDaysBagsContent();
+          }}>
+          <Text style={styles.functionBtnTxt}>Show DaysBags Content</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.functionBtn}
           onPress={() => {

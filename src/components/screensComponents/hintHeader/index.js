@@ -18,6 +18,7 @@ const styles = StyleSheet.create({
     // backgroundColor: '#FF4C00',
     paddingVertical: 10,
     paddingHorizontal: 10,
+    width: '100%',
   },
   hintText: {
     color: '#fff',

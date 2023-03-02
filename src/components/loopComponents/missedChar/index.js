@@ -25,6 +25,7 @@ import {
 import {RealmContext} from '../../../realm/models';
 import {Loop} from '../../../realm/models/Loop';
 import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
+import {PassedWords} from '../../../realm/models/PassedWords';
 
 const {useQuery, useObject, useRealm} = RealmContext;
 const mapState = ({loopRedux}) => ({
@@ -51,7 +52,7 @@ const MissedChar = props => {
   const [myIndex, setMyIndex] = useState(0);
   const [isChecked, setIsChecked] = useState(false);
   const word = loopRoad[loopStep].wordObj.wordLearnedLang;
-
+  const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id);
   const containerBg = {
     backgroundColor: darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite,
   };
@@ -142,12 +143,37 @@ const MissedChar = props => {
 
   useEffect(() => {
     buildTheMissedWord();
-  }, []);
+  }, [loopStep]);
 
   const checkResponse = () => {
     if (word === wordMissed.join('')) {
+      try {
+        realm.write(() => {
+          passedWord.score = passedWord.score + 1;
+          passedWord.viewNbr = passedWord.viewNbr + 1;
+          if (passedWord.prog < 20) {
+            passedWord.prog = passedWord.prog + 1;
+          }
+        });
+      } catch (err) {
+        console.error(
+          'Failed to update prog and score and viewNbr of this word',
+          err.message,
+        );
+      }
       Alert.alert('Correct Answer');
     } else {
+      try {
+        realm.write(() => {
+          passedWord.score = passedWord.score - 1;
+          passedWord.viewNbr = passedWord.viewNbr + 1;
+        });
+      } catch (err) {
+        console.error(
+          'Failed to update prog and score and viewNbr of this word',
+          err.message,
+        );
+      }
       Alert.alert('Wrong Answer -- Correct answer is ', word);
       if (loopType != 3 && loopType != 4) {
         updateLoopRoad();
@@ -171,17 +197,17 @@ const MissedChar = props => {
     });
 
     if (loopType === 0) {
-      // it means discover
+      // it means default
       realm.write(() => {
         loop[0].defaultWordsBagRoad = newRoad;
       });
     } else if (loopType === 1) {
-      // it means Practice
+      // it means custom
       realm.write(() => {
         loop[0].customWordsBagRoad = newRoad;
       });
     } else if (loopType === 2) {
-      // it means Master
+      // it means review
       realm.write(() => {
         loop[0].reviewWordsBagRoad = newRoad;
       });
@@ -200,6 +226,18 @@ const MissedChar = props => {
       realm.write(() => {
         loop[0].stepOfDefaultWordsBag = 0;
       });
+    } else if (loopType === 1) {
+      realm.write(() => {
+        loop[0].stepOfCustomWordsBag = 0;
+      });
+    } else if (loopType === 2) {
+      realm.write(() => {
+        loop[0].stepOfReviewWordsBag = 0;
+        loop[0].reviewWordsBagRoad = [];
+      });
+      dispatch({
+        type: loopReduxTypes.RESET_REVIEW_BAG_ARRAY,
+      });
     }
   };
 
@@ -212,9 +250,19 @@ const MissedChar = props => {
         payload: loopStep + 1,
       });
       if (loopType === 0) {
-        // update default wordsBag step in the real DB
+        // update default wordsBag step in the realm DB
         realm.write(() => {
           loop[0].stepOfDefaultWordsBag = loop[0].stepOfDefaultWordsBag + 1;
+        });
+      } else if (loopType === 1) {
+        // update custom wordsBag step in the realm DB
+        realm.write(() => {
+          loop[0].stepOfCustomWordsBag = loop[0].stepOfCustomWordsBag + 1;
+        });
+      } else if (loopType === 2) {
+        // update review wordsBag step in the realm DB
+        realm.write(() => {
+          loop[0].stepOfReviewWordsBag = loop[0].stepOfReviewWordsBag + 1;
         });
       }
     } else {

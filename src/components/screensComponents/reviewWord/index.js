@@ -3,58 +3,71 @@ import React, {useEffect} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {FONTS} from '../../../constants';
 import {useDispatch, useSelector} from 'react-redux';
+import {RealmContext} from '../../../realm/models';
+import {Word} from '../../../realm/models/Word';
+import {DaysBags} from '../../../realm/models/DaysBags';
+import {PassedWords} from '../../../realm/models/PassedWords';
+import {Loop} from '../../../realm/models/Loop';
+import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
 
-const mapState = ({user, words}) => ({
-  userId: user.userId,
-  userNativeLang: user.userNativeLang,
-  userLearnedLang: user.userLearnedLang,
-  userLevel: user.userLevel,
-  currentWeek: user.currentWeek,
-  currentDay: user.currentDay,
-  stepOfDefaultWordsBag: user.stepOfDefaultWordsBag,
-  defaultWordsBag: user.defaultWordsBag,
-  allWords: words.words,
-  wordsLoading: words.wordsLoading,
-  audioLoading: words.audioLoading,
-  daysBags: user.daysBags,
-  currentWeek: user.currentWeek,
-  currentDay: user.currentDay,
+const {useQuery, useObject, useRealm} = RealmContext;
+
+const mapState = ({loopRedux}) => ({
+  reviewBagArray: loopRedux.reviewBagArray,
 });
 
 const ReviewWordComp = props => {
-  const {
-    userId,
-    userNativeLang,
-    userLearnedLang,
-    userLevel,
-    currentWeek,
-    currentDay,
-    daysBags,
-    stepOfDefaultWordsBag,
-    defaultWordsBag,
-    allWords,
-    wordsLoading,
-    audioLoading,
-  } = useSelector(mapState);
+  const {wordItem} = props;
+  const realm = useRealm();
+  const loop = useQuery(Loop);
+  const myDaysBags = useQuery(DaysBags);
+  const myWord = useObject(Word, wordItem._id);
+  //
+  let reviewWordsBag = loop[0].reviewWordsBag;
+  let reviewWordsBagRoad = loop[0].reviewWordsBagRoad;
+  let stepOfReviewWordsBag = loop[0].stepOfReviewWordsBag;
+  //
+  const {reviewBagArray} = useSelector(mapState);
+  const passedWords = useObject(PassedWords, wordItem._id);
   const dispatch = useDispatch();
-  const {word, wordItem} = props;
   useEffect(() => {
     // console.log('allWords =>', allWords[wordItem.id].wordLearnedLang);
+    console.log('myWord =>', passedWords);
   }, []);
-
+  const addWordToReviewArray = wrdItem => {
+    dispatch({
+      type: loopReduxTypes.ADD_TO_REVIEW_BAG_ARRAY,
+      payload: wrdItem,
+    });
+  };
   return (
     <View style={styles.container}>
-      <Text style={styles.wordStyle}>
-        {allWords[wordItem.id]?.wordLearnedLang}
-      </Text>
+      <Text style={styles.wordStyle}>{wordItem.wordLearnedLang}</Text>
       <View style={[styles.progressBarParent]}>
         <View
           style={[
             styles.progressBarChild,
-            {width: `${(wordItem.prog + 2 * 100) / 20}%`},
+            {width: `${(passedWords.prog * 100) / 20}%`},
           ]}></View>
       </View>
-      <TouchableOpacity style={styles.btnStyle}>
+      <TouchableOpacity
+        style={[
+          styles.btnStyle,
+          {
+            backgroundColor:
+              reviewBagArray.some(e => e._id === wordItem._id) ||
+              reviewWordsBagRoad.length > 0
+                ? '#FF4C0020'
+                : '#FF4C00',
+          },
+        ]}
+        disabled={
+          reviewBagArray.some(e => e._id === wordItem._id) ||
+          reviewWordsBagRoad.length > 0
+        }
+        onPress={() => {
+          addWordToReviewArray(wordItem);
+        }}>
         <Ionicons name="ios-add" size={28} color="#fff" />
       </TouchableOpacity>
     </View>

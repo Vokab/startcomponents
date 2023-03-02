@@ -20,6 +20,7 @@ import {RealmContext} from '../../../realm/models';
 import {User} from '../../../realm/models/User';
 import {Loop} from '../../../realm/models/Loop';
 import {Word} from '../../../realm/models/Word';
+import {PassedWords} from '../../../realm/models/PassedWords';
 
 const {useQuery, useObject, useRealm} = RealmContext;
 const mapState = ({loopRedux}) => ({
@@ -43,6 +44,7 @@ const Cards = props => {
   const [respArray, setRespArray] = useState([]);
   const [isChecked, setIsChecked] = useState(false);
   const wordVar = loopRoad[loopStep].wordObj.wordLearnedLang;
+  const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id);
   const cardsPos = [
     {bottom: '50%', left: '20%'},
     {bottom: '30%', left: '40%'},
@@ -111,8 +113,33 @@ const Cards = props => {
     });
     if (wordVar === respoArToString) {
       setRespArray([]);
+      try {
+        realm.write(() => {
+          passedWord.score = passedWord.score + 1;
+          passedWord.viewNbr = passedWord.viewNbr + 1;
+          if (passedWord.prog < 20) {
+            passedWord.prog = passedWord.prog + 1;
+          }
+        });
+      } catch (err) {
+        console.error(
+          'Failed to update prog and score and viewNbr of this word',
+          err.message,
+        );
+      }
       alert(`Correct Answer ${respoArToString}`);
     } else {
+      try {
+        realm.write(() => {
+          passedWord.score = passedWord.score - 1;
+          passedWord.viewNbr = passedWord.viewNbr + 1;
+        });
+      } catch (err) {
+        console.error(
+          'Failed to update prog and score and viewNbr of this word',
+          err.message,
+        );
+      }
       alert(`Wrong answer : ${respoArToString}, Correct answer is: ${wordVar}`);
       setRespArray([]);
       if (loopType != 3 && loopType != 4) {
@@ -164,6 +191,18 @@ const Cards = props => {
       // update default wordsBag road in the real DB
       realm.write(() => {
         loop[0].stepOfDefaultWordsBag = 0;
+      });
+    } else if (loopType === 1) {
+      realm.write(() => {
+        loop[0].stepOfCustomWordsBag = 0;
+      });
+    } else if (loopType === 2) {
+      realm.write(() => {
+        loop[0].stepOfReviewWordsBag = 0;
+        loop[0].reviewWordsBagRoad = [];
+      });
+      dispatch({
+        type: loopReduxTypes.RESET_REVIEW_BAG_ARRAY,
       });
     }
   };
@@ -244,7 +283,7 @@ const Cards = props => {
       <View style={styles.cardsResponseContainer}>
         <View style={styles.cardsResponse}>
           {respArray.map((myCard, index) => {
-            console.log('this index is =>', myCard.showOrNot);
+            // console.log('this index is =>', myCard.showOrNot);
 
             return (
               <TouchableOpacity
@@ -260,7 +299,7 @@ const Cards = props => {
 
       <View style={styles.cardsContainer}>
         {wordCards.map((myCard, index) => {
-          console.log('this index is =>', myCard.showOrNot);
+          // console.log('this index is =>', myCard.showOrNot);
           if (myCard.showOrNot) {
             return (
               <TouchableOpacity

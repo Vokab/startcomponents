@@ -4,6 +4,7 @@ import {
   View,
   ActivityIndicator,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import React, {useState, useEffect} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
@@ -11,6 +12,8 @@ import {
   clearDefaultRoadRedux,
   constructDef,
   constructDefaultBagRoad,
+  constructReadyReview,
+  constructReview,
   continueDefaultBagRoad,
   resetLoopState,
   resetLoopStepRedux,
@@ -28,15 +31,17 @@ import {User} from '../realm/models/User';
 import {Word} from '../realm/models/Word';
 import {Loop} from '../realm/models/Loop';
 import loopReduxTypes from '../redux/LoopRedux/loopRedux.types';
+import {DaysBags} from '../realm/models/DaysBags';
+import Realm from 'realm';
+import ObjectID from 'bson-objectid';
 
 const {useQuery, useObject, useRealm} = RealmContext;
-const mapState = ({user, loopRedux, loop}) => ({
+const mapState = ({loopRedux, loop}) => ({
   isReady: loopRedux.isReady,
   loopStep: loopRedux.loopStep,
   loopRoad: loopRedux.loopRoad,
   loopId: loopRedux.loopRoad,
-
-  stepOfCustomWordsBag: user.stepOfCustomWordsBag,
+  reviewBagArray: loopRedux.reviewBagArray,
 });
 
 const LoopManager = ({route, navigation}) => {
@@ -44,16 +49,28 @@ const LoopManager = ({route, navigation}) => {
   const user = useQuery(User);
   const loop = useQuery(Loop);
   const words = useQuery(Word);
+  const daysBags = useQuery(DaysBags);
 
   let defaultWordsBag = loop[0].defaultWordsBag;
   let defaultWordsBagRoad = loop[0].defaultWordsBagRoad;
   let stepOfDefaultWordsBag = loop[0].stepOfDefaultWordsBag;
   let isDefaultDiscover = loop[0].isDefaultDiscover;
 
-  const {idType} = route.params;
-  const {isReady, loopStep, loopRoad, loopId, stepOfCustomWordsBag} =
-    useSelector(mapState);
+  //
+  let reviewWordsBag = loop[0].reviewWordsBag;
+  let reviewWordsBagRoad = loop[0].reviewWordsBagRoad;
+  let stepOfReviewWordsBag = loop[0].stepOfReviewWordsBag;
+
+  let currentDay = user[0].currentDay;
+  let currentWeek = user[0].currentDay;
+  const {idType, readyReviewBag} = route.params;
+  const {isReady, loopStep, loopRoad, reviewBagArray} = useSelector(mapState);
   const dispatch = useDispatch();
+
+  function sleep(ms) {
+    console.log('sleep start');
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
   const buildLoopRoad = async (roadArray, step) => {
     dispatch({
@@ -65,33 +82,61 @@ const LoopManager = ({route, navigation}) => {
       type: loopReduxTypes.SET_LOOP_STEP,
       payload: step,
     });
+    await sleep(3000);
     dispatch({
       type: loopReduxTypes.UPDATE_LOOP_STATE,
     });
+  };
+
+  const addThisBagToDaysBagss = () => {
+    try {
+      let dayBag;
+      realm.write(() => {
+        dayBag = realm.create('DaysBags', {
+          _id: ObjectID(),
+          day: currentDay,
+          week: currentWeek,
+          step: 0,
+          words: JSON.stringify(defaultWordsBag),
+        });
+      });
+      console.log('new dayBag created:', dayBag);
+    } catch (err) {
+      console.error('Failed to create the BagDay', err.message);
+    }
+  };
+  const addThisBagWordsToPassedWords = async () => {
+    try {
+      let passedWord;
+      defaultWordsBag.forEach(elem => {
+        realm.write(() => {
+          passedWord = realm.create('PassedWords', {
+            _id: elem._id,
+            score: 100,
+            viewNbr: 0,
+            prog: 0,
+          });
+        });
+        console.log('elem._id:', passedWord);
+      });
+    } catch (err) {
+      console.error('Failed to create the PassedWords', err.message);
+    }
   };
   useEffect(() => {
     if (idType === 0) {
       if (stepOfDefaultWordsBag === 0) {
         // we started now and we dont see those words before
-        // here we need to add this words bag to the daysBags array
-        // if (isDefaultDiscover === 0) {
-        //   dispatch(
-        //     addThisBagToDaysBags(
-        //       daysBags,
-        //       defaultWordsBag,
-        //       currentDay,
-        //       currentWeek,
-        //     ),
-        //   );
-        // }
         //--------------------------------------------
-        // dispatch(
-        //   constructDefaultBagRoad(
-        //     defaultWordsBag,
-        //     stepOfDefaultWordsBag,
-        //     isDefaultDiscover,
-        //   ),
-        // );
+        // here we need to add this words bag to the daysBags array
+        if (isDefaultDiscover === 0 && defaultWordsBagRoad.length === 0) {
+          console.log(
+            'we will add to the daybags and passedwords : ',
+            defaultWordsBagRoad,
+          );
+          addThisBagWordsToPassedWords();
+          addThisBagToDaysBagss();
+        }
         updateDefaultRoad().then(() => {
           const arr = [];
           console.log(
@@ -112,13 +157,6 @@ const LoopManager = ({route, navigation}) => {
       } else {
         // we continue what we already started.
         //--------------------------------------------
-        // dispatch(
-        //   continueDefaultBagRoad(
-        //     defaultWordsBag,
-        //     stepOfDefaultWordsBag,
-        //     defaultWordsBagRoad,
-        //   ),
-        // );
         const arr = [];
         defaultWordsBagRoad.forEach(item => {
           arr.push(JSON.parse(item));
@@ -126,20 +164,58 @@ const LoopManager = ({route, navigation}) => {
         console.log('default Words Bag Road as Objects', arr);
         buildLoopRoad(arr, stepOfDefaultWordsBag);
       }
-    } else if (idType === 1 && stepOfCustomWordsBag === 0) {
+    } else if (idType === 1) {
       // We need to construct the custom words bag road
+    } else if (idType === 2) {
+      if (stepOfReviewWordsBag === 0 && reviewWordsBagRoad.length === 0) {
+        // We need to construct the Review words bag road
+        updateReviewRoad().then(() => {
+          const arr = [];
+          console.log(
+            'review Words Bag Road as Strings =>',
+            reviewWordsBagRoad,
+          );
+          // const myObjFromJson = JSON.parse(defaultWordsBagRoad);
+          reviewWordsBagRoad.forEach(item => {
+            arr.push(JSON.parse(item));
+          });
+          console.log('review Words Bag Road as Objects', arr);
+          buildLoopRoad(arr, 0).then(() => {
+            console.log('isReady =>', isReady);
+            console.log('loopStep =>', loopStep);
+            console.log('loopRoad =>', loopRoad);
+          });
+        });
+      } else {
+        // we continue what we already started in review bag
+        console.log('we continue what we already started in review bag');
+        const arr = [];
+        reviewWordsBagRoad.forEach(item => {
+          arr.push(JSON.parse(item));
+        });
+        console.log('review Words Bag Road as Objects', arr);
+        buildLoopRoad(arr, stepOfReviewWordsBag);
+      }
+    } else if (idType === 3) {
+      // We need to build the daily test road
+    } else if (idType === 4) {
+      // We need to build the weekly test road
+    } else if (idType === 5) {
+      // We need to build the review Ready-To-Review bag road
+      console.log('We need to build the review Ready-To-Review bag road');
+      console.log('ready review Bag Road as string', readyReviewBag);
+      // buildLoopRoad(readyReviewBag, stepOfReviewWordsBag);
+      constructReadyReview(readyReviewBag).then(res => {
+        console.log('review Words Bag Road as Objects', res);
+        buildLoopRoad(res, 0).then(() => {});
+      });
     }
-    //  else if (idType === 2) {
-    //   if (stepOfReviewWordsBag === 0) {
-    //     // We need to construct the Review words bag road
-    //   } else {
-    //     // we continue what we already started in review bag
-    //   }
-    // } else if (idType === 3) {
-    //   // We need to build the daily test road
-    // } else if (idType === 4) {
-    //   // We need to build the weekly test road
-    // }
+    return () => {
+      alert('are you sure you want to exit');
+      dispatch({
+        type: loopReduxTypes.RESET_LOOP,
+      });
+    };
   }, []);
 
   const updateDefaultRoad = async () => {
@@ -152,6 +228,20 @@ const LoopManager = ({route, navigation}) => {
       console.log('error in updating Default Road =>', error);
     }
   };
+  const updateReviewRoad = async () => {
+    try {
+      realm.write(() => {
+        loop[0].reviewWordsBag = reviewBagArray;
+      });
+      const road = await constructReview(reviewBagArray);
+      realm.write(() => {
+        loop[0].reviewWordsBagRoad = road;
+      });
+    } catch (error) {
+      console.log('error in updating Review Road =>', error);
+    }
+  };
+
   const deleteOldRoad = async () => {
     realm.write(() => {
       // Delete all instances of Cat from the realm.
@@ -159,28 +249,13 @@ const LoopManager = ({route, navigation}) => {
       loop[0].defaultWordsBagRoad = [];
     });
   };
-
-  // useEffect(() => {
-  //   const arr = [];
-  //   console.log('default Words Bag Road as Strings =>', defaultWordsBagRoad);
-  //   // const myObjFromJson = JSON.parse(defaultWordsBagRoad);
-  //   defaultWordsBagRoad.forEach(item => {
-  //     arr.push(JSON.parse(item));
-  //   });
-  //   console.log('default Words Bag Road as Objects', arr);
-
-  //   if (defaultWordsBagRoad.length === 0) {
-  //     updateDefaultRoad();
-  //   }
-  //   // if (defaultWordsBagRoad.length != 0) {
-  //   //   console.log('yes we will deltete it now');
-  //   //   deleteOldRoad();
-  //   // }
-  // }, [defaultWordsBagRoad]);
-
   const clearDefaultRoad = () => {
     console.log('clearDefaultRoad start');
   };
+
+  useEffect(() => {
+    console.log('isReady now From Loop =>', isReady);
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -232,14 +307,14 @@ const LoopManager = ({route, navigation}) => {
         <View>
           <Text>Loop</Text>
           <ActivityIndicator size="large" color="#00ff00" />
-
+          {/* 
           <TouchableOpacity
             style={styles.clearBtn}
             onPress={() => {
               clearDefaultRoad();
             }}>
             <Text style={styles.clearBtnTxt}>CLEAR</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       )}
     </View>

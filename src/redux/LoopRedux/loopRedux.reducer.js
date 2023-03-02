@@ -5,10 +5,26 @@ const INITIAL_STATE = {
   loopStep: 0,
   loopRoad: [],
   isReady: false,
+  reviewBagArray: [],
 };
 
 const loopReduxReducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
+    case loopReduxTypes.RESET_REVIEW_BAG_ARRAY:
+      return {
+        ...state,
+        reviewBagArray: [],
+      };
+    case loopReduxTypes.ADD_TO_REVIEW_BAG_ARRAY:
+      return {
+        ...state,
+        reviewBagArray: [...state.reviewBagArray, action.payload],
+      };
+    case loopReduxTypes.REMOVE_FROM_REVIEW_BAG_ARRAY:
+      return {
+        ...state,
+        reviewBagArray: [...action.payload],
+      };
     case loopReduxTypes.UPDATE_LOOP_STATE:
       return {
         ...state,

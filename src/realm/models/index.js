@@ -1,12 +1,14 @@
 import {createRealmContext} from '@realm/react';
+import {DaysBags} from './DaysBags';
 import {Loop, Road} from './Loop';
+import {PassedWords} from './PassedWords';
 import {TaskV3, TaskV4} from './Task';
 import {User} from './User';
 import {Word} from './Word';
 
 export const RealmContext = createRealmContext({
-  schema: [TaskV4, Word, User, Loop, Road],
-  schemaVersion: 17,
+  schema: [TaskV4, Word, User, Loop, Road, DaysBags, PassedWords],
+  schemaVersion: 22,
 });
 // TaskRealmContextV2
 export const schemas = [TaskV3.schema, TaskV4.schema];
