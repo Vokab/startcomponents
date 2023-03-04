@@ -16,6 +16,7 @@ import {RealmContext} from '../../../realm/models';
 import {User} from '../../../realm/models/User';
 import {Loop} from '../../../realm/models/Loop';
 import {Word} from '../../../realm/models/Word';
+import Steps from '../../screensComponents/steps';
 
 const {useQuery, useObject, useRealm} = RealmContext;
 
@@ -113,39 +114,7 @@ const TodayCard = props => {
       <View style={styles.titleWrapper}>
         <Text style={styles.title}>Day 2</Text>
       </View>
-      <View style={styles.stepsWrapper}>
-        <Text style={styles.stepTitle}>Discover</Text>
-        <Text style={styles.stepTitle}>Practice</Text>
-        <Text style={styles.stepTitle}>Master</Text>
-      </View>
-      <View style={styles.stepsShapeWrapper}>
-        <View style={styles.stepsShape}>
-          <View
-            style={[
-              styles.stepCircle,
-              {
-                backgroundColor:
-                  loop[0].isDefaultDiscover === 0 ? '#000' : '#fff',
-              },
-            ]}></View>
-          <View
-            style={[
-              styles.stepCircle,
-              {
-                backgroundColor:
-                  loop[0].isDefaultDiscover === 1 ? '#000' : '#fff',
-              },
-            ]}></View>
-          <View
-            style={[
-              styles.stepCircle,
-              {
-                backgroundColor:
-                  loop[0].isDefaultDiscover === 2 ? '#000' : '#fff',
-              },
-            ]}></View>
-        </View>
-      </View>
+      {<Steps stepOfWhat={0} />}
       <View style={styles.buttonWrapper}>
         <TouchableOpacity
           style={styles.buttonStyle}

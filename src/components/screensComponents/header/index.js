@@ -5,7 +5,8 @@ import {COLORS_THEME} from '../../../constants';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {FONTS} from '../../../constants';
 
-const ReviewHeader = () => {
+const ReviewHeader = props => {
+  const {screenTitle} = props;
   const reviewExplinationModal = () => {
     console.log('reviewExplinationModal start');
   };
@@ -13,7 +14,7 @@ const ReviewHeader = () => {
     <View style={styles.container}>
       <View style={styles.headerBox}></View>
       <View style={[styles.reviewHeaderBox, styles.headerBox]}>
-        <Text style={styles.reviewHeader}>Review</Text>
+        <Text style={styles.reviewHeader}>{screenTitle}</Text>
       </View>
       <View style={[styles.headerIcon, styles.headerBox]}>
         <TouchableOpacity

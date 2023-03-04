@@ -42,6 +42,7 @@ const mapState = ({loopRedux, loop}) => ({
   loopRoad: loopRedux.loopRoad,
   loopId: loopRedux.loopRoad,
   reviewBagArray: loopRedux.reviewBagArray,
+  customBagArray: loopRedux.customBagArray,
 });
 
 const LoopManager = ({route, navigation}) => {
@@ -61,10 +62,17 @@ const LoopManager = ({route, navigation}) => {
   let reviewWordsBagRoad = loop[0].reviewWordsBagRoad;
   let stepOfReviewWordsBag = loop[0].stepOfReviewWordsBag;
 
+  //
+  let customWordsBag = loop[0].customWordsBag;
+  let customWordsBagRoad = loop[0].customWordsBagRoad;
+  let stepOfCustomWordsBag = loop[0].stepOfCustomWordsBag;
+  let isCustomDiscover = loop[0].isCustomDiscover;
+
   let currentDay = user[0].currentDay;
   let currentWeek = user[0].currentDay;
   const {idType, readyReviewBag} = route.params;
-  const {isReady, loopStep, loopRoad, reviewBagArray} = useSelector(mapState);
+  const {isReady, loopStep, loopRoad, reviewBagArray, customBagArray} =
+    useSelector(mapState);
   const dispatch = useDispatch();
 
   function sleep(ms) {
@@ -88,7 +96,7 @@ const LoopManager = ({route, navigation}) => {
     });
   };
 
-  const addThisBagToDaysBagss = () => {
+  const addThisBagToDaysBagss = bagWord => {
     try {
       let dayBag;
       realm.write(() => {
@@ -97,7 +105,7 @@ const LoopManager = ({route, navigation}) => {
           day: currentDay,
           week: currentWeek,
           step: 0,
-          words: JSON.stringify(defaultWordsBag),
+          words: JSON.stringify(bagWord),
         });
       });
       console.log('new dayBag created:', dayBag);
@@ -105,10 +113,10 @@ const LoopManager = ({route, navigation}) => {
       console.error('Failed to create the BagDay', err.message);
     }
   };
-  const addThisBagWordsToPassedWords = async () => {
+  const addThisBagWordsToPassedWords = async bagWord => {
     try {
       let passedWord;
-      defaultWordsBag.forEach(elem => {
+      bagWord.forEach(elem => {
         realm.write(() => {
           passedWord = realm.create('PassedWords', {
             _id: elem._id,
@@ -134,8 +142,8 @@ const LoopManager = ({route, navigation}) => {
             'we will add to the daybags and passedwords : ',
             defaultWordsBagRoad,
           );
-          addThisBagWordsToPassedWords();
-          addThisBagToDaysBagss();
+          addThisBagWordsToPassedWords(defaultWordsBag);
+          addThisBagToDaysBagss(defaultWordsBag);
         }
         updateDefaultRoad().then(() => {
           const arr = [];
@@ -166,6 +174,38 @@ const LoopManager = ({route, navigation}) => {
       }
     } else if (idType === 1) {
       // We need to construct the custom words bag road
+      if (stepOfCustomWordsBag === 0) {
+        // we started now and we dont see those words before
+        //--------------------------------------------
+        // here we need to add this words bag to the daysBags array
+
+        updateCustomRoad().then(() => {
+          const arr = [];
+          console.log(
+            'custom Words Bag Road as Strings =>',
+            customWordsBagRoad,
+          );
+          // const myObjFromJson = JSON.parse(defaultWordsBagRoad);
+          customWordsBagRoad.forEach(item => {
+            arr.push(JSON.parse(item));
+          });
+          console.log('Custom Words Bag Road as Objects', arr);
+          buildLoopRoad(arr, 0).then(() => {
+            console.log('isReady =>', isReady);
+            console.log('loopStep =>', loopStep);
+            console.log('loopRoad =>', loopRoad);
+          });
+        });
+      } else {
+        // we continue what we already started.
+        //--------------------------------------------
+        const arr = [];
+        customWordsBagRoad.forEach(item => {
+          arr.push(JSON.parse(item));
+        });
+        console.log('Custom Words Bag Road as Objects', arr);
+        buildLoopRoad(arr, stepOfCustomWordsBag);
+      }
     } else if (idType === 2) {
       if (stepOfReviewWordsBag === 0 && reviewWordsBagRoad.length === 0) {
         // We need to construct the Review words bag road
@@ -228,6 +268,30 @@ const LoopManager = ({route, navigation}) => {
       console.log('error in updating Default Road =>', error);
     }
   };
+  const updateCustomRoad = async () => {
+    try {
+      console.log(' customBagArray from updateCustomRoad :', customBagArray);
+      realm.write(() => {
+        loop[0].customWordsBag = customBagArray;
+      });
+      if (isCustomDiscover === 0 && customWordsBagRoad.length === 0) {
+        console.log(
+          'we will add to the daybags and passedwords : ',
+          customWordsBagRoad,
+        );
+        addThisBagWordsToPassedWords(customWordsBag);
+        addThisBagToDaysBagss(customWordsBag);
+      }
+
+      const road = await constructDef(customWordsBag, isCustomDiscover);
+      realm.write(() => {
+        loop[0].customWordsBagRoad = road;
+      });
+    } catch (error) {
+      console.log('error in updating Custom Road =>', error);
+    }
+  };
+
   const updateReviewRoad = async () => {
     try {
       realm.write(() => {
@@ -255,6 +319,7 @@ const LoopManager = ({route, navigation}) => {
 
   useEffect(() => {
     console.log('isReady now From Loop =>', isReady);
+    console.log('customBagArray From Loop', customBagArray);
   }, []);
 
   return (

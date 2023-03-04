@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,6 +21,15 @@ import {User} from '../realm/models/User';
 import {Loop} from '../realm/models/Loop';
 import {DaysBags} from '../realm/models/DaysBags';
 import {PassedWords} from '../realm/models/PassedWords';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from 'firebase/storage';
+import ObjectID from 'bson-objectid';
+import {storage, db} from '../firebase/utils';
 
 const {useQuery, useRealm} = RealmContext;
 const Test = () => {
@@ -224,9 +234,119 @@ const Test = () => {
       realm.delete(realm.objects('PassedWords'));
     });
   };
+
+  const [file, setFile] = useState(null);
+  const [progressValue, setProgressValue] = useState(0);
+  const uploadFile = () => {
+    let options = {
+      storageOptions: {
+        skipBackup: true,
+        path: 'images',
+      },
+    };
+    launchImageLibrary(options, res => {
+      console.log('Response = ', res);
+      if (res.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (res.error) {
+        console.log('ImagePicker Error: ', res.error);
+      } else if (res.customButton) {
+        console.log('User tapped custom button: ', res.customButton);
+        alert(res.customButton);
+      } else {
+        const source = {uri: res.uri};
+        console.log('response', JSON.stringify(res));
+        setFile(res);
+        // this.setState({
+        //   filePath: res,
+        //   fileData: res.data,
+        //   fileUri: res.uri
+        // });
+      }
+    });
+  };
+  const uploadToFirebase = async () => {
+    const uri = file.assets[0].uri;
+    const blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function (e) {
+        console.log(e);
+        reject(new TypeError('Network request failed'));
+      };
+      xhr.responseType = 'blob';
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+    });
+    const fileRef = ref(storage, 'custom/' + ObjectID());
+    console.log('Blob =================', blob);
+    const result = uploadBytesResumable(fileRef, blob);
+    result.on(
+      'state_changed',
+      snapshot => {
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setProgressValue(snapshot.bytesTransferred / snapshot.totalBytes);
+        console.log('Upload is ' + progress + '% done');
+      },
+      error => {
+        console.error('Error uploading', error);
+      },
+      () => {
+        getDownloadURL(result.snapshot.ref).then(downloadURL => {
+          console.log('File available at', downloadURL);
+          // const newVideoRef = doc(collection(db, "feed"));
+          // setDoc(newVideoRef, {
+          //   userId: userId,
+          //   LikesNumber: 12,
+          //   id: "04",
+          //   userName: user.name,
+          //   userImg: user.avatar,
+          //   likes: {},
+          //   comments: {},
+          //   url: downloadURL,
+          //   createdAt: new Date(),
+          //   updatedAt: null,
+          //   deletedAt: null,
+          // });
+          // navigation.goBack();
+        });
+      },
+    );
+  };
+  useEffect(() => {
+    console.log('uri', file?.assets[0].uri);
+  }, []);
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.addWrapper}>
+        <TouchableOpacity
+          style={[styles.functionBtn, {backgroundColor: 'red'}]}
+          onPress={() => {
+            uploadToFirebase();
+          }}>
+          <Text style={styles.functionBtnTxt}>
+            uploadToFirebase : {progressValue} %
+          </Text>
+        </TouchableOpacity>
+        {file !== null ? (
+          <Image
+            style={{width: 200, height: 100}}
+            source={{uri: file.assets[0].uri}}
+            resizeMethod={'resize'}
+            resizeMode={'contain'}
+          />
+        ) : null}
+        <TouchableOpacity
+          style={[styles.functionBtn, {backgroundColor: 'red'}]}
+          onPress={() => {
+            uploadFile();
+          }}>
+          <Text style={styles.functionBtnTxt}>UploadFile</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.functionBtn, {backgroundColor: 'red'}]}
           onPress={() => {

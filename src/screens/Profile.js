@@ -112,7 +112,7 @@ const Profile = () => {
     <View style={styles.screenWrapper}>
       <Image source={ShadowEffect} style={styles.shadowImageBg} />
       <View style={styles.reviewBagContainer}>
-        <ReviewHeader />
+        <ReviewHeader screenTitle={'Review'} />
         {/* <HintHeader text={'Add at least 6 words to start your review bag'} /> */}
         <View style={styles.bagContainer}>
           <View style={styles.bagContent}>
@@ -131,19 +131,6 @@ const Profile = () => {
                       <Text style={styles.wordInBagTxt}>
                         {item.wordLearnedLang}
                       </Text>
-
-                      {/* <TouchableOpacity
-                        style={styles.removeWord}
-                        disabled={reviewWordsBagRoad.length > 0}
-                        onPress={() => {
-                          removeWordFromReviewArray(item);
-                        }}>
-                        <Ionicons
-                          name="ios-close-circle"
-                          size={20}
-                          color="#000"
-                        />
-                      </TouchableOpacity> */}
                     </View>
                   );
                 })

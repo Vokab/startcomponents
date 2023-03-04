@@ -6,10 +6,27 @@ const INITIAL_STATE = {
   loopRoad: [],
   isReady: false,
   reviewBagArray: [],
+  customBagArray: [],
 };
 
 const loopReduxReducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
+    case loopReduxTypes.RESET_CUSTOM_BAG_ARRAY:
+      return {
+        ...state,
+        customBagArray: [],
+      };
+    case loopReduxTypes.ADD_TO_CUSTOM_BAG_ARRAY:
+      return {
+        ...state,
+        customBagArray: [...state.customBagArray, action.payload],
+      };
+    case loopReduxTypes.REMOVE_FROM_CUSTOM_BAG_ARRAY:
+      return {
+        ...state,
+        customBagArray: [...action.payload],
+      };
+    ////////////////////////////////////////////////////////////////////////////////////
     case loopReduxTypes.RESET_REVIEW_BAG_ARRAY:
       return {
         ...state,

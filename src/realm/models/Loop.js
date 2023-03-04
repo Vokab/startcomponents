@@ -29,7 +29,7 @@ export class Loop extends Realm.Object {
     properties: {
       _id: 'string',
       defaultWordsBag: 'Word[]',
-      customWordsBag: 'Word[]',
+      customWordsBag: 'CustomWords[]',
       reviewWordsBag: 'Word[]',
       defaultWordsBagRoad: 'string[]',
       customWordsBagRoad: 'string[]',

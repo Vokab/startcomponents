@@ -256,27 +256,20 @@ const Review = () => {
 
         {/* <View style={{ height: '100%', width: 10 }} /> */}
       </View>
-      <ScrollView style={{flex: 6}}>
+      {/* <ScrollView style={{flex: 6}}>
         {files?.map((item, index) => {
-          return (
-            <TouchableOpacity
-              onPress={() => {
-                playThisFile(item);
-              }}
-              key={index}
-              style={styles.audioItem}></TouchableOpacity>
-          );
+        renderItem(item)
         })}
-      </ScrollView>
+      </ScrollView> */}
 
-      {/* <View style={{flex: 6}}>
+      <View style={{flex: 6}}>
         <FlatList
           data={files}
           keyExtractor={(item, index) => String(index)}
           renderItem={renderItem}
           numColumns={3}
         />
-      </View> */}
+      </View>
     </SafeAreaView>
   );
 };

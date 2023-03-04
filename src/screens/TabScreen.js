@@ -9,6 +9,7 @@ import {icons} from '../constants';
 import {COLORS_THEME} from '../constants';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Test from './Test';
+import CustomScreen from './CustomScreen';
 const Tab = createBottomTabNavigator();
 
 const TabScreen = () => {
@@ -86,10 +87,10 @@ const TabScreen = () => {
         }}
       />
       <Tab.Screen
-        name="Review"
-        component={Review}
+        name="CustomScreen"
+        component={CustomScreen}
         options={{
-          tabBarLabel: 'Review',
+          tabBarLabel: 'CustomScreen',
           tabBarIcon: ({focused}) => (
             <View style={focused ? styles.shadow_o : styles.shadow_w}>
               <MaterialCommunityIcons
