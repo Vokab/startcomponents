@@ -19,6 +19,7 @@ export class User extends Realm.Object {
       deletedWordsIds: 'string[]',
       currentWeek: 'int',
       currentDay: 'int',
+      isPremium: 'bool',
     },
   };
 }

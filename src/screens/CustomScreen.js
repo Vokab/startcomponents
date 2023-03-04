@@ -16,6 +16,7 @@ import ReviewHeader from '../components/screensComponents/header';
 import HintHeaderBg from '../components/screensComponents/hintHeaderBg';
 import UsaFlag from '../../assets/united-states.png';
 import ArFlag from '../../assets/sa.png';
+import Premium from '../../assets/premium.png';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -40,6 +41,7 @@ import ReviewWordComp from '../components/screensComponents/reviewWord';
 import RNFetchBlob from 'rn-fetch-blob';
 import CustomWordComp from '../components/screensComponents/customWord';
 import Steps from '../components/screensComponents/steps';
+import {User} from '../realm/models/User';
 const {useQuery, useObject, useRealm} = RealmContext;
 const mapState = ({loopRedux}) => ({
   customBagArray: loopRedux.customBagArray,
@@ -48,10 +50,17 @@ const mapState = ({loopRedux}) => ({
 
 const CustomScreen = () => {
   const realm = useRealm();
+  const user = useQuery(User);
   const words = useQuery(Word);
   const loop = useQuery(Loop);
   const myDaysBags = useQuery(DaysBags);
-  const customWords = useQuery(CustomWords);
+  isSubed = user[0].isPremium;
+  const customWords = useQuery(CustomWords)
+    .sorted('passedDate', true)
+    .filtered('passed != true');
+  const customWordsPassed = useQuery(CustomWords)
+    .sorted('passedDate')
+    .filtered('passed == true');
   //
   const {customBagArray, isReady} = useSelector(mapState);
   const navigation = useNavigation();
@@ -64,10 +73,11 @@ const CustomScreen = () => {
   // const [reviewBagArray, setReviewBagArray] = useState([]);
 
   //   const {} = useSelector(mapState);
-  const [nativeWord, setNativeWord] = React.useState('hello');
-  const [learnedWord, setLearnedWord] = React.useState('مرحبا');
-  const [example, setExample] = React.useState('مرحبا اخي الكريم');
-  const [exampleIndex, setExampleIndex] = React.useState(1);
+  const [nativeWord, setNativeWord] = useState('');
+  const [learnedWord, setLearnedWord] = useState('');
+  const [example, setExample] = useState('');
+  const [exampleSplited, setExampleSplited] = useState([]);
+  const [exampleIndex, setExampleIndex] = useState(null);
   const [file, setFile] = useState(null);
   const [progressValue, setProgressValue] = useState(0);
   const [load, setLoad] = useState(false);
@@ -99,53 +109,64 @@ const CustomScreen = () => {
   };
 
   const uploadToFirebase = async () => {
-    const id = ObjectID();
-    console.log('uploadToFirebase start', id);
-    setLoad(true);
-    const uri = file.assets[0].uri;
-    console.log('uri is ,', uri);
-    console.log('new uri is ,', uri.replace('file:///', ''));
-    const fileExtention = uri.split('.').pop();
-    // RNFetchBlob.fs
-    //   .exists(uri.replace('file:///', ''))
-    //   .then(exist => {
-    //     console.log(`file ${exist ? '' : 'not'} exists`);
-    //   })
-    //   .catch(
-    //     err => ('Error occured when copying image to new destination', err),
-    //   );
-    // const fileName = uri.split('/').pop();
-    // console.log('fileName ,', fileName);
-    RNFetchBlob.fs
-      .cp(
-        uri.replace('file:///', ''),
-        destinationPath + '/' + id.toString() + '.' + fileExtention,
-      )
-      .then(res => {
-        console.log('image copied to the new destination', res);
-        setLoad(false);
-      })
-      .catch(err => {
-        console.log('Error occured when copying image to new destination', err);
-        setLoad(false);
+    try {
+      const id = ObjectID();
+      console.log('uploadToFirebase start', id);
+      setLoad(true);
+      let uri = null;
+      let fileExtention = null;
+      if (file !== null) {
+        console.log('what file containe now', file);
+        uri = file.assets[0].uri;
+        fileExtention = uri.split('.').pop();
+        console.log('uri is ,', uri);
+        console.log('new uri is ,', uri.replace('file:///', ''));
+        fileExtention = uri.split('.').pop();
+
+        RNFetchBlob.fs
+          .cp(
+            uri.replace('file:///', ''),
+            destinationPath + '/' + id.toString() + '.' + fileExtention,
+          )
+          .then(res => {
+            console.log('image copied to the new destination', res);
+            setLoad(false);
+          })
+          .catch(err => {
+            console.log(
+              'Error occured when copying image to new destination',
+              err,
+            );
+            setLoad(false);
+            setNativeWord('');
+            setLearnedWord('');
+            setExample('');
+            setExampleSplited([]);
+            setExampleIndex(null);
+            setFile(null);
+            setLoad(false);
+          });
+      }
+
+      realm.write(() => {
+        realm.create('CustomWords', {
+          _id: id.toString(),
+          wordNativeLang: nativeWord,
+          wordLearnedLang: learnedWord,
+          wordLearnedExample: example,
+          exampleWordIndex: exampleIndex,
+          localImagePath:
+            file !== null
+              ? destinationPath + '/' + id.toString() + '.' + fileExtention
+              : '',
+          wordImage: '',
+          passed: false,
+          passedDate: new Date(),
+          deleted: false,
+        });
       });
-    realm.write(() => {
-      realm.create('CustomWords', {
-        _id: id.toString(),
-        wordNativeLang: nativeWord,
-        wordLearnedLang: learnedWord,
-        wordLearnedExample: example,
-        exampleWordIndex: exampleIndex,
-        localImagePath:
-          destinationPath + '/' + id.toString() + '.' + fileExtention,
-        wordImage: '',
-        passed: false,
-        passedDate: new Date(),
-        deleted: false,
-      });
-    });
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /* const blob = await new Promise((resolve, reject) => {
+      //////////////////////////////////////////////////////////////////////////////////////////////////////////
+      /* const blob = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.onload = function () {
         resolve(xhr.response);
@@ -193,6 +214,23 @@ const CustomScreen = () => {
         });
       },
     );*/
+      setNativeWord('');
+      setLearnedWord('');
+      setExample('');
+      setExampleSplited([]);
+      setExampleIndex(null);
+      setFile(null);
+      setLoad(false);
+    } catch (error) {
+      console.warn('Error occured', error);
+      setNativeWord('');
+      setLearnedWord('');
+      setExample('');
+      setExampleSplited([]);
+      setExampleIndex(null);
+      setFile(null);
+      setLoad(false);
+    }
   };
   const addCustomWord = () => {
     uploadToFirebase();
@@ -236,12 +274,36 @@ const CustomScreen = () => {
       loop[0].isCustomDiscover = 0;
     });
   };
+  const chooseExampleIndex = index => {
+    setExampleIndex(index);
+  };
+  useEffect(() => {
+    if (isSubed) {
+      let split = example.split(' ');
+      newAr = [];
+      split.forEach((item, index) => {
+        if (item !== '') newAr.push(item);
+        if (item === learnedWord && item !== '') {
+          console.log('yes item = learnedWord', item, learnedWord);
+          setExampleIndex(index);
+        }
+      });
+      setExampleSplited(newAr);
+      console.log('split =>', newAr);
+      console.log('example index is ', exampleIndex);
+    }
+  }, [example]);
+
+  useEffect(() => {
+    console.log('is user subed =>', isSubed);
+  }, []);
+
   return (
-    <ScrollView>
-      <View style={styles.screenWrapper}>
-        <Image source={ShadowEffect} style={styles.shadowImageBg} />
+    <View style={styles.screenWrapper}>
+      <Image source={ShadowEffect} style={styles.shadowImageBg} />
+      <ReviewHeader screenTitle={'Custom'} />
+      <ScrollView>
         <View style={styles.reviewBagContainer}>
-          <ReviewHeader screenTitle={'Custom'} />
           <HintHeaderBg text={'Add at custom word'} />
           <View style={styles.dataInContainer}>
             {/* The Word in the Native Language */}
@@ -275,35 +337,84 @@ const CustomScreen = () => {
               </View>
             </View>
             {/* The Example in the Native Language */}
-            <View style={styles.inputWrapper}>
-              <View style={styles.flagImgBox}>
-                <Image source={ArFlag} style={styles.flagImg} />
-              </View>
-              <View style={styles.inputBox}>
-                <TextInput
-                  style={[styles.input, {height: 100}]}
-                  onChangeText={setExample}
-                  value={example}
-                  placeholder={'Example'}
-                  placeholderTextColor={'#ff4c0080'}
-                  multiline={true}
-                  textAlignVertical={'top'}
-                />
-              </View>
-            </View>
-
-            {/* The Word IMAGE */}
-            <View style={styles.addImageBox}>
-              <TouchableOpacity
-                style={styles.btnBox}
-                onPress={() => {
-                  uploadFile();
-                }}>
-                <View style={styles.btnInternBox}>
-                  <FontAwesome5 name="file-image" size={30} color="#fff" />
-                  <Text style={styles.btnText}>Add Image</Text>
+            <View>
+              <Image source={Premium} style={styles.premiumImage} />
+              <View style={[styles.inputWrapper, {opacity: isSubed ? 1 : 0.3}]}>
+                <View style={styles.flagImgBox}>
+                  <Image source={ArFlag} style={styles.flagImg} />
                 </View>
-              </TouchableOpacity>
+                <View style={styles.inputBox}>
+                  <TextInput
+                    editable={isSubed}
+                    style={[styles.input, {height: 100}]}
+                    onChangeText={setExample}
+                    value={example}
+                    placeholder={
+                      isSubed ? 'Example' : 'Subscripe to can use this'
+                    }
+                    placeholderTextColor={'#ff4c0080'}
+                    multiline={true}
+                    textAlignVertical={'top'}
+                  />
+                </View>
+              </View>
+              {isSubed && exampleSplited.length !== 0 ? (
+                <View style={styles.exIndexStyle}>
+                  <Text style={styles.exIndexHintStyle}>
+                    Choose the word belong to the expression : "{learnedWord}"
+                  </Text>
+                  <View style={styles.exSplitedStyle}>
+                    {exampleSplited.map((item, index) => {
+                      return (
+                        <TouchableOpacity
+                          key={index}
+                          onPress={() => {
+                            chooseExampleIndex(index);
+                          }}
+                          style={[
+                            styles.wordInBagBox,
+                            {
+                              backgroundColor:
+                                index === exampleIndex ? 'blue' : '#fff',
+                            },
+                          ]}>
+                          <View>
+                            <Text style={styles.wordInBagTxt}>{item}</Text>
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+              ) : null}
+            </View>
+            {/* The Word IMAGE */}
+            <View style>
+              <Image source={Premium} style={styles.premiumImageBtn} />
+              <View style={[styles.addImageBox, {opacity: isSubed ? 1 : 0.3}]}>
+                <TouchableOpacity
+                  disabled={!isSubed}
+                  style={styles.btnBox}
+                  onPress={() => {
+                    uploadFile();
+                  }}>
+                  <View style={styles.btnInternBox}>
+                    {file !== null ? (
+                      <Image
+                        style={{width: 100, height: 100}}
+                        source={{uri: file.assets[0].uri}}
+                        resizeMethod={'resize'}
+                        resizeMode={'contain'}
+                      />
+                    ) : (
+                      <FontAwesome5 name="file-image" size={30} color="#fff" />
+                    )}
+                    {file !== null ? null : (
+                      <Text style={styles.btnText}>Add Image</Text>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
           {load ? <ActivityIndicator size="large" color="#00ff00" /> : null}
@@ -313,9 +424,23 @@ const CustomScreen = () => {
               style={[
                 styles.goBtnStyle,
                 {
-                  backgroundColor: '#FF4C00',
+                  opacity:
+                    nativeWord === '' ||
+                    learnedWord === '' ||
+                    (isSubed &&
+                      exampleSplited.length !== 0 &&
+                      exampleIndex === null)
+                      ? 0.3
+                      : 1,
                 },
               ]}
+              disabled={
+                nativeWord === '' ||
+                learnedWord === '' ||
+                (isSubed &&
+                  exampleSplited.length !== 0 &&
+                  exampleIndex === null)
+              }
               onPress={() => {
                 //   goToLoop();
                 uploadToFirebase();
@@ -429,27 +554,53 @@ const CustomScreen = () => {
               </TouchableOpacity>
             ) : null}
           </View>
-          <View style={styles.reviewWordsContainer}>
-            {customWords.map((item, index) => {
-              return (
-                <CustomWordComp
-                  key={index}
-                  wordItem={item}
-                  word={'candlelight'}
-                />
-              );
-            })}
-          </View>
         </View>
-      </View>
-      {/* <View style={{height: 800}}></View> */}
-    </ScrollView>
+        <View style={styles.reviewWordsContainer}>
+          {customWords.map((item, index) => {
+            return <CustomWordComp key={index} wordItem={item} />;
+          })}
+          {customWordsPassed.map((item, index) => {
+            return (
+              <CustomWordComp key={index} wordItem={item} isPassed={true} />
+            );
+          })}
+        </View>
+
+        {/* <View style={{height: 800}}></View> */}
+      </ScrollView>
+    </View>
   );
 };
 
 export default CustomScreen;
 
 const styles = StyleSheet.create({
+  premiumImageBtn: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    right: 50,
+    top: 30,
+  },
+  premiumImage: {
+    position: 'absolute',
+    width: 50,
+    height: 50,
+    right: 50,
+    top: 20,
+  },
+  exSplitedStyle: {
+    flexDirection: 'row',
+    marginVertical: 10,
+  },
+  exIndexHintStyle: {
+    color: '#fff',
+  },
+  exIndexStyle: {
+    justifyContent: 'center',
+    // backgroundColor: 'red',
+    alignItems: 'center',
+  },
   customStepContainer: {
     paddingHorizontal: 20,
   },
@@ -462,6 +613,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     width: '90%',
     marginLeft: '10%',
+    marginVertical: 20,
   },
   btnText: {
     fontFamily: FONTS.enFontFamilyMedium,
@@ -471,12 +623,14 @@ const styles = StyleSheet.create({
   },
   btnInternBox: {
     flexDirection: 'row',
+    justifyContent: 'center',
   },
   btnBox: {
-    padding: 20,
-    borderWidth: 1,
+    padding: 15,
+    borderWidth: 2,
     borderColor: '#fff',
     borderRadius: 10,
+    borderStyle: 'dashed',
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -536,7 +690,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 2,
-    marginHorizontal: 2,
+    marginHorizontal: 5,
   },
   leftLine: {
     width: 5,

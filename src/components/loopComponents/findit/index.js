@@ -209,16 +209,21 @@ const FindIt = props => {
         payload: loopStep + 1,
       });
       if (loopType === 0) {
+        console.log(
+          'HERE We Will update default wordsBag step in the realm DB',
+        );
         // update default wordsBag step in the realm DB
         realm.write(() => {
           loop[0].stepOfDefaultWordsBag = loop[0].stepOfDefaultWordsBag + 1;
         });
       } else if (loopType === 1) {
+        console.log('HERE We Will update custom wordsBag step in the realm DB');
         // update custom wordsBag step in the realm DB
         realm.write(() => {
           loop[0].stepOfCustomWordsBag = loop[0].stepOfCustomWordsBag + 1;
         });
       } else if (loopType === 2) {
+        console.log('HERE We Will update review wordsBag step in the realm DB');
         // update review wordsBag step in the realm DB
         realm.write(() => {
           loop[0].stepOfReviewWordsBag = loop[0].stepOfReviewWordsBag + 1;

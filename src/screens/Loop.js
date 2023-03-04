@@ -271,10 +271,11 @@ const LoopManager = ({route, navigation}) => {
   const updateCustomRoad = async () => {
     try {
       console.log(' customBagArray from updateCustomRoad :', customBagArray);
-      realm.write(() => {
-        loop[0].customWordsBag = customBagArray;
-      });
+
       if (isCustomDiscover === 0 && customWordsBagRoad.length === 0) {
+        realm.write(() => {
+          loop[0].customWordsBag = customBagArray;
+        });
         console.log(
           'we will add to the daybags and passedwords : ',
           customWordsBagRoad,

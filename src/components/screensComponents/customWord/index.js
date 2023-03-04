@@ -17,7 +17,7 @@ const mapState = ({loopRedux}) => ({
 });
 
 const CustomWordComp = props => {
-  const {wordItem} = props;
+  const {wordItem, isPassed} = props;
   const realm = useRealm();
   const loop = useQuery(Loop);
 
@@ -87,7 +87,9 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#1D1E37',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,.10)',
+    // borderColor: 'rgba(255,255,255,.60)',
+    borderColor: '  rgba(255, 76, 0,.40)',
+
     width: '49%',
     height: 140,
     borderRadius: 20,

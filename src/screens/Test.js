@@ -403,7 +403,9 @@ const Test = () => {
         ourWords?.map((element, index) => {
           return (
             <View key={index} style={styles.taskStyle}>
-              <Text style={styles.taskName}>{element.wordLearnedLang}</Text>
+              <Text style={styles.taskName}>
+                {element.wordLearnedLang} / {element.passed ? 'true' : 'false'}
+              </Text>
               <View style={{flexDirection: 'row'}}>
                 <TouchableOpacity
                   style={styles.taskUpdateStyle}

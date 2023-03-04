@@ -4,7 +4,8 @@ import {RealmContext} from '../../../realm/models';
 import {User} from '../../../realm/models/User';
 import {Loop} from '../../../realm/models/Loop';
 import {Word} from '../../../realm/models/Word';
-import {FONTS} from '../../../constants';
+import {COLORS_THEME, FONTS} from '../../../constants';
+import Octicons from 'react-native-vector-icons/Octicons';
 
 const {useQuery, useObject, useRealm} = RealmContext;
 
@@ -17,9 +18,54 @@ const Steps = props => {
   return (
     <View style={styles.stepContainer}>
       <View style={styles.stepsWrapper}>
-        <Text style={styles.stepTitle}>Discover</Text>
-        <Text style={styles.stepTitle}>Practice</Text>
-        <Text style={styles.stepTitle}>Master</Text>
+        <Text
+          style={[
+            styles.stepTitle,
+            {
+              color:
+                stepOfWhat === 0
+                  ? loop[0].isDefaultDiscover === 0
+                    ? COLORS_THEME.primary
+                    : '#fff'
+                  : loop[0].isCustomDiscover === 0
+                  ? COLORS_THEME.primary
+                  : '#fff',
+            },
+          ]}>
+          Discover
+        </Text>
+        <Text
+          style={[
+            styles.stepTitle,
+            {
+              color:
+                stepOfWhat === 0
+                  ? loop[0].isDefaultDiscover === 1
+                    ? COLORS_THEME.primary
+                    : '#fff'
+                  : loop[0].isCustomDiscover === 1
+                  ? COLORS_THEME.primary
+                  : '#fff',
+            },
+          ]}>
+          Practice
+        </Text>
+        <Text
+          style={[
+            styles.stepTitle,
+            {
+              color:
+                stepOfWhat === 0
+                  ? loop[0].isDefaultDiscover === 2
+                    ? COLORS_THEME.primary
+                    : '#fff'
+                  : loop[0].isCustomDiscover === 2
+                  ? COLORS_THEME.primary
+                  : '#fff',
+            },
+          ]}>
+          Master
+        </Text>
       </View>
       <View style={styles.stepsShapeWrapper}>
         <View style={styles.stepsShape}>
@@ -27,44 +73,143 @@ const Steps = props => {
             style={[
               styles.stepCircle,
               {
+                width:
+                  stepOfWhat === 0
+                    ? loop[0].isDefaultDiscover === 0
+                      ? 20
+                      : loop[0].isDefaultDiscover > 0
+                      ? 30
+                      : 15
+                    : loop[0].isCustomDiscover === 0
+                    ? 20
+                    : loop[0].isCustomDiscover > 0
+                    ? 30
+                    : 15,
+
+                height:
+                  stepOfWhat === 0
+                    ? loop[0].isDefaultDiscover === 0
+                      ? 20
+                      : loop[0].isDefaultDiscover > 0
+                      ? 30
+                      : 15
+                    : loop[0].isCustomDiscover === 0
+                    ? 20
+                    : loop[0].isCustomDiscover > 0
+                    ? 30
+                    : 15,
                 backgroundColor:
                   stepOfWhat === 0
                     ? loop[0].isDefaultDiscover === 0
-                      ? '#000'
+                      ? COLORS_THEME.primary
                       : '#fff'
                     : loop[0].isCustomDiscover === 0
-                    ? '#000'
+                    ? COLORS_THEME.primary
                     : '#fff',
               },
-            ]}></View>
+            ]}>
+            {stepOfWhat === 0 ? (
+              loop[0].isDefaultDiscover > 0 ? (
+                <Octicons name="check" size={26} color="#000" />
+              ) : null
+            ) : loop[0].isCustomDiscover > 0 ? (
+              <Octicons name="check" size={26} color="#000" />
+            ) : null}
+          </View>
           <View
             style={[
               styles.stepCircle,
               {
+                width:
+                  stepOfWhat === 0
+                    ? loop[0].isDefaultDiscover === 1
+                      ? 20
+                      : loop[0].isDefaultDiscover > 1
+                      ? 30
+                      : 15
+                    : loop[0].isCustomDiscover === 1
+                    ? 20
+                    : loop[0].isCustomDiscover > 1
+                    ? 30
+                    : 15,
+
+                height:
+                  stepOfWhat === 0
+                    ? loop[0].isDefaultDiscover === 1
+                      ? 20
+                      : loop[0].isDefaultDiscover > 1
+                      ? 30
+                      : 15
+                    : loop[0].isCustomDiscover === 1
+                    ? 20
+                    : loop[0].isCustomDiscover > 1
+                    ? 30
+                    : 15,
                 backgroundColor:
                   stepOfWhat === 0
                     ? loop[0].isDefaultDiscover === 1
-                      ? '#000'
+                      ? COLORS_THEME.primary
                       : '#fff'
                     : loop[0].isCustomDiscover === 1
-                    ? '#000'
+                    ? COLORS_THEME.primary
                     : '#fff',
               },
-            ]}></View>
+            ]}>
+            {stepOfWhat === 0 ? (
+              loop[0].isDefaultDiscover > 1 ? (
+                <Octicons name="check" size={26} color="#000" />
+              ) : null
+            ) : loop[0].isCustomDiscover > 1 ? (
+              <Octicons name="check" size={26} color="#000" />
+            ) : null}
+          </View>
           <View
             style={[
               styles.stepCircle,
               {
+                width:
+                  stepOfWhat === 0
+                    ? loop[0].isDefaultDiscover === 2
+                      ? 20
+                      : loop[0].isDefaultDiscover > 2
+                      ? 30
+                      : 15
+                    : loop[0].isCustomDiscover === 2
+                    ? 20
+                    : loop[0].isCustomDiscover > 2
+                    ? 30
+                    : 15,
+
+                height:
+                  stepOfWhat === 0
+                    ? loop[0].isDefaultDiscover === 2
+                      ? 20
+                      : loop[0].isDefaultDiscover > 2
+                      ? 30
+                      : 15
+                    : loop[0].isCustomDiscover === 2
+                    ? 20
+                    : loop[0].isCustomDiscover > 2
+                    ? 30
+                    : 15,
                 backgroundColor:
                   stepOfWhat === 0
                     ? loop[0].isDefaultDiscover === 2
-                      ? '#000'
+                      ? COLORS_THEME.primary
                       : '#fff'
                     : loop[0].isCustomDiscover === 2
-                    ? '#000'
+                    ? COLORS_THEME.primary
                     : '#fff',
               },
-            ]}></View>
+            ]}>
+            {stepOfWhat === 0 ? (
+              loop[0].isDefaultDiscover > 2 ? (
+                <Octicons name="check" size={26} color="#000" />
+              ) : null
+            ) : loop[0].isCustomDiscover > 2 ? (
+              <Octicons name="check" size={26} color="#000" />
+            ) : null}
+          </View>
         </View>
       </View>
     </View>
@@ -86,7 +231,7 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     color: '#fff',
-    fontFamily: FONTS.enFontFamilyMedium,
+    fontFamily: FONTS.enFontFamilyBold,
   },
   stepsShapeWrapper: {
     paddingHorizontal: 10,
@@ -106,5 +251,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 20,
     backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
