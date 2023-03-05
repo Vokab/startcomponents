@@ -1,4 +1,4 @@
-import images from './images';
+import IMAGES from './images';
 import {
   COLORS,
   SIZES,
@@ -9,4 +9,4 @@ import {
 } from './theme';
 import icons from './icons';
 
-export {images, COLORS, SIZES, FONTS, icons, COLORS_THEME, FONT_TEXT_CUSTOM1};
+export {IMAGES, COLORS, SIZES, FONTS, icons, COLORS_THEME, FONT_TEXT_CUSTOM1};

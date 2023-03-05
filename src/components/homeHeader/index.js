@@ -1,7 +1,7 @@
-import {StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, Text, View, Image} from 'react-native';
 import React, {useEffect} from 'react';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import {FONTS} from '../../constants';
+import {FONTS, IMAGES} from '../../constants';
 import {useSelector} from 'react-redux';
 import {RealmContext} from '../../realm/models';
 import {User} from '../../realm/models/User';
@@ -19,13 +19,15 @@ const HomeHeader = () => {
   return (
     <View style={styles.container}>
       <View style={styles.learnedLang}>
-        <Text style={styles.learnedLangTxt}>
-          {user[0].userLearnedLang ? user[0].userLearnedLang : '99'}
-        </Text>
+        {user[0].userLearnedLang ? (
+          <Image source={IMAGES.ger} style={styles.falgStyle} />
+        ) : (
+          <Text style={styles.learnedLangTxt}>99</Text>
+        )}
       </View>
       <View style={styles.week}>
         <Text style={styles.weekTxt}>
-          {user[0].currentWeek ? user[0].currentWeek : 'WW'}
+          Week {user[0].currentWeek ? user[0].currentWeek : 'WW'}
         </Text>
       </View>
       <View style={styles.user}>
@@ -38,6 +40,10 @@ const HomeHeader = () => {
 export default HomeHeader;
 
 const styles = StyleSheet.create({
+  falgStyle: {
+    width: 25,
+    height: 25,
+  },
   learnedLang: {},
   week: {},
   user: {},
@@ -55,6 +61,6 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    // marginBottom: 100,
   },
 });

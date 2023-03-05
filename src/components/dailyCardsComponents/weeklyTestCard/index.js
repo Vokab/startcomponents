@@ -1,24 +1,18 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, Text, TouchableOpacity, View, Image} from 'react-native';
 import React from 'react';
 import {FONTS} from '../../../constants';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import Tester from '../../../../assets/tester.png';
 
-const DayCard = () => {
-  const isThisDayPassed = false;
+const WeeklyTestCard = () => {
+  const isThisDayPassed = true;
   return (
     <View style={[styles.container, {height: !isThisDayPassed ? 150 : null}]}>
       {isThisDayPassed ? (
         <View style={styles.titleWrapper}>
-          <FontAwesome5
-            name={'check-circle'}
-            size={40}
-            color="rgba(0, 0, 0, 0.9)"
-            style={{marginBottom: 20}}
-          />
-          <Text style={styles.title}>
-            Congratulation you finished this day words
-          </Text>
+          <Image source={Tester} style={styles.testImg} />
+          <Text style={styles.title}>Test end of the week</Text>
           <View style={styles.buttonWrapper}>
             <TouchableOpacity
               style={styles.buttonStyle}
@@ -34,23 +28,28 @@ const DayCard = () => {
       )}
 
       {/* <View style={styles.cardDate}>
-        <Text style={styles.cardDateTxt}>9 Wed</Text>
-      </View> */}
+          <Text style={styles.cardDateTxt}>9 Wed</Text>
+        </View> */}
       {/* <View style={styles.titleWrapper}>
-        <Text style={styles.title}>Day 1</Text>
-      </View> */}
+          <Text style={styles.title}>Day 1</Text>
+        </View> */}
       {/* <View style={styles.buttonWrapper}>
-        <TouchableOpacity style={styles.buttonStyle}>
-          <Text style={styles.buttonTxtStyle}>Take test</Text>
-        </TouchableOpacity>
-      </View> */}
+          <TouchableOpacity style={styles.buttonStyle}>
+            <Text style={styles.buttonTxtStyle}>Take test</Text>
+          </TouchableOpacity>
+        </View> */}
     </View>
   );
 };
 
-export default DayCard;
+export default WeeklyTestCard;
 
 const styles = StyleSheet.create({
+  testImg: {
+    width: 100,
+    height: 100,
+    marginBottom: 20,
+  },
   buttonWrapper: {
     flexDirection: 'row',
     justifyContent: 'center',

@@ -10,6 +10,7 @@ import {COLORS_THEME} from '../constants';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Test from './Test';
 import CustomScreen from './CustomScreen';
+import Dev from './Dev';
 const Tab = createBottomTabNavigator();
 
 const TabScreen = () => {
@@ -104,7 +105,7 @@ const TabScreen = () => {
       />
       <Tab.Screen
         name="Profile"
-        component={Profile}
+        component={Dev}
         options={{
           tabBarLabel: 'Profile',
           tabBarIcon: ({focused}) => (

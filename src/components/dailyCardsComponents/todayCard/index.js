@@ -10,13 +10,14 @@ import {
 import React, {useEffect, useState, useMemo} from 'react';
 import {COLORS_THEME, FONTS, SIZES} from '../../../constants';
 import Feather from 'react-native-vector-icons/Feather';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+
 import {useNavigation} from '@react-navigation/native';
 import {RealmContext} from '../../../realm/models';
 import {User} from '../../../realm/models/User';
 import {Loop} from '../../../realm/models/Loop';
 import {Word} from '../../../realm/models/Word';
 import Steps from '../../screensComponents/steps';
+import DailyWord from '../../screensComponents/dailyWord';
 
 const {useQuery, useObject, useRealm} = RealmContext;
 
@@ -43,17 +44,23 @@ const TodayCard = props => {
   const loadMoreWords = () => {};
   useEffect(() => {}, []);
 
-  const changeWordModal = async (item, index) => {
-    console.log('Start changeWord', item);
-    const ids = await getIdsOfWordsBag();
-    const idsQuery = ids.map(id => `_id != "${id}"`).join(' AND ');
-    setItemWillChange(index);
-    const newOnes = words.filtered(
-      `(${idsQuery}) AND deleted != true AND passed != true`,
-    );
-    setSuggestions(newOnes);
-    setVisible(true);
-  };
+  // const changeWordModal = async (item, index) => {
+  //   console.log('Start changeWord', item);
+  //   const ids = await getIdsOfWordsBag();
+  //   const idsQuery = ids.map(id => `_id != "${id}"`).join(' AND ');
+  //   setItemWillChange(index);
+  //   const newOnes = words.filtered(
+  //     `(${idsQuery}) AND deleted != true AND passed != true`,
+  //   );
+  //   setSuggestions(newOnes);
+  //   setVisible(true);
+  // };
+
+  // const disappearWordModal = (item, index) => {
+  //   console.log('Start disappearWord', item);
+  //   setDeleteModalVisible(true);
+  //   setItemWillDeleted(index);
+  // };
 
   const getIdsOfWordsBag = async () => {
     const array = [];
@@ -63,11 +70,7 @@ const TodayCard = props => {
     // console.log('array =>',array)
     return array;
   };
-  const disappearWordModal = (item, index) => {
-    console.log('Start disappearWord', item);
-    setDeleteModalVisible(true);
-    setItemWillDeleted(index);
-  };
+
   const confirmDisappear = async () => {
     console.log('Start confirmDisappear');
     let itemWillMarkedDeleted = words.filtered(
@@ -111,10 +114,13 @@ const TodayCard = props => {
   };
   return (
     <View style={styles.container}>
-      <View style={styles.titleWrapper}>
+      {/* <View style={styles.titleWrapper}>
         <Text style={styles.title}>Day 2</Text>
+      </View> */}
+      <View style={{paddingHorizontal: 20}}>
+        <Steps stepOfWhat={0} />
       </View>
-      {<Steps stepOfWhat={0} />}
+
       <View style={styles.buttonWrapper}>
         <TouchableOpacity
           style={styles.buttonStyle}
@@ -123,11 +129,16 @@ const TodayCard = props => {
           }}>
           <Text style={styles.buttonTxtStyle}>
             {/* {0 === 0 ? (0 < 3 ? 'Start' + 1 : 'Review' + 1) : 'Continue' + 1} */}
-            {loop[0].stepOfDefaultWordsBag === 0
+            {/* {loop[0].stepOfDefaultWordsBag === 0
               ? loop[0].isDefaultDiscover < 3
                 ? 'Start' + loop[0].isDefaultDiscover
                 : 'Review' + loop[0].isDefaultDiscover
-              : 'Continue' + loop[0].isDefaultDiscover}
+              : 'Continue' + loop[0].isDefaultDiscover} */}
+            {loop[0].stepOfDefaultWordsBag === 0
+              ? loop[0].isDefaultDiscover < 3
+                ? 'Start'
+                : 'Review'
+              : 'Continue'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -135,25 +146,18 @@ const TodayCard = props => {
         {loop[0].defaultWordsBag.map((item, index) => {
           // console.log('item from list', item.myId);
           return (
-            <View key={index} style={styles.wordBox}>
-              <Text style={styles.wordTxt}>{item.wordLearnedLang}</Text>
-              <View style={styles.btnBox}>
-                <TouchableOpacity
-                  style={styles.changeBtn}
-                  onPress={() => {
-                    changeWordModal(item, index);
-                  }}>
-                  <FontAwesome name={'refresh'} size={20} color={'#000'} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.disappearBtn}
-                  onPress={() => {
-                    disappearWordModal(item, index);
-                  }}>
-                  <Feather name={'eye-off'} size={20} color={'#fff'} />
-                </TouchableOpacity>
-              </View>
-            </View>
+            <DailyWord
+              key={index}
+              item={item}
+              index={index}
+              setItemWillChange={setItemWillChange}
+              words={words}
+              setSuggestions={setSuggestions}
+              setVisible={setVisible}
+              loop={loop}
+              setDeleteModalVisible={setDeleteModalVisible}
+              setItemWillDeleted={setItemWillDeleted}
+            />
           );
         })}
       </View>
@@ -400,6 +404,10 @@ const styles = StyleSheet.create({
   listOfWords: {
     marginTop: 20,
     width: '100%',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    // justifyContent: 'space-around',
+    paddingHorizontal: 4,
     // backgroundColor: 'red',
   },
   showMore: {
@@ -459,17 +467,24 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: 10,
   },
-  buttonWrapper: {flexDirection: 'row', paddingHorizontal: 10},
+  buttonWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
   buttonTxtStyle: {
     fontSize: 24,
     fontFamily: FONTS.enFontFamilyBold,
-    color: '#1D1E37',
+    color: '#ffffff',
+    textAlign: 'center',
   },
   buttonStyle: {
     paddingHorizontal: 20,
     paddingVertical: 5,
     borderRadius: 5,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS_THEME.primary,
+    width: '70%',
   },
   title: {
     fontSize: 30,
@@ -481,13 +496,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   container: {
-    backgroundColor: 'rgba(255,76,0,.8)',
+    backgroundColor: '#262738',
     // backgroundColor: '#FF4C0080',
     // height: '100%',
     width: '100%',
     paddingVertical: 20,
-    paddingHorizontal: 10,
+    // paddingHorizontal: 10,
     justifyContent: 'space-around',
     borderRadius: 20,
+    zIndex: 2,
   },
 });
