@@ -4,36 +4,41 @@ import {
   View,
   Image,
   TouchableOpacity,
-  Alert,
+  Animated,
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import {COLORS_THEME, FONTS} from '../../../constants/theme';
 import {SIZES} from '../../../constants/theme';
 import Arabic from '../../../../assets/sa.png';
+import English from '../../../../assets/united-states.png';
 import ShadowEffect from '../../../../assets/shadowImg.png';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {wrapper} from '../../besmart/firstAlgo';
+import {wrapper} from '../../../besmart/firstAlgo';
 import {useDispatch, useSelector} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
 import {
   finishLoop,
   goNextRedux,
   resetLoopStepRedux,
   updateLoopRoad,
 } from '../../../redux/Loop/loop.actions';
+import {useNavigation} from '@react-navigation/native';
 import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
-import {Loop} from '../../../realm/models/Loop';
 import {RealmContext} from '../../../realm/models';
+import {User} from '../../../realm/models/User';
+import {Loop} from '../../../realm/models/Loop';
+import {Word} from '../../../realm/models/Word';
 import {PassedWords} from '../../../realm/models/PassedWords';
 import LottieView from 'lottie-react-native';
+import Suceess from '../../../../assets/suceess.png';
+
 const {useQuery, useObject, useRealm} = RealmContext;
 const mapState = ({loopRedux}) => ({
   loopStep: loopRedux.loopStep,
   loopRoad: loopRedux.loopRoad,
 });
 
-const FindIt = props => {
+const CardsImg = props => {
   const realm = useRealm();
   const loop = useQuery(Loop);
   let isDefaultDiscover = loop[0].isDefaultDiscover;
@@ -44,16 +49,33 @@ const FindIt = props => {
   const dispatch = useDispatch();
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [words, setWord] = useState('keyboard');
-  const [suggWords, setSuggWords] = useState([]);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [word, setWord] = useState('');
+  const [wordCards, setWordCards] = useState([]);
+  const [respArray, setRespArray] = useState([]);
   const [isChecked, setIsChecked] = useState(false);
   const [trueOfFalse, setTrueOfFalse] = useState(false);
+  const [fadeInOut, setFadeInOut] = useState(false);
 
   const animElement = useRef();
   const animElementWrong = useRef();
-  const word = 'test';
-  // const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id);
+
+  const fadeAnimnNative = useRef(new Animated.Value(1)).current;
+  const fadeAnimLearn = useRef(new Animated.Value(0)).current;
+
+  const wordVar = 'oussama';
+  // const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id); // REMOVED FOR ANIMATION TESTING
+  const cardsPos = [
+    {bottom: '50%', left: '20%'},
+    {bottom: '30%', left: '40%'},
+    {bottom: '60%', left: '60%'},
+    {bottom: '20%', left: '70%'},
+    {bottom: '10%', left: '20%'},
+    {bottom: '00%', left: '50%'},
+    {bottom: '70%', left: '40%'},
+    {bottom: '50%', left: '80%'},
+    {bottom: '70%', left: '5%'},
+    {bottom: '80%', left: '80%'},
+  ];
   const containerBg = {
     backgroundColor: darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite,
   };
@@ -62,65 +84,56 @@ const FindIt = props => {
   };
   const color = darkMode ? COLORS_THEME.textWhite : COLORS_THEME.textDark;
 
-  const shuffle = async array => {
-    let currentIndex = array.length,
-      randomIndex;
-    // While there remain elements to shuffle.
-    while (currentIndex != 0) {
-      // Pick a remaining element.
-      randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex--;
-      // And swap it with the current element.
-      [array[currentIndex], array[randomIndex]] = [
-        array[randomIndex],
-        array[currentIndex],
-      ];
-    }
-    // setShuffledArray(array);
-    return array;
+  useEffect(() => {
+    // let wordVariable = loopRoad[loopStep].wordObj.wordLearnedLang;
+    const getData = async () => {
+      const data = await wrapper(wordVar);
+      console.log('cards =>', data);
+      setWordCards(data);
+    };
+    getData();
+  }, [loopStep]);
+  const toogleSugResp = myItem => {
+    // showOrNot true => sugg card
+    // showOrNot false => response card
+    console.log('myItem of word =>', myItem);
+    console.log('old wordcards =>', wordCards);
+    const newAr = [];
+    wordCards.forEach(item => {
+      if (item.wordId === myItem.wordId) {
+        item.showOrNot = !item.showOrNot;
+        if (!myItem.showOrNot) {
+          addToRespArray(myItem);
+          console.log('now we need to add it to respo array');
+        } else {
+          setRespArray([]);
+          setRespArray(
+            respArray.filter(itemi => itemi.wordId !== myItem.wordId),
+          );
+          console.log('now we need to remove it to respo array');
+        }
+      }
+      newAr.push(item);
+    });
+    console.log('new wordcards =>', newAr);
+    // addToRespArray(myItem);
+    setWordCards(newAr);
   };
 
-  const buildSuggWords = async () => {
-    // suggestions words are one by cutting one random char and one by adding random char in random place
-    let arr = [];
-    wordToArray = word.split('');
-    wordToArrayForRemove = word.split('');
-    randomItem = wordToArray[Math.floor(Math.random() * wordToArray.length)];
-    randomIndex = Math.floor(Math.random() * wordToArray.length);
-    secRandomIndex = Math.floor(Math.random() * wordToArray.length);
-
-    wordToArray.splice(randomIndex, 0, randomItem);
-    wordToArrayForRemove.splice(secRandomIndex, 1);
-    // console.log('randomIndex =>', randomIndex);
-    // console.log('randomItem =>', randomItem);
-    // console.log('secRandomIndex =>', secRandomIndex);
-    // console.log('wordToArray =>', wordToArray);
-    // console.log('wordToArrayForRemove =>', wordToArrayForRemove);
-    arr.push(wordToArray.join(''), wordToArrayForRemove.join(''), word);
-    let shuffledArray = await shuffle(arr);
-    setSuggWords(shuffledArray);
+  const addToRespArray = item => {
+    const newAr = [];
+    setRespArray([...respArray, item]);
   };
-  const selectItem = item => {
-    console.log('selectItem => ', selectedItem);
-    setSelectedItem(item);
-  };
-  useEffect(() => {
-    buildSuggWords();
-  }, []);
-  useEffect(() => {
-    if (trueOfFalse === true) {
-      animElement.current?.play();
-      // correctSound.play();
-    } else {
-      animElementWrong.current?.play();
-      // wrongSound.play();
-    }
-  }, [trueOfFalse, isChecked]);
 
   const checkResponse = () => {
+    let respoArToString = '';
+    respArray.forEach(item => {
+      respoArToString = respoArToString + item.word;
+    });
     setIsChecked(true);
-    if (word === selectedItem) {
+    if (wordVar === respoArToString) {
       setTrueOfFalse(true);
+      // setRespArray([]);
       // try {
       //   realm.write(() => {
       //     passedWord.score = passedWord.score + 1;
@@ -135,7 +148,7 @@ const FindIt = props => {
       //     err.message,
       //   );
       // }
-      Alert.alert('Correct Answer');
+      alert(`Correct Answer ${respoArToString}`);
     } else {
       setTrueOfFalse(false);
       // try {
@@ -149,14 +162,13 @@ const FindIt = props => {
       //     err.message,
       //   );
       // }
-      Alert.alert('Wrong Answer -- Correct answer is ', word);
+      alert(`Wrong answer : ${respoArToString}, Correct answer is: ${wordVar}`);
+      // setRespArray([]);
       if (loopType != 3 && loopType != 4) {
         updateLoopRoad();
       }
     }
-    // setSelectedItem(null);
   };
-
   const updateLoopRoad = () => {
     // update redux Loop Road
     loopRoad.push(loopRoad[loopStep]);
@@ -172,27 +184,27 @@ const FindIt = props => {
     });
 
     if (loopType === 0) {
-      // it means default
+      // it means Deafault
       realm.write(() => {
         loop[0].defaultWordsBagRoad = newRoad;
       });
     } else if (loopType === 1) {
-      // it means custom
+      // it means Custom
       realm.write(() => {
-        loop[0].customWordsBagRoad = newRoad;
+        loop[0].defaultWordsBagRoad = newRoad;
       });
     } else if (loopType === 2) {
-      // it means review
+      // it means Review
       realm.write(() => {
-        loop[0].reviewWordsBagRoad = newRoad;
+        loop[0].defaultWordsBagRoad = newRoad;
       });
     }
   };
-
   const loopExit = async () => {
     // reset loopRedux Step
     // reset loopRedux Road
     // reset loopRedux isReady
+    setRespArray([]);
     dispatch({
       type: loopReduxTypes.RESET_LOOP,
     });
@@ -225,29 +237,13 @@ const FindIt = props => {
         payload: loopStep + 1,
       });
       if (loopType === 0) {
-        console.log(
-          'HERE We Will update default wordsBag step in the realm DB',
-        );
-        // update default wordsBag step in the realm DB
+        // update default wordsBag step in the real DB
         realm.write(() => {
           loop[0].stepOfDefaultWordsBag = loop[0].stepOfDefaultWordsBag + 1;
-        });
-      } else if (loopType === 1) {
-        console.log('HERE We Will update custom wordsBag step in the realm DB');
-        // update custom wordsBag step in the realm DB
-        realm.write(() => {
-          loop[0].stepOfCustomWordsBag = loop[0].stepOfCustomWordsBag + 1;
-        });
-      } else if (loopType === 2) {
-        console.log('HERE We Will update review wordsBag step in the realm DB');
-        // update review wordsBag step in the realm DB
-        realm.write(() => {
-          loop[0].stepOfReviewWordsBag = loop[0].stepOfReviewWordsBag + 1;
         });
       }
     } else {
       // if custom or default words bag we need to update the isDefaultDiscover variable by add 1
-      // console.log('loopStep =>', loopStep);
       if (loopType === 0 && isDefaultDiscover < 3) {
         // add 1 to isDefaultDiscover in the realm DB
         realm.write(() => {
@@ -262,10 +258,64 @@ const FindIt = props => {
     }
   };
 
+  const fadeIn = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 1 in 5 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+  const fadeOut = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 0 in 3 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+  useEffect(() => {
+    if (isChecked) {
+      if (trueOfFalse === true) {
+        animElement.current?.play();
+        // correctSound.play();
+      } else {
+        animElementWrong.current?.play();
+        // wrongSound.play();
+      }
+    }
+  }, [trueOfFalse, isChecked]);
+
+  useEffect(() => {
+    if (isChecked && !trueOfFalse) {
+      const interval = setInterval(fadeInOut ? fadeIn : fadeOut, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [fadeInOut, isChecked, trueOfFalse]);
+
+  // useEffect(() => {
+  //   console.log(
+  //     'we are in the step number',
+  //     loopRoad[loopStep].wordObj.wordLearnedLang,
+  //     // setWord(loopRoad[loopStep].wordObj.wordLearnedLang),
+  //   );
+  // }, [loopStep]);
+
   return (
     <View style={[styles.wrapper, containerBg]}>
       <Image source={ShadowEffect} style={styles.shadowImageBg} />
-      <Image source={ShadowEffect} style={styles.shadowImageBg2} />
       {!isKeyboardVisible && (
         <View style={styles.header}>
           <TouchableOpacity>
@@ -282,7 +332,7 @@ const FindIt = props => {
               size={30}
               color={'#D2FF00'}
             />
-            <Text style={styles.questionText}>Choose what mean</Text>
+            <Text style={styles.questionText}>Build with cards what mean</Text>
           </View>
         </View>
       )}
@@ -291,14 +341,43 @@ const FindIt = props => {
           styles.nativeWordBox,
           {backgroundColor: darkMode ? '#00000040' : '#ffffff50'},
         ]}>
-        <View style={styles.nativeWordBoxContent}>
-          <Text style={[styles.nativeWordTxt, {color: color}]}>
-            {'oussama'}
-          </Text>
-          <Image source={Arabic} style={styles.nativeFlag} />
-        </View>
+        <Animated.View
+          style={[styles.nativeWordBoxContent, {opacity: fadeAnimnNative}]}>
+          {/* <Text style={[styles.nativeWordTxt, {color: color}]}>نجاح</Text> */}
+          <View style={styles.wordImgWrapper}>
+            <Image
+              resizeMethod={'resize'}
+              resizeMode="contain"
+              source={Suceess}
+              style={styles.wordImg}
+            />
+          </View>
+          {/* <Image source={Arabic} style={styles.nativeFlag} /> */}
+        </Animated.View>
+        <Animated.View
+          style={[styles.nativeWordBoxContent, {opacity: fadeAnimLearn}]}>
+          <Image source={English} style={styles.learnedFlag} />
+          <Text style={[styles.nativeWordTxt, {color: color}]}>Konsen</Text>
+        </Animated.View>
       </View>
       <View style={styles.cardsResponseContainer}>
+        <View style={styles.cardsResponse}>
+          {respArray.map((myCard, index) => {
+            // console.log('this index is =>', myCard.showOrNot);
+
+            return (
+              <TouchableOpacity
+                key={index}
+                style={[styles.cardRespStyle]}
+                onPress={() => toogleSugResp(myCard)}>
+                <Text style={[styles.cardRespTxt]}>{myCard.word}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.cardsContainer}>
         {isChecked ? (
           trueOfFalse ? (
             <LottieView
@@ -336,32 +415,28 @@ const FindIt = props => {
             />
           )
         ) : null}
-        {suggWords.map((item, index) => {
-          return (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.suggCard,
-                {
-                  backgroundColor: isChecked
-                    ? selectedItem === item
-                      ? selectedItem === word
-                        ? '#178b2e'
-                        : '#6d0303'
-                      : item === word
-                      ? '#178b2e'
-                      : '#1D1E3750'
-                    : selectedItem === item
-                    ? '#FF4C00'
-                    : '#1D1E3750',
-                },
-              ]}
-              onPress={() => {
-                selectItem(item);
-              }}>
-              <Text style={styles.suggCardText}>{item}</Text>
-            </TouchableOpacity>
-          );
+        {wordCards.map((myCard, index) => {
+          // console.log('this index is =>', myCard.showOrNot);
+          if (myCard.showOrNot) {
+            return (
+              <TouchableOpacity
+                key={index}
+                style={[styles.blurParrentCard, cardsPos[index]]}
+                onPress={() => toogleSugResp(myCard)}>
+                <Image
+                  source={ShadowEffect}
+                  style={styles.blurEffectImg}
+                  blurRadius={50}
+                  resizeMode="stretch"
+                />
+                <View style={[styles.cardBtn, backgroundColor]}>
+                  <Text style={[styles.checkBtnTxt, styles.cardBtnTxt]}>
+                    {myCard.word}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          }
         })}
       </View>
       <View style={styles.btnContainer}>
@@ -390,29 +465,65 @@ const FindIt = props => {
   );
 };
 
-export default FindIt;
+export default CardsImg;
 
 const styles = StyleSheet.create({
-  suggCardText: {
-    fontFamily: FONTS.enFontFamilyBold,
+  cardRespTxt: {
+    fontSize: 18,
     color: '#fff',
-    fontSize: 20,
+    fontFamily: FONTS.enFontFamilyBold,
   },
-  suggCard: {
-    width: '80%',
-    height: 70,
-    backgroundColor: '#1D1E3750',
-    marginVertical: 10,
+  cardRespStyle: {
+    backgroundColor: '#FFFFFF20',
+    height: 40,
+    marginHorizontal: 2,
+    marginTop: 15,
+    paddingHorizontal: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    borderColor: '#FF4C0030',
-    borderWidth: 5,
   },
-
+  cardsResponse: {
+    backgroundColor: 'rgba(29,30,55,.40)',
+    width: '90%',
+    height: 70,
+    borderWidth: 2,
+    borderColor: '#FF4C00',
+    flexDirection: 'row',
+    paddingHorizontal: 8,
+  },
+  foreignFlag: {
+    width: 20,
+    height: 20,
+    // backgroundColor: 'red',
+    marginRight: 20,
+  },
+  foreignWordBoxContent: {},
+  inputBoxSubBox: {
+    width: '100%',
+    // justifyContent: 'flex-end',
+    alignItems: 'center',
+    flexDirection: 'row',
+    paddingHorizontal: 15,
+  },
+  input: {
+    width: '80%',
+    // backgroundColor: 'red',
+    color: '#fff',
+    fontSize: 20,
+    // fontWeight: 'bold',
+    fontFamily: FONTS.enFontFamilyMedium,
+    borderBottomColor: '#fff',
+    borderBottomWidth: 2,
+  },
   checkBtnTxt: {
     fontFamily: FONTS.enFontFamilyBold,
     color: '#000',
     fontSize: 24,
+  },
+  cardBtnTxt: {
+    fontFamily: FONTS.enFontFamilyBold,
+    color: '#000',
+    fontSize: 20,
   },
   questionWrapper: {
     flex: 1,
@@ -481,6 +592,40 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
+  blurParrentCard: {
+    position: 'absolute',
+    // backgroundColor: 'blue',
+
+    width: 50,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  blurEffectImg: {
+    position: 'absolute',
+    top: '-40%',
+    left: '-40%',
+    width: '180%',
+    height: '180%',
+    // backgroundColor: 'red',
+    zIndex: -1,
+    opacity: 1,
+  },
+  btnGoTxt: {
+    color: '#1D1E37',
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  cardBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: 50,
+    // backgroundColor: '#fff',  // Changed To DarkLight Code
+    // marginTop: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   btnGo: {
     width: '80%',
     height: 60,
@@ -490,12 +635,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
+  cardsContainer: {
+    // marginTop: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 4,
+    width: '100%',
+    position: 'relative',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    // //***************
+    // backgroundColor: '#00bb0c',
+    // width: '100%',
+    // //***************
+  },
+
   cardsResponseContainer: {
     width: '100%',
     // marginTop: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    flex: 6,
+    flex: 2,
     // //***************
     // backgroundColor: '#a79d08',
     // width: '100%',
@@ -512,6 +673,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
+    width: '100%',
+    // backgroundColor: 'red',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   nativeFlag: {
     width: 26,
@@ -520,10 +686,17 @@ const styles = StyleSheet.create({
     // marginRight: 10,
     marginLeft: 15,
   },
+  learnedFlag: {
+    width: 26,
+    height: 26,
+    // backgroundColor: 'red',
+    // marginRight: 10,
+    marginRight: 15,
+  },
   nativeWordBox: {
     width: '100%',
     // height: 80,
-    flex: 1.5,
+    flex: 2,
     // //***************
     // backgroundColor: '#ce3207',
     // width: '100%',
@@ -542,7 +715,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 10,
   },
-
+  wordImgWrapper: {
+    width: '70%',
+    // height: 180,
+    // //***************
+    // backgroundColor: '#00e2f7',
+    // width: '100%',
+    // //***************
+    height: '100%',
+    // marginHorizontal: '15%',
+  },
+  wordImg: {
+    width: '100%',
+    height: '100%',
+    // //***************
+    // backgroundColor: '#00e2f7',
+    // width: '100%',
+    // //***************
+  },
   wrapper: {
     // justifyContent: 'space-around',
     alignItems: 'center',
@@ -554,22 +744,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  conatiner: {},
   shadowImageBg: {
     width: 400,
     height: 500,
-    opacity: 0.3,
-    position: 'absolute',
-    top: SIZES.height / 2 - 200,
-    left: -200,
-    // backgroundColor: 'red',
-  },
-  shadowImageBg2: {
-    width: 300,
-    height: 400,
     opacity: 0.25,
     position: 'absolute',
-    top: -200,
-    right: -150,
+    top: SIZES.height / 2 - 200 - 50,
+    left: SIZES.width / 2 - 200,
     // backgroundColor: 'red',
   },
 });

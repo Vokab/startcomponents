@@ -8,21 +8,21 @@ import {
   Keyboard,
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
-import ShadowEffect from '../../assets/shadowImg.png';
-import Suceess from '../../assets/suceess.png';
-import Arabic from '../../assets/sa.png';
-import English from '../../assets/united-states.png';
+import ShadowEffect from '../../../../assets/shadowImg.png';
+import Suceess from '../../../../assets/suceess.png';
+import Arabic from '../../../../assets/sa.png';
+import English from '../../../../assets/united-states.png';
 import Icon from 'react-native-vector-icons/Feather';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {COLORS_THEME, FONTS} from '../constants/theme';
-import {SIZES} from '../constants/theme';
+import {COLORS_THEME, FONTS} from '../../../constants/theme';
+import {SIZES} from '../../../constants/theme';
 import {useDispatch, useSelector} from 'react-redux';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import {RealmContext} from '../realm/models';
-import {Loop} from '../realm/models/Loop';
-import loopReduxTypes from '../redux/LoopRedux/loopRedux.types';
+import {RealmContext} from '../../../realm/models';
+import {Loop} from '../../../realm/models/Loop';
+import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
 
 const {useQuery, useObject, useRealm} = RealmContext;
 
@@ -31,7 +31,7 @@ const mapState = ({loopRedux}) => ({
   loopRoad: loopRedux.loopRoad,
 });
 
-const Discover = () => {
+const Rehide = () => {
   const realm = useRealm();
   const loop = useQuery(Loop);
   const loopType = 0;
@@ -263,7 +263,7 @@ const Discover = () => {
   );
 };
 
-export default Discover;
+export default Rehide;
 
 const styles = StyleSheet.create({
   checkBtnTxt: {

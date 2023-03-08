@@ -5,6 +5,7 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  Animated,
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import {COLORS_THEME, FONTS} from '../../../constants/theme';
@@ -16,6 +17,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {wrapper} from '../../besmart/firstAlgo';
 import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
+import LottieView from 'lottie-react-native';
+
 import {
   finishLoop,
   goNextRedux,
@@ -51,8 +54,15 @@ const MissedChar = props => {
   const [arrayOfSuggChars, setArayOfSuggChars] = useState([]);
   const [myIndex, setMyIndex] = useState(0);
   const [isChecked, setIsChecked] = useState(false);
-  const word = loopRoad[loopStep].wordObj.wordLearnedLang;
-  const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id);
+  const [trueOfFalse, setTrueOfFalse] = useState(false);
+  const [fadeInOut, setFadeInOut] = useState(false);
+  const animElement = useRef();
+  const animElementWrong = useRef();
+
+  const fadeAnimnNative = useRef(new Animated.Value(1)).current;
+  const fadeAnimLearn = useRef(new Animated.Value(0)).current;
+  const word = 'oussama';
+  // const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id);
   const containerBg = {
     backgroundColor: darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite,
   };
@@ -62,6 +72,53 @@ const MissedChar = props => {
   const color = darkMode ? COLORS_THEME.textWhite : COLORS_THEME.textDark;
 
   const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+
+  const fadeIn = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 1 in 5 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+  const fadeOut = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 0 in 3 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+  useEffect(() => {
+    if (isChecked) {
+      if (trueOfFalse === true) {
+        animElement.current?.play();
+        // correctSound.play();
+      } else {
+        animElementWrong.current?.play();
+        // wrongSound.play();
+      }
+    }
+  }, [trueOfFalse, isChecked]);
+
+  useEffect(() => {
+    if (isChecked && !trueOfFalse) {
+      const interval = setInterval(fadeInOut ? fadeIn : fadeOut, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [fadeInOut, isChecked, trueOfFalse]);
 
   const shuffle = async array => {
     let currentIndex = array.length,
@@ -146,40 +203,42 @@ const MissedChar = props => {
   }, [loopStep]);
 
   const checkResponse = () => {
+    setIsChecked(true);
     if (word === wordMissed.join('')) {
-      try {
-        realm.write(() => {
-          passedWord.score = passedWord.score + 1;
-          passedWord.viewNbr = passedWord.viewNbr + 1;
-          if (passedWord.prog < 20) {
-            passedWord.prog = passedWord.prog + 1;
-          }
-        });
-      } catch (err) {
-        console.error(
-          'Failed to update prog and score and viewNbr of this word',
-          err.message,
-        );
-      }
+      setTrueOfFalse(true);
+      // try {
+      //   realm.write(() => {
+      //     passedWord.score = passedWord.score + 1;
+      //     passedWord.viewNbr = passedWord.viewNbr + 1;
+      //     if (passedWord.prog < 20) {
+      //       passedWord.prog = passedWord.prog + 1;
+      //     }
+      //   });
+      // } catch (err) {
+      //   console.error(
+      //     'Failed to update prog and score and viewNbr of this word',
+      //     err.message,
+      //   );
+      // }
       Alert.alert('Correct Answer');
     } else {
-      try {
-        realm.write(() => {
-          passedWord.score = passedWord.score - 1;
-          passedWord.viewNbr = passedWord.viewNbr + 1;
-        });
-      } catch (err) {
-        console.error(
-          'Failed to update prog and score and viewNbr of this word',
-          err.message,
-        );
-      }
+      setTrueOfFalse(false);
+      // try {
+      //   realm.write(() => {
+      //     passedWord.score = passedWord.score - 1;
+      //     passedWord.viewNbr = passedWord.viewNbr + 1;
+      //   });
+      // } catch (err) {
+      //   console.error(
+      //     'Failed to update prog and score and viewNbr of this word',
+      //     err.message,
+      //   );
+      // }
       Alert.alert('Wrong Answer -- Correct answer is ', word);
       if (loopType != 3 && loopType != 4) {
         updateLoopRoad();
       }
     }
-    setIsChecked(true);
   };
 
   const updateLoopRoad = () => {
@@ -314,46 +373,92 @@ const MissedChar = props => {
         ]}>
         <View style={styles.nativeWordBoxContent}>
           <Text style={[styles.nativeWordTxt, {color: color}]}>
-            {loopRoad[loopStep].wordObj.wordNativeLang}
+            {'oussama'}
           </Text>
           <Image source={Arabic} style={styles.nativeFlag} />
         </View>
       </View>
-      <View style={styles.cardsResponseContainer}>
-        <View style={styles.cardsRes}>
-          {wordMissed?.map((item, index) => {
-            if (index === wordMissed.indexOf('_')) {
+      <View
+        style={{
+          width: '100%',
+          // marginTop: 40,
+          justifyContent: 'center',
+          alignItems: 'center',
+          flex: 6,
+        }}>
+        {isChecked ? (
+          trueOfFalse ? (
+            <LottieView
+              ref={animElement}
+              source={require('../../../../assets/animations/correct.json')}
+              autoPlay={false}
+              loop={true}
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                width: '100%',
+                height: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                elevation: 3,
+                zIndex: 3,
+              }}
+            />
+          ) : (
+            <LottieView
+              ref={animElementWrong}
+              source={require('../../../../assets/animations/wrong.json')}
+              autoPlay={false}
+              loop={true}
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                width: '100%',
+                height: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                elevation: 1,
+                zIndex: 1,
+              }}
+            />
+          )
+        ) : null}
+        <View style={styles.cardsResponseContainer}>
+          <View style={styles.cardsRes}>
+            {wordMissed?.map((item, index) => {
+              if (index === wordMissed.indexOf('_')) {
+                return (
+                  <Text
+                    key={index}
+                    style={[styles.cardsResText, {color: '#FF4C00'}]}>
+                    {item}
+                  </Text>
+                );
+              }
               return (
-                <Text
-                  key={index}
-                  style={[styles.cardsResText, {color: '#FF4C00'}]}>
+                <Text key={index} style={styles.cardsResText}>
                   {item}
                 </Text>
               );
-            }
-            return (
-              <Text key={index} style={styles.cardsResText}>
-                {item}
-              </Text>
-            );
-          })}
+            })}
+          </View>
         </View>
-      </View>
-      <View style={styles.suggCardsContainer}>
-        <View style={styles.suggCardsSubContainer}>
-          {arrayOfSuggChars.map((item, index) => {
-            return (
-              <TouchableOpacity
-                key={index}
-                disabled={wordMissed.indexOf('_') === -1}
-                style={styles.suggSingleCard}
-                onPress={() => {
-                  fillChar(item);
-                }}>
-                <Text style={styles.suggSingleCardTxt}>{item}</Text>
-              </TouchableOpacity>
-            );
-          })}
+        <View style={styles.suggCardsContainer}>
+          <View style={styles.suggCardsSubContainer}>
+            {arrayOfSuggChars.map((item, index) => {
+              return (
+                <TouchableOpacity
+                  key={index}
+                  disabled={wordMissed.indexOf('_') === -1}
+                  style={styles.suggSingleCard}
+                  onPress={() => {
+                    fillChar(item);
+                  }}>
+                  <Text style={styles.suggSingleCardTxt}>{item}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
       </View>
       <View style={styles.btnContainer}>

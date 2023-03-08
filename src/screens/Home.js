@@ -10,6 +10,7 @@ import {Loop} from '../realm/models/Loop';
 import {Word} from '../realm/models/Word';
 import Dev from './Dev';
 import WeeklyTestCard from '../components/dailyCardsComponents/weeklyTestCard';
+import HomeShape from '../components/screensComponents/homeShape';
 
 const {useQuery, useRealm} = RealmContext;
 
@@ -137,7 +138,7 @@ const Home = () => {
       <HomeHeader />
       <ScrollView style={styles.subContainer}>
         <View>
-          <Dev />
+          <HomeShape />
           <View style={{marginBottom: 50}}>{items}</View>
         </View>
         <WeeklyTestCard />

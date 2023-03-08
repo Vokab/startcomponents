@@ -7,24 +7,43 @@ import {
   TextInput,
   Keyboard,
   Alert,
+  Animated,
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 
-import {COLORS_THEME, FONTS} from '../../constants/theme';
-import {SIZES} from '../../constants/theme';
-import Arabic from '../../../assets/sa.png';
-import English from '../../../assets/united-states.png';
-import ShadowEffect from '../../../assets/shadowImg.png';
+import {COLORS_THEME, FONTS} from '../../../constants/theme';
+import {SIZES} from '../../../constants/theme';
+import Arabic from '../../../../assets/sa.png';
+import English from '../../../../assets/united-states.png';
+import ShadowEffect from '../../../../assets/shadowImg.png';
 import Icon from 'react-native-vector-icons/Feather';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import LottieView from 'lottie-react-native';
+import {useDispatch, useSelector} from 'react-redux';
+import {useNavigation} from '@react-navigation/native';
+import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
+import {RealmContext} from '../../../realm/models';
 
-const PlaceHolderComp = () => {
+const {useQuery, useObject, useRealm} = RealmContext;
+const mapState = ({loopRedux}) => ({
+  loopStep: loopRedux.loopStep,
+  loopRoad: loopRedux.loopRoad,
+});
+
+const PlaceHolderComp = props => {
+  const navigation = useNavigation();
+  const {loopStep, loopRoad} = useSelector(mapState);
+  const {loopType} = props;
+  const dispatch = useDispatch();
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [text, onChangeText] = React.useState('');
   const [word, setWord] = useState('konsens');
+  const [isChecked, setIsChecked] = useState(false);
+  const [trueOfFalse, setTrueOfFalse] = useState(false);
+  const [fadeInOut, setFadeInOut] = useState(false);
   const containerBg = {
     backgroundColor: darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite,
   };
@@ -33,15 +52,71 @@ const PlaceHolderComp = () => {
   };
   const color = darkMode ? COLORS_THEME.textWhite : COLORS_THEME.textDark;
 
-  const checkWord = () => {
+  const animElement = useRef();
+  const animElementWrong = useRef();
+
+  const fadeAnimnNative = useRef(new Animated.Value(1)).current;
+  const fadeAnimLearn = useRef(new Animated.Value(0)).current;
+
+  const checkResponse = () => {
+    setIsChecked(true);
     Keyboard.dismiss();
     console.log('hello there');
     if (word === text) {
+      setTrueOfFalse(true);
       alert(`Correct Answer ${text}`);
     } else {
+      setTrueOfFalse(false);
       alert(`Wrong answer : ${text}, Correct answer is: ${word}`);
     }
   };
+  const fadeIn = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 1 in 5 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+  const fadeOut = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 0 in 3 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+  useEffect(() => {
+    if (isChecked) {
+      if (trueOfFalse === true) {
+        animElement.current?.play();
+        // correctSound.play();
+      } else {
+        animElementWrong.current?.play();
+        // wrongSound.play();
+      }
+    }
+  }, [trueOfFalse, isChecked]);
+
+  useEffect(() => {
+    if (isChecked && !trueOfFalse) {
+      const interval = setInterval(fadeInOut ? fadeIn : fadeOut, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [fadeInOut, isChecked, trueOfFalse]);
+
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       'keyboardDidShow',
@@ -61,6 +136,78 @@ const PlaceHolderComp = () => {
       keyboardDidShowListener.remove();
     };
   }, []);
+
+  const goToNext = () => {
+    console.log('goToNext start');
+    setIsChecked(false);
+    if (loopStep < loopRoad.length - 1) {
+      dispatch({
+        type: loopReduxTypes.SET_LOOP_STEP,
+        payload: loopStep + 1,
+      });
+      if (loopType === 0) {
+        console.log(
+          'HERE We Will update default wordsBag step in the realm DB',
+        );
+        // update default wordsBag step in the realm DB
+        realm.write(() => {
+          loop[0].stepOfDefaultWordsBag = loop[0].stepOfDefaultWordsBag + 1;
+        });
+      } else if (loopType === 1) {
+        console.log('HERE We Will update custom wordsBag step in the realm DB');
+        // update custom wordsBag step in the realm DB
+        realm.write(() => {
+          loop[0].stepOfCustomWordsBag = loop[0].stepOfCustomWordsBag + 1;
+        });
+      } else if (loopType === 2) {
+        console.log('HERE We Will update review wordsBag step in the realm DB');
+        // update review wordsBag step in the realm DB
+        realm.write(() => {
+          loop[0].stepOfReviewWordsBag = loop[0].stepOfReviewWordsBag + 1;
+        });
+      }
+    } else {
+      // if custom or default words bag we need to update the isDefaultDiscover variable by add 1
+      // console.log('loopStep =>', loopStep);
+      if (loopType === 0 && isDefaultDiscover < 3) {
+        // add 1 to isDefaultDiscover in the realm DB
+        realm.write(() => {
+          loop[0].isDefaultDiscover = loop[0].isDefaultDiscover + 1;
+        });
+      } else if (loopType === 1 && isCustomDiscover < 3) {
+        realm.write(() => {
+          loop[0].isCustomDiscover = loop[0].isCustomDiscover + 1;
+        });
+      }
+      loopExit().then(navigation.navigate('Home'));
+    }
+  };
+  const loopExit = async () => {
+    // reset loopRedux Step
+    // reset loopRedux Road
+    // reset loopRedux isReady
+    dispatch({
+      type: loopReduxTypes.RESET_LOOP,
+    });
+    if (loopType === 0) {
+      // update default wordsBag road in the real DB
+      realm.write(() => {
+        loop[0].stepOfDefaultWordsBag = 0;
+      });
+    } else if (loopType === 1) {
+      realm.write(() => {
+        loop[0].stepOfCustomWordsBag = 0;
+      });
+    } else if (loopType === 2) {
+      realm.write(() => {
+        loop[0].stepOfReviewWordsBag = 0;
+        loop[0].reviewWordsBagRoad = [];
+      });
+      dispatch({
+        type: loopReduxTypes.RESET_REVIEW_BAG_ARRAY,
+      });
+    }
+  };
 
   return (
     <View style={[styles.wrapper, containerBg]}>
@@ -100,58 +247,107 @@ const PlaceHolderComp = () => {
           styles.nativeWordBox,
           {backgroundColor: darkMode ? '#00000040' : '#ffffff50'},
         ]}>
-        <View style={styles.nativeWordBoxContent}>
+        <Animated.View
+          style={[styles.nativeWordBoxContent, {opacity: fadeAnimnNative}]}>
           <Text style={[styles.nativeWordTxt, {color: color}]}>نجاح</Text>
           <Image source={Arabic} style={styles.nativeFlag} />
-        </View>
+        </Animated.View>
+        <Animated.View
+          style={[styles.nativeWordBoxContent, {opacity: fadeAnimLearn}]}>
+          <Image source={English} style={styles.learnedFlag} />
+          <Text style={[styles.nativeWordTxt, {color: color}]}>Konsen</Text>
+        </Animated.View>
       </View>
-      <View style={styles.foreignWordBox}>
-        <View style={styles.foreignWordBoxContent}>
-          <TouchableOpacity>
-            <Icon name="speaker" size={80} color="#FF4C00" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={styles.inputBox}>
-        <View style={styles.inputBoxSubBox}>
-          <Image
-            source={English}
-            style={styles.foreignFlag}
-            // resizeMethod="resize"
-            // resizeMode="stretch"
-          />
-          <View style={styles.pHolder}>
-            <Text style={styles.pHolderTxt}>{word}</Text>
+      <View
+        style={{
+          width: '100%',
+          // marginTop: 40,
+          justifyContent: 'center',
+          alignItems: 'center',
+          flex: 5.5,
+        }}>
+        {isChecked ? (
+          trueOfFalse ? (
+            <LottieView
+              ref={animElement}
+              source={require('../../../../assets/animations/correct.json')}
+              autoPlay={false}
+              loop={true}
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                width: '100%',
+                height: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                elevation: 3,
+                zIndex: 3,
+              }}
+            />
+          ) : (
+            <LottieView
+              ref={animElementWrong}
+              source={require('../../../../assets/animations/wrong.json')}
+              autoPlay={false}
+              loop={true}
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                width: '100%',
+                height: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                elevation: 1,
+                zIndex: 1,
+              }}
+            />
+          )
+        ) : null}
+        <View style={styles.foreignWordBox}>
+          <View style={styles.foreignWordBoxContent}>
+            <TouchableOpacity>
+              <Icon name="speaker" size={80} color="#FF4C00" />
+            </TouchableOpacity>
           </View>
-          <TextInput
-            style={styles.input}
-            onChangeText={onChangeText}
-            value={text}
-            placeholder={word}
-            placeholderTextColor="#ffffff20"
-            keyboardType="visible-password"
-          />
+        </View>
+
+        <View style={styles.inputBox}>
+          <View style={styles.inputBoxSubBox}>
+            <Image
+              source={English}
+              style={styles.foreignFlag}
+              // resizeMethod="resize"
+              // resizeMode="stretch"
+            />
+            <View style={styles.pHolder}>
+              <Text style={styles.pHolderTxt}>{word}</Text>
+            </View>
+            <TextInput
+              style={styles.input}
+              onChangeText={onChangeText}
+              value={text}
+              placeholder={word}
+              placeholderTextColor="#ffffff20"
+              keyboardType="visible-password"
+            />
+          </View>
         </View>
       </View>
       <View style={styles.btnContainer}>
         <View style={styles.blurParrent}>
-          {/* <Image
-            source={ShadowEffect}
-            style={styles.blurEffectImg}
-            blurRadius={50}
-            resizeMode="stretch"
-          /> */}
-          <TouchableOpacity
-            style={[styles.btnGo, backgroundColor]}
-            onPress={() => checkWord()}>
-            {/* <Fontisto
-              name="check"
-              size={30}
-              color={darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite}
-            /> */}
-            <Text style={styles.checkBtnTxt}>check</Text>
-          </TouchableOpacity>
+          {!isChecked ? (
+            <TouchableOpacity
+              style={[styles.btnGo, backgroundColor]}
+              onPress={() => checkResponse()}>
+              <Text style={styles.checkBtnTxt}>check</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.btnGo, backgroundColor]}
+              onPress={() => goToNext()}>
+              <Text style={styles.checkBtnTxt}>Next</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
       <View style={styles.footer}>
@@ -339,6 +535,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
+    width: '100%',
+    // backgroundColor: 'red',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   nativeFlag: {
     width: 26,
@@ -346,6 +547,13 @@ const styles = StyleSheet.create({
     // backgroundColor: 'red',
     // marginRight: 10,
     marginLeft: 15,
+  },
+  learnedFlag: {
+    width: 26,
+    height: 26,
+    // backgroundColor: 'red',
+    // marginRight: 10,
+    marginRight: 15,
   },
   nativeWordBox: {
     width: '100%',

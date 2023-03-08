@@ -11,6 +11,15 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Test from './Test';
 import CustomScreen from './CustomScreen';
 import Dev from './Dev';
+import Rehide from '../components/loopComponents/rehide';
+import SingleImg from '../components/loopComponents/singleImg';
+import Writing from '../components/loopComponents/writing';
+import Cards from '../components/loopComponents/cards';
+import PlaceHolderComp from '../components/loopComponents/placeholder';
+import MissedChar from '../components/loopComponents/missedChar';
+import FindIt from '../components/loopComponents/findit/index';
+import CardsImg from '../components/loopComponents/cardsImg';
+import ReType from '../components/loopComponents/retype';
 const Tab = createBottomTabNavigator();
 
 const TabScreen = () => {
@@ -105,8 +114,9 @@ const TabScreen = () => {
       />
       <Tab.Screen
         name="Profile"
-        component={Dev}
+        component={ReType}
         options={{
+          tabBarStyle: {display: 'none'},
           tabBarLabel: 'Profile',
           tabBarIcon: ({focused}) => (
             <View style={focused ? styles.shadow_o : styles.shadow_w}>

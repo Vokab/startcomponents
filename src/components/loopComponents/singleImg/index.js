@@ -16,24 +16,22 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {wrapper} from '../../besmart/firstAlgo';
 import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
-import {
-  finishLoop,
-  goNextRedux,
-  resetLoopStepRedux,
-  updateLoopRoad,
-} from '../../../redux/Loop/loop.actions';
+import Suceess from '../../../../assets/suceess.png';
+
 import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
 import {Loop} from '../../../realm/models/Loop';
 import {RealmContext} from '../../../realm/models';
 import {PassedWords} from '../../../realm/models/PassedWords';
+
 import LottieView from 'lottie-react-native';
+
 const {useQuery, useObject, useRealm} = RealmContext;
 const mapState = ({loopRedux}) => ({
   loopStep: loopRedux.loopStep,
   loopRoad: loopRedux.loopRoad,
 });
 
-const FindIt = props => {
+const SingleImg = props => {
   const realm = useRealm();
   const loop = useQuery(Loop);
   let isDefaultDiscover = loop[0].isDefaultDiscover;
@@ -50,10 +48,10 @@ const FindIt = props => {
   const [isChecked, setIsChecked] = useState(false);
   const [trueOfFalse, setTrueOfFalse] = useState(false);
 
+  const word = 'oussama';
+  const passedWord = [];
   const animElement = useRef();
   const animElementWrong = useRef();
-  const word = 'test';
-  // const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id);
   const containerBg = {
     backgroundColor: darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite,
   };
@@ -107,6 +105,50 @@ const FindIt = props => {
   useEffect(() => {
     buildSuggWords();
   }, []);
+
+  const checkResponse = () => {
+    setIsChecked(true);
+
+    if (word === selectedItem) {
+      setTrueOfFalse(true);
+      // animElement.current?.play();
+      try {
+        realm.write(() => {
+          passedWord.score = passedWord.score + 1;
+          passedWord.viewNbr = passedWord.viewNbr + 1;
+          if (passedWord.prog < 20) {
+            passedWord.prog = passedWord.prog + 1;
+          }
+        });
+      } catch (err) {
+        console.error(
+          'Failed to update prog and score and viewNbr of this word',
+          err.message,
+        );
+      }
+      Alert.alert('Correct Answer');
+    } else {
+      setTrueOfFalse(false);
+      // animElementWrong.current?.play();
+      try {
+        realm.write(() => {
+          passedWord.score = passedWord.score - 1;
+          passedWord.viewNbr = passedWord.viewNbr + 1;
+        });
+      } catch (err) {
+        console.error(
+          'Failed to update prog and score and viewNbr of this word',
+          err.message,
+        );
+      }
+      Alert.alert('Wrong Answer -- Correct answer is ', word);
+      if (loopType != 3 && loopType != 4) {
+        updateLoopRoad();
+      }
+    }
+    // setSelectedItem(null);
+  };
+
   useEffect(() => {
     if (trueOfFalse === true) {
       animElement.current?.play();
@@ -116,47 +158,6 @@ const FindIt = props => {
       // wrongSound.play();
     }
   }, [trueOfFalse, isChecked]);
-
-  const checkResponse = () => {
-    setIsChecked(true);
-    if (word === selectedItem) {
-      setTrueOfFalse(true);
-      // try {
-      //   realm.write(() => {
-      //     passedWord.score = passedWord.score + 1;
-      //     passedWord.viewNbr = passedWord.viewNbr + 1;
-      //     if (passedWord.prog < 20) {
-      //       passedWord.prog = passedWord.prog + 1;
-      //     }
-      //   });
-      // } catch (err) {
-      //   console.error(
-      //     'Failed to update prog and score and viewNbr of this word',
-      //     err.message,
-      //   );
-      // }
-      Alert.alert('Correct Answer');
-    } else {
-      setTrueOfFalse(false);
-      // try {
-      //   realm.write(() => {
-      //     passedWord.score = passedWord.score - 1;
-      //     passedWord.viewNbr = passedWord.viewNbr + 1;
-      //   });
-      // } catch (err) {
-      //   console.error(
-      //     'Failed to update prog and score and viewNbr of this word',
-      //     err.message,
-      //   );
-      // }
-      Alert.alert('Wrong Answer -- Correct answer is ', word);
-      if (loopType != 3 && loopType != 4) {
-        updateLoopRoad();
-      }
-    }
-    // setSelectedItem(null);
-  };
-
   const updateLoopRoad = () => {
     // update redux Loop Road
     loopRoad.push(loopRoad[loopStep]);
@@ -282,21 +283,29 @@ const FindIt = props => {
               size={30}
               color={'#D2FF00'}
             />
-            <Text style={styles.questionText}>Choose what mean</Text>
+            <Text style={styles.questionText}>
+              Choose the meaning of this image
+            </Text>
           </View>
         </View>
       )}
-      <View
+      {/* <View
         style={[
           styles.nativeWordBox,
           {backgroundColor: darkMode ? '#00000040' : '#ffffff50'},
         ]}>
         <View style={styles.nativeWordBoxContent}>
-          <Text style={[styles.nativeWordTxt, {color: color}]}>
-            {'oussama'}
-          </Text>
+          <Text style={[styles.nativeWordTxt, {color: color}]}>Oussama</Text>
           <Image source={Arabic} style={styles.nativeFlag} />
         </View>
+      </View> */}
+      <View style={styles.wordImgWrapper}>
+        <Image
+          resizeMethod={'resize'}
+          resizeMode="contain"
+          source={Suceess}
+          style={styles.wordImg}
+        />
       </View>
       <View style={styles.cardsResponseContainer}>
         {isChecked ? (
@@ -336,10 +345,12 @@ const FindIt = props => {
             />
           )
         ) : null}
+
         {suggWords.map((item, index) => {
           return (
             <TouchableOpacity
               key={index}
+              disabled={isChecked}
               style={[
                 styles.suggCard,
                 {
@@ -390,9 +401,29 @@ const FindIt = props => {
   );
 };
 
-export default FindIt;
+export default SingleImg;
 
 const styles = StyleSheet.create({
+  wordImg: {
+    width: '100%',
+    height: '100%',
+    // //***************
+    // backgroundColor: '#00e2f7',
+    // width: '100%',
+    // //***************
+  },
+  wordImgWrapper: {
+    width: '70%',
+    // height: 180,
+    // //***************
+    // backgroundColor: '#00e2f7',
+    // width: '100%',
+    // //***************
+    flex: 2,
+    // marginHorizontal: '15%',
+    marginTop: 20,
+  },
+
   suggCardText: {
     fontFamily: FONTS.enFontFamilyBold,
     color: '#fff',

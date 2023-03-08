@@ -1,8 +1,16 @@
-import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  TouchableOpacity,
+  Animated,
+} from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
 import {COLORS_THEME, FONTS} from '../../../constants/theme';
 import {SIZES} from '../../../constants/theme';
 import Arabic from '../../../../assets/sa.png';
+import English from '../../../../assets/united-states.png';
 import ShadowEffect from '../../../../assets/shadowImg.png';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -21,6 +29,7 @@ import {User} from '../../../realm/models/User';
 import {Loop} from '../../../realm/models/Loop';
 import {Word} from '../../../realm/models/Word';
 import {PassedWords} from '../../../realm/models/PassedWords';
+import LottieView from 'lottie-react-native';
 
 const {useQuery, useObject, useRealm} = RealmContext;
 const mapState = ({loopRedux}) => ({
@@ -43,8 +52,17 @@ const Cards = props => {
   const [wordCards, setWordCards] = useState([]);
   const [respArray, setRespArray] = useState([]);
   const [isChecked, setIsChecked] = useState(false);
-  const wordVar = loopRoad[loopStep].wordObj.wordLearnedLang;
-  const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id);
+  const [trueOfFalse, setTrueOfFalse] = useState(false);
+  const [fadeInOut, setFadeInOut] = useState(false);
+
+  const animElement = useRef();
+  const animElementWrong = useRef();
+
+  const fadeAnimnNative = useRef(new Animated.Value(1)).current;
+  const fadeAnimLearn = useRef(new Animated.Value(0)).current;
+
+  const wordVar = 'oussama';
+  // const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id); // REMOVED FOR ANIMATION TESTING
   const cardsPos = [
     {bottom: '50%', left: '20%'},
     {bottom: '30%', left: '40%'},
@@ -111,43 +129,44 @@ const Cards = props => {
     respArray.forEach(item => {
       respoArToString = respoArToString + item.word;
     });
+    setIsChecked(true);
     if (wordVar === respoArToString) {
-      setRespArray([]);
-      try {
-        realm.write(() => {
-          passedWord.score = passedWord.score + 1;
-          passedWord.viewNbr = passedWord.viewNbr + 1;
-          if (passedWord.prog < 20) {
-            passedWord.prog = passedWord.prog + 1;
-          }
-        });
-      } catch (err) {
-        console.error(
-          'Failed to update prog and score and viewNbr of this word',
-          err.message,
-        );
-      }
+      setTrueOfFalse(true);
+      // setRespArray([]);
+      // try {
+      //   realm.write(() => {
+      //     passedWord.score = passedWord.score + 1;
+      //     passedWord.viewNbr = passedWord.viewNbr + 1;
+      //     if (passedWord.prog < 20) {
+      //       passedWord.prog = passedWord.prog + 1;
+      //     }
+      //   });
+      // } catch (err) {
+      //   console.error(
+      //     'Failed to update prog and score and viewNbr of this word',
+      //     err.message,
+      //   );
+      // }
       alert(`Correct Answer ${respoArToString}`);
     } else {
-      try {
-        realm.write(() => {
-          passedWord.score = passedWord.score - 1;
-          passedWord.viewNbr = passedWord.viewNbr + 1;
-        });
-      } catch (err) {
-        console.error(
-          'Failed to update prog and score and viewNbr of this word',
-          err.message,
-        );
-      }
+      setTrueOfFalse(false);
+      // try {
+      //   realm.write(() => {
+      //     passedWord.score = passedWord.score - 1;
+      //     passedWord.viewNbr = passedWord.viewNbr + 1;
+      //   });
+      // } catch (err) {
+      //   console.error(
+      //     'Failed to update prog and score and viewNbr of this word',
+      //     err.message,
+      //   );
+      // }
       alert(`Wrong answer : ${respoArToString}, Correct answer is: ${wordVar}`);
-      setRespArray([]);
+      // setRespArray([]);
       if (loopType != 3 && loopType != 4) {
         updateLoopRoad();
       }
     }
-
-    setIsChecked(true);
   };
   const updateLoopRoad = () => {
     // update redux Loop Road
@@ -184,6 +203,7 @@ const Cards = props => {
     // reset loopRedux Step
     // reset loopRedux Road
     // reset loopRedux isReady
+    setRespArray([]);
     dispatch({
       type: loopReduxTypes.RESET_LOOP,
     });
@@ -237,13 +257,60 @@ const Cards = props => {
     }
   };
 
+  const fadeIn = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 1 in 5 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+  const fadeOut = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 0 in 3 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
   useEffect(() => {
-    console.log(
-      'we are in the step number',
-      loopRoad[loopStep].wordObj.wordLearnedLang,
-      // setWord(loopRoad[loopStep].wordObj.wordLearnedLang),
-    );
-  }, [loopStep]);
+    if (isChecked) {
+      if (trueOfFalse === true) {
+        animElement.current?.play();
+        // correctSound.play();
+      } else {
+        animElementWrong.current?.play();
+        // wrongSound.play();
+      }
+    }
+  }, [trueOfFalse, isChecked]);
+
+  useEffect(() => {
+    if (isChecked && !trueOfFalse) {
+      const interval = setInterval(fadeInOut ? fadeIn : fadeOut, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [fadeInOut, isChecked, trueOfFalse]);
+
+  // useEffect(() => {
+  //   console.log(
+  //     'we are in the step number',
+  //     loopRoad[loopStep].wordObj.wordLearnedLang,
+  //     // setWord(loopRoad[loopStep].wordObj.wordLearnedLang),
+  //   );
+  // }, [loopStep]);
 
   return (
     <View style={[styles.wrapper, containerBg]}>
@@ -273,12 +340,16 @@ const Cards = props => {
           styles.nativeWordBox,
           {backgroundColor: darkMode ? '#00000040' : '#ffffff50'},
         ]}>
-        <View style={styles.nativeWordBoxContent}>
-          <Text style={[styles.nativeWordTxt, {color: color}]}>
-            {loopRoad[loopStep].wordObj.wordNativeLang}
-          </Text>
+        <Animated.View
+          style={[styles.nativeWordBoxContent, {opacity: fadeAnimnNative}]}>
+          <Text style={[styles.nativeWordTxt, {color: color}]}>نجاح</Text>
           <Image source={Arabic} style={styles.nativeFlag} />
-        </View>
+        </Animated.View>
+        <Animated.View
+          style={[styles.nativeWordBoxContent, {opacity: fadeAnimLearn}]}>
+          <Image source={English} style={styles.learnedFlag} />
+          <Text style={[styles.nativeWordTxt, {color: color}]}>Konsen</Text>
+        </Animated.View>
       </View>
       <View style={styles.cardsResponseContainer}>
         <View style={styles.cardsResponse}>
@@ -298,6 +369,43 @@ const Cards = props => {
       </View>
 
       <View style={styles.cardsContainer}>
+        {isChecked ? (
+          trueOfFalse ? (
+            <LottieView
+              ref={animElement}
+              source={require('../../../../assets/animations/correct.json')}
+              autoPlay={false}
+              loop={true}
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                width: '100%',
+                height: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                elevation: 3,
+                zIndex: 3,
+              }}
+            />
+          ) : (
+            <LottieView
+              ref={animElementWrong}
+              source={require('../../../../assets/animations/wrong.json')}
+              autoPlay={false}
+              loop={true}
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                width: '100%',
+                height: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                elevation: 1,
+                zIndex: 1,
+              }}
+            />
+          )
+        ) : null}
         {wordCards.map((myCard, index) => {
           // console.log('this index is =>', myCard.showOrNot);
           if (myCard.showOrNot) {
@@ -556,6 +664,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
+    width: '100%',
+    // backgroundColor: 'red',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   nativeFlag: {
     width: 26,
@@ -563,6 +676,13 @@ const styles = StyleSheet.create({
     // backgroundColor: 'red',
     // marginRight: 10,
     marginLeft: 15,
+  },
+  learnedFlag: {
+    width: 26,
+    height: 26,
+    // backgroundColor: 'red',
+    // marginRight: 10,
+    marginRight: 15,
   },
   nativeWordBox: {
     width: '100%',
