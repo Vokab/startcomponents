@@ -25,6 +25,7 @@ export class Word extends Realm.Object {
       score: 'int',
       viewNbr: 'int',
       prog: 'int',
+      wordType: 'int',
     },
   };
 }

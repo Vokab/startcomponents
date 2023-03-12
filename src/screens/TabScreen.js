@@ -20,6 +20,8 @@ import MissedChar from '../components/loopComponents/missedChar';
 import FindIt from '../components/loopComponents/findit/index';
 import CardsImg from '../components/loopComponents/cardsImg';
 import ReType from '../components/loopComponents/retype';
+import Hearing from '../components/loopComponents/hearing';
+import Initialize from './Initialize';
 const Tab = createBottomTabNavigator();
 
 const TabScreen = () => {
@@ -47,7 +49,7 @@ const TabScreen = () => {
           null,
         ],
       }}
-      initialRouteName="Tes">
+      initialRouteName="Test">
       <Tab.Screen
         name="Test"
         component={Test}
@@ -82,7 +84,7 @@ const TabScreen = () => {
       />
       <Tab.Screen
         name="Custom"
-        component={Custom}
+        component={CustomScreen}
         options={{
           tabBarLabel: 'Custom',
           tabBarIcon: ({focused}) => (
@@ -98,7 +100,7 @@ const TabScreen = () => {
       />
       <Tab.Screen
         name="CustomScreen"
-        component={CustomScreen}
+        component={Profile}
         options={{
           tabBarLabel: 'CustomScreen',
           tabBarIcon: ({focused}) => (
@@ -114,9 +116,9 @@ const TabScreen = () => {
       />
       <Tab.Screen
         name="Profile"
-        component={ReType}
+        component={Initialize}
         options={{
-          tabBarStyle: {display: 'none'},
+          // tabBarStyle: {display: 'none'},
           tabBarLabel: 'Profile',
           tabBarIcon: ({focused}) => (
             <View style={focused ? styles.shadow_o : styles.shadow_w}>

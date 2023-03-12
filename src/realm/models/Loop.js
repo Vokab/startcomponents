@@ -34,6 +34,8 @@ export class Loop extends Realm.Object {
       defaultWordsBagRoad: 'string[]',
       customWordsBagRoad: 'string[]',
       reviewWordsBagRoad: 'string[]',
+      dailyTestRoad: 'string[]',
+      weeklyTestRoad: 'string[]',
       stepOfDefaultWordsBag: 'int',
       stepOfCustomWordsBag: 'int',
       stepOfReviewWordsBag: 'int',

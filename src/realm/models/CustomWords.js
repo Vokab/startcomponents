@@ -20,6 +20,7 @@ export class CustomWords extends Realm.Object {
       passed: 'bool',
       passedDate: 'date',
       deleted: 'bool',
+      wordType: 'int',
     },
   };
 }

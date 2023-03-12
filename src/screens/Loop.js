@@ -34,6 +34,8 @@ import loopReduxTypes from '../redux/LoopRedux/loopRedux.types';
 import {DaysBags} from '../realm/models/DaysBags';
 import Realm from 'realm';
 import ObjectID from 'bson-objectid';
+import ReType from '../components/loopComponents/retype';
+import PlaceHolderComp from '../components/loopComponents/placeholder';
 
 const {useQuery, useObject, useRealm} = RealmContext;
 const mapState = ({loopRedux, loop}) => ({
@@ -250,12 +252,12 @@ const LoopManager = ({route, navigation}) => {
         buildLoopRoad(res, 0).then(() => {});
       });
     }
-    return () => {
-      alert('are you sure you want to exit');
-      dispatch({
-        type: loopReduxTypes.RESET_LOOP,
-      });
-    };
+    // return () => {
+    //   alert('are you sure you want to exit');
+    //   dispatch({
+    //     type: loopReduxTypes.RESET_LOOP,
+    //   });
+    // };
   }, []);
 
   const updateDefaultRoad = async () => {
@@ -318,10 +320,10 @@ const LoopManager = ({route, navigation}) => {
     console.log('clearDefaultRoad start');
   };
 
-  useEffect(() => {
-    console.log('isReady now From Loop =>', isReady);
-    console.log('customBagArray From Loop', customBagArray);
-  }, []);
+  // useEffect(() => {
+  //   console.log('isReady now From Loop =>', isReady);
+  //   console.log('customBagArray From Loop', customBagArray);
+  // }, []);
 
   return (
     <View style={styles.container}>
@@ -331,28 +333,84 @@ const LoopManager = ({route, navigation}) => {
             if (loopStep < loopRoad.length) {
               // console.log('loopStep =>', loopStep);
               switch (loopRoad[loopStep].screen) {
-                case 0:
+                case 1:
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
                       <Discover loopType={idType} />
                     </View>
                   );
-                case 1:
+                case 2:
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
-                      <Cards loopType={idType} />
+                      <ReType loopType={idType} />
                     </View>
                   );
                 case 3:
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
-                      <MissedChar loopType={idType} />
+                      <PlaceHolderComp loopType={idType} />
                     </View>
                   );
                 case 4:
+                  return (
+                    <View style={{width: '100%', height: '100%'}}>
+                      {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
+                      <Cards loopType={idType} />
+                    </View>
+                  );
+                case 5:
+                  return (
+                    <View style={{width: '100%', height: '100%'}}>
+                      {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
+                      <FindIt loopType={idType} />
+                    </View>
+                  );
+                case 6:
+                  return (
+                    <View style={{width: '100%', height: '100%'}}>
+                      {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
+                      <FindIt loopType={idType} />
+                    </View>
+                  );
+                case 7:
+                  return (
+                    <View style={{width: '100%', height: '100%'}}>
+                      {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
+                      <FindIt loopType={idType} />
+                    </View>
+                  );
+                case 8:
+                  return (
+                    <View style={{width: '100%', height: '100%'}}>
+                      {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
+                      <FindIt loopType={idType} />
+                    </View>
+                  );
+                case 9:
+                  return (
+                    <View style={{width: '100%', height: '100%'}}>
+                      {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
+                      <FindIt loopType={idType} />
+                    </View>
+                  );
+                case 10:
+                  return (
+                    <View style={{width: '100%', height: '100%'}}>
+                      {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
+                      <FindIt loopType={idType} />
+                    </View>
+                  );
+                case 11:
+                  return (
+                    <View style={{width: '100%', height: '100%'}}>
+                      {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
+                      <FindIt loopType={idType} />
+                    </View>
+                  );
+                case 12:
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}

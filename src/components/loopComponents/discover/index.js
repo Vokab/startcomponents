@@ -1,5 +1,5 @@
 import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useMemo} from 'react';
 import ShadowEffect from '../../../../assets/shadowImg.png';
 import Suceess from '../../../../assets/suceess.png';
 import Arabic from '../../../../assets/sa.png';
@@ -19,7 +19,7 @@ import {Loop} from '../../../realm/models/Loop';
 import {Word} from '../../../realm/models/Word';
 import {User} from '../../../realm/models/User';
 import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
-
+import Sound from 'react-native-sound';
 const {useQuery, useObject, useRealm} = RealmContext;
 
 const mapState = ({loopRedux}) => ({
@@ -66,9 +66,6 @@ const Discover = props => {
   const color = darkMode ? COLORS_THEME.textWhite : COLORS_THEME.textDark;
 
   const loopExit = async () => {
-    // reset loopRedux Step
-    // reset loopRedux Road
-    // reset loopRedux isReady
     dispatch({
       type: loopReduxTypes.RESET_LOOP,
     });
@@ -92,12 +89,43 @@ const Discover = props => {
         realm.write(() => {
           loop[0].stepOfDefaultWordsBag = loop[0].stepOfDefaultWordsBag + 1;
         });
+      } else if (loopType === 1) {
+        console.log('HERE We Will update custom wordsBag step in the realm DB');
+        // update custom wordsBag step in the realm DB
+        realm.write(() => {
+          loop[0].stepOfCustomWordsBag = loop[0].stepOfCustomWordsBag + 1;
+        });
       }
     } else {
       loopExit().then(navigation.navigate('Home'));
     }
   };
-
+  useEffect(() => {
+    if (loopType === 0) {
+      console.log(
+        'type of this word is =====>>',
+        loopRoad[loopStep].wordObj.wordType,
+      );
+      playAudio();
+    }
+  }, []);
+  const playAudio = () => {
+    console.log('play sound now');
+    var audio = new Sound(loopRoad[loopStep].wordObj.audioPath, null, error => {
+      if (error) {
+        console.log('failed to load the sound', error);
+        return;
+      }
+      // if loaded successfully
+      console.log(
+        'duration in seconds: ' +
+          audio.getDuration() +
+          'number of channels: ' +
+          audio.getNumberOfChannels(),
+      );
+      audio.play();
+    });
+  };
   return (
     // <ScrollView style={styles.conatiner}>
     <View style={[styles.wrapper, containerBg]}>
@@ -111,7 +139,8 @@ const Discover = props => {
         <Image
           resizeMethod={'resize'}
           resizeMode="contain"
-          source={Suceess}
+          source={{uri: loopRoad[loopStep].wordObj.wordImage}}
+          // src={}
           style={styles.wordImg}
         />
       </View>
@@ -137,7 +166,12 @@ const Discover = props => {
         </View>
         <View style={styles.foreignSpellingBox}>
           <Text style={styles.foreignSpellingTxt}>kənˈsensəs</Text>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              if (loopType === 0) {
+                playAudio();
+              }
+            }}>
             <Icon name="speaker" size={40} color="#FF4C00" />
           </TouchableOpacity>
         </View>

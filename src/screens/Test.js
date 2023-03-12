@@ -30,6 +30,7 @@ import {
 } from 'firebase/storage';
 import ObjectID from 'bson-objectid';
 import {storage, db} from '../firebase/utils';
+import Sound from 'react-native-sound';
 
 const {useQuery, useRealm} = RealmContext;
 const Test = () => {
@@ -152,6 +153,7 @@ const Test = () => {
             score: 0,
             viewNbr: 0,
             prog: 0,
+            wordType: 0,
           });
         });
         console.log('firebaseWord =>', item);
@@ -203,14 +205,22 @@ const Test = () => {
         loop[0].isDefaultDiscover = 0;
         loop[0].stepOfDefaultWordsBag = 0;
       });
-      // console.log(
-      //   'defaultWordsBagRoad length =>',
-      //   loop[0].defaultWordsBagRoad.length,
-      // );
     } catch (err) {
       console.error('Failed to reset the default road and step', err.message);
     }
   };
+  const resetCustomRoadAndStep = async () => {
+    try {
+      realm.write(() => {
+        loop[0].customWordsBagRoad = [];
+        loop[0].isCustomDiscover = 0;
+        loop[0].stepOfCustomWordsBag = 0;
+      });
+    } catch (err) {
+      console.error('Failed to reset the default road and step', err.message);
+    }
+  };
+
   const showDaysBagsContent = async () => {
     daysBags.forEach(item => {
       console.log('new DayBag =>', item);
@@ -319,7 +329,24 @@ const Test = () => {
   useEffect(() => {
     console.log('uri', file?.assets[0].uri);
   }, []);
-
+  const playThisItem = item => {
+    console.log('this item =>', item);
+    console.log('play sound now');
+    var audio = new Sound(item.audioPath, null, error => {
+      if (error) {
+        console.log('failed to load the sound', error);
+        return;
+      }
+      // if loaded successfully
+      console.log(
+        'duration in seconds: ' +
+          audio.getDuration() +
+          'number of channels: ' +
+          audio.getNumberOfChannels(),
+      );
+      audio.play();
+    });
+  };
   return (
     <ScrollView style={styles.container}>
       <View style={styles.addWrapper}>
@@ -377,6 +404,13 @@ const Test = () => {
           <Text style={styles.functionBtnTxt}>Show DaysBags Content</Text>
         </TouchableOpacity>
         <TouchableOpacity
+          style={[styles.functionBtn, {backgroundColor: '#f4f'}]}
+          onPress={() => {
+            resetCustomRoadAndStep();
+          }}>
+          <Text style={styles.functionBtnTxt}>Reset Custom Road and Step</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           style={styles.functionBtn}
           onPress={() => {
             resetDefaultRoadAndStep();
@@ -420,6 +454,13 @@ const Test = () => {
                     deleteThisItem(element);
                   }}>
                   <Text style={styles.taskDeleteTxtStyle}>Delete</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.taskDeleteStyle}
+                  onPress={() => {
+                    playThisItem(element);
+                  }}>
+                  <Text style={styles.taskDeleteTxtStyle}>Play</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -524,7 +565,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 10,
-    paddingVertical: 20,
+    // paddingVertical: 20,
     // justifyContent: 'center',
     // alignItems: 'center',
   },

@@ -163,6 +163,7 @@ const CustomScreen = () => {
           passed: false,
           passedDate: new Date(),
           deleted: false,
+          wordType: 1,
         });
       });
       //////////////////////////////////////////////////////////////////////////////////////////////////////////

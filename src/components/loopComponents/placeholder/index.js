@@ -9,7 +9,7 @@ import {
   Alert,
   Animated,
 } from 'react-native';
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useMemo} from 'react';
 
 import {COLORS_THEME, FONTS} from '../../../constants/theme';
 import {SIZES} from '../../../constants/theme';
@@ -25,6 +25,9 @@ import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
 import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
 import {RealmContext} from '../../../realm/models';
+import Sound from 'react-native-sound';
+import {PassedWords} from '../../../realm/models/PassedWords';
+import {Loop} from '../../../realm/models/Loop';
 
 const {useQuery, useObject, useRealm} = RealmContext;
 const mapState = ({loopRedux}) => ({
@@ -35,15 +38,22 @@ const mapState = ({loopRedux}) => ({
 const PlaceHolderComp = props => {
   const navigation = useNavigation();
   const {loopStep, loopRoad} = useSelector(mapState);
+  const realm = useRealm();
+
+  // const user = useQuery(User);
+  const loop = useQuery(Loop);
+  // const words = useQuery(Word);
+  // const daysBags = useQuery(DaysBags);
   const {loopType} = props;
   const dispatch = useDispatch();
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [text, onChangeText] = React.useState('');
-  const [word, setWord] = useState('konsens');
+  const [word, setWord] = useState(loopRoad[loopStep].wordObj.wordLearnedLang);
   const [isChecked, setIsChecked] = useState(false);
   const [trueOfFalse, setTrueOfFalse] = useState(false);
   const [fadeInOut, setFadeInOut] = useState(false);
+  const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id);
   const containerBg = {
     backgroundColor: darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite,
   };
@@ -58,16 +68,52 @@ const PlaceHolderComp = props => {
   const fadeAnimnNative = useRef(new Animated.Value(1)).current;
   const fadeAnimLearn = useRef(new Animated.Value(0)).current;
 
+  const correctSound = useMemo(() => new Sound('correct.mp3'), []);
+  const wrongSound = useMemo(() => new Sound('wrong.mp3'), []);
+
+  useEffect(() => {
+    if (loopType === 0) {
+      playAudio();
+    }
+  }, []);
+
   const checkResponse = () => {
     setIsChecked(true);
     Keyboard.dismiss();
     console.log('hello there');
     if (word === text) {
       setTrueOfFalse(true);
-      alert(`Correct Answer ${text}`);
+      correctSound.play();
+      // alert(`Correct Answer ${text}`);
+      try {
+        realm.write(() => {
+          passedWord.score = passedWord.score + 1;
+          passedWord.viewNbr = passedWord.viewNbr + 1;
+          if (passedWord.prog < 20) {
+            passedWord.prog = passedWord.prog + 1;
+          }
+        });
+      } catch (err) {
+        console.error(
+          'Failed to update prog and score and viewNbr of this word',
+          err.message,
+        );
+      }
     } else {
       setTrueOfFalse(false);
-      alert(`Wrong answer : ${text}, Correct answer is: ${word}`);
+      wrongSound.play();
+      // alert(`Wrong answer : ${text}, Correct answer is: ${word}`);
+      try {
+        realm.write(() => {
+          passedWord.score = passedWord.score - 1;
+          passedWord.viewNbr = passedWord.viewNbr + 1;
+        });
+      } catch (err) {
+        console.error(
+          'Failed to update prog and score and viewNbr of this word',
+          err.message,
+        );
+      }
     }
   };
   const fadeIn = () => {
@@ -209,6 +255,16 @@ const PlaceHolderComp = props => {
     }
   };
 
+  const playAudio = () => {
+    var audio = new Sound(loopRoad[loopStep].wordObj.audioPath, null, error => {
+      if (error) {
+        console.log('failed to load the sound', error);
+        return;
+      }
+      audio.play();
+    });
+  };
+
   return (
     <View style={[styles.wrapper, containerBg]}>
       <Image source={ShadowEffect} style={styles.shadowImageBg} />
@@ -249,13 +305,17 @@ const PlaceHolderComp = props => {
         ]}>
         <Animated.View
           style={[styles.nativeWordBoxContent, {opacity: fadeAnimnNative}]}>
-          <Text style={[styles.nativeWordTxt, {color: color}]}>نجاح</Text>
+          <Text style={[styles.nativeWordTxt, {color: color}]}>
+            {loopRoad[loopStep].wordObj.wordNativeLang}
+          </Text>
           <Image source={Arabic} style={styles.nativeFlag} />
         </Animated.View>
         <Animated.View
           style={[styles.nativeWordBoxContent, {opacity: fadeAnimLearn}]}>
           <Image source={English} style={styles.learnedFlag} />
-          <Text style={[styles.nativeWordTxt, {color: color}]}>Konsen</Text>
+          <Text style={[styles.nativeWordTxt, {color: color}]}>
+            {loopRoad[loopStep].wordObj.wordLearnedLang}
+          </Text>
         </Animated.View>
       </View>
       <View
@@ -305,7 +365,12 @@ const PlaceHolderComp = props => {
         ) : null}
         <View style={styles.foreignWordBox}>
           <View style={styles.foreignWordBoxContent}>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                if (loopType === 0) {
+                  playAudio();
+                }
+              }}>
               <Icon name="speaker" size={80} color="#FF4C00" />
             </TouchableOpacity>
           </View>

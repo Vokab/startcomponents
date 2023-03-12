@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Animated,
 } from 'react-native';
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useMemo} from 'react';
 import {COLORS_THEME, FONTS} from '../../../constants/theme';
 import {SIZES} from '../../../constants/theme';
 import Arabic from '../../../../assets/sa.png';
@@ -16,20 +16,13 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {wrapper} from '../../../besmart/firstAlgo';
 import {useDispatch, useSelector} from 'react-redux';
-import {
-  finishLoop,
-  goNextRedux,
-  resetLoopStepRedux,
-  updateLoopRoad,
-} from '../../../redux/Loop/loop.actions';
 import {useNavigation} from '@react-navigation/native';
 import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
 import {RealmContext} from '../../../realm/models';
-import {User} from '../../../realm/models/User';
 import {Loop} from '../../../realm/models/Loop';
-import {Word} from '../../../realm/models/Word';
 import {PassedWords} from '../../../realm/models/PassedWords';
 import LottieView from 'lottie-react-native';
+import Sound from 'react-native-sound';
 
 const {useQuery, useObject, useRealm} = RealmContext;
 const mapState = ({loopRedux}) => ({
@@ -48,7 +41,6 @@ const ReType = props => {
   const dispatch = useDispatch();
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [word, setWord] = useState('Konsens');
   const [wordCards, setWordCards] = useState([]);
   const [respArray, setRespArray] = useState([]);
   const [isChecked, setIsChecked] = useState(false);
@@ -61,8 +53,11 @@ const ReType = props => {
   const fadeAnimnNative = useRef(new Animated.Value(1)).current;
   const fadeAnimLearn = useRef(new Animated.Value(0)).current;
 
-  const wordVar = 'oussama';
-  // const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id); // REMOVED FOR ANIMATION TESTING
+  const wordVar = loopRoad[loopStep].wordObj.wordLearnedLang;
+  const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id); // REMOVED FOR ANIMATION TESTING
+
+  const correctSound = useMemo(() => new Sound('correct.mp3'), []);
+  const wrongSound = useMemo(() => new Sound('wrong.mp3'), []);
 
   const containerBg = {
     backgroundColor: darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite,
@@ -81,7 +76,7 @@ const ReType = props => {
       obj.wordId = index;
       newArray.push(obj);
     });
-    shuffle(newArray);
+    await shuffle(newArray);
     return newArray;
   };
   const shuffle = async array => {
@@ -101,6 +96,21 @@ const ReType = props => {
     // setShuffledArray(array);
     return array;
   };
+  const playAudio = () => {
+    var audio = new Sound(loopRoad[loopStep].wordObj.audioPath, null, error => {
+      if (error) {
+        console.log('failed to load the sound', error);
+        return;
+      }
+      audio.play();
+    });
+  };
+  useEffect(() => {
+    if (loopType === 0){
+      playAudio();
+    }
+   
+  }, []);
   useEffect(() => {
     // let wordVariable = loopRoad[loopStep].wordObj.wordLearnedLang;
     const getData = async () => {
@@ -150,73 +160,78 @@ const ReType = props => {
     setIsChecked(true);
     if (wordVar === respoArToString) {
       setTrueOfFalse(true);
+      correctSound.play();
       // setRespArray([]);
-      // try {
-      //   realm.write(() => {
-      //     passedWord.score = passedWord.score + 1;
-      //     passedWord.viewNbr = passedWord.viewNbr + 1;
-      //     if (passedWord.prog < 20) {
-      //       passedWord.prog = passedWord.prog + 1;
-      //     }
-      //   });
-      // } catch (err) {
-      //   console.error(
-      //     'Failed to update prog and score and viewNbr of this word',
-      //     err.message,
-      //   );
-      // }
-      alert(`Correct Answer ${respoArToString}`);
+      try {
+        realm.write(() => {
+          passedWord.score = passedWord.score + 1;
+          passedWord.viewNbr = passedWord.viewNbr + 1;
+          if (passedWord.prog < 20) {
+            passedWord.prog = passedWord.prog + 1;
+          }
+        });
+      } catch (err) {
+        console.error(
+          'Failed to update prog and score and viewNbr of this word',
+          err.message,
+        );
+      }
+      // alert(`Correct Answer ${respoArToString}`);
     } else {
       setTrueOfFalse(false);
-      // try {
-      //   realm.write(() => {
-      //     passedWord.score = passedWord.score - 1;
-      //     passedWord.viewNbr = passedWord.viewNbr + 1;
-      //   });
-      // } catch (err) {
-      //   console.error(
-      //     'Failed to update prog and score and viewNbr of this word',
-      //     err.message,
-      //   );
-      // }
-      alert(`Wrong answer : ${respoArToString}, Correct answer is: ${wordVar}`);
+      wrongSound.play();
+      try {
+        realm.write(() => {
+          passedWord.score = passedWord.score - 1;
+          passedWord.viewNbr = passedWord.viewNbr + 1;
+        });
+      } catch (err) {
+        console.error(
+          'Failed to update prog and score and viewNbr of this word',
+          err.message,
+        );
+      }
+      // alert(`Wrong answer : ${respoArToString}, Correct answer is: ${wordVar}`);
       // setRespArray([]);
-      if (loopType != 3 && loopType != 4) {
+      /*
+      // For now we will not add the screens of the discover to the loop array if the user make a mistake
+       if (loopType != 3 && loopType != 4) {
         updateLoopRoad();
       }
+      */
     }
   };
-  const updateLoopRoad = () => {
-    // update redux Loop Road
-    loopRoad.push(loopRoad[loopStep]);
-    dispatch({
-      type: loopReduxTypes.UPDATE_LOOP_ROAD,
-      payload: loopRoad,
-    });
-    // update the right road if its default custom or review
-    const newRoad = [];
-    loopRoad.forEach(item => {
-      const myJSON_Object = JSON.stringify(item);
-      newRoad.push(myJSON_Object);
-    });
+  // const updateLoopRoad = () => {
+  //   // update redux Loop Road
+  //   loopRoad.push(loopRoad[loopStep]);
+  //   dispatch({
+  //     type: loopReduxTypes.UPDATE_LOOP_ROAD,
+  //     payload: loopRoad,
+  //   });
+  //   // update the right road if its default custom or review
+  //   const newRoad = [];
+  //   loopRoad.forEach(item => {
+  //     const myJSON_Object = JSON.stringify(item);
+  //     newRoad.push(myJSON_Object);
+  //   });
 
-    if (loopType === 0) {
-      // it means Deafault
-      realm.write(() => {
-        loop[0].defaultWordsBagRoad = newRoad;
-      });
-    } else if (loopType === 1) {
-      // it means Custom
-      realm.write(() => {
-        loop[0].defaultWordsBagRoad = newRoad;
-      });
-    } else if (loopType === 2) {
-      // it means Review
-      realm.write(() => {
-        loop[0].defaultWordsBagRoad = newRoad;
-      });
-    }
-  };
+  //   if (loopType === 0) {
+  //     // it means Deafault
+  //     realm.write(() => {
+  //       loop[0].defaultWordsBagRoad = newRoad;
+  //     });
+  //   } else if (loopType === 1) {
+  //     // it means Custom
+  //     realm.write(() => {
+  //       loop[0].defaultWordsBagRoad = newRoad;
+  //     });
+  //   } else if (loopType === 2) {
+  //     // it means Review
+  //     realm.write(() => {
+  //       loop[0].defaultWordsBagRoad = newRoad;
+  //     });
+  //   }
+  // };
   const loopExit = async () => {
     // reset loopRedux Step
     // reset loopRedux Road
@@ -234,14 +249,6 @@ const ReType = props => {
       realm.write(() => {
         loop[0].stepOfCustomWordsBag = 0;
       });
-    } else if (loopType === 2) {
-      realm.write(() => {
-        loop[0].stepOfReviewWordsBag = 0;
-        loop[0].reviewWordsBagRoad = [];
-      });
-      dispatch({
-        type: loopReduxTypes.RESET_REVIEW_BAG_ARRAY,
-      });
     }
   };
 
@@ -257,6 +264,12 @@ const ReType = props => {
         // update default wordsBag step in the real DB
         realm.write(() => {
           loop[0].stepOfDefaultWordsBag = loop[0].stepOfDefaultWordsBag + 1;
+        });
+      } else if (loopType === 1) {
+        console.log('HERE We Will update custom wordsBag step in the realm DB');
+        // update custom wordsBag step in the realm DB
+        realm.write(() => {
+          loop[0].stepOfCustomWordsBag = loop[0].stepOfCustomWordsBag + 1;
         });
       }
     } else {
@@ -360,13 +373,17 @@ const ReType = props => {
         ]}>
         <Animated.View
           style={[styles.nativeWordBoxContent, {opacity: fadeAnimnNative}]}>
-          <Text style={[styles.nativeWordTxt, {color: color}]}>نجاح</Text>
+          <Text style={[styles.nativeWordTxt, {color: color}]}>
+            {loopRoad[loopStep].wordObj.wordNativeLang}
+          </Text>
           <Image source={Arabic} style={styles.nativeFlag} />
         </Animated.View>
         <Animated.View
           style={[styles.nativeWordBoxContent, {opacity: fadeAnimLearn}]}>
           <Image source={English} style={styles.learnedFlag} />
-          <Text style={[styles.nativeWordTxt, {color: color}]}>Konsen</Text>
+          <Text style={[styles.nativeWordTxt, {color: color}]}>
+            {loopRoad[loopStep].wordObj.wordLearnedLang}
+          </Text>
         </Animated.View>
       </View>
       <View
@@ -417,7 +434,7 @@ const ReType = props => {
         <View style={styles.foreignWordBoxContent}>
           <Image source={English} style={styles.foreignFlag} />
           <Text style={[styles.foreignWordTxt, {color: color}]}>
-            {'Konsens'}
+            {loopRoad[loopStep].wordObj.wordLearnedLang}
           </Text>
         </View>
         <View style={styles.cardsResponseContainer}>
@@ -684,10 +701,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignContent: 'center',
     flex: 3,
-    width: '100%',
+    width: '90%',
     position: 'relative',
     flexDirection: 'row',
     flexWrap: 'wrap',
+
     // //***************
     // backgroundColor: '#00bb0c',
     // width: '100%',

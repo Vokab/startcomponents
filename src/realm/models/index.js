@@ -9,7 +9,7 @@ import {Word} from './Word';
 
 export const RealmContext = createRealmContext({
   schema: [TaskV4, Word, User, Loop, Road, DaysBags, PassedWords, CustomWords],
-  schemaVersion: 29,
+  schemaVersion: 31,
 });
 // TaskRealmContextV2
 export const schemas = [TaskV3.schema, TaskV4.schema];

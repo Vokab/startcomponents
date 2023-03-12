@@ -39,27 +39,30 @@ const Review = () => {
   const [urls, setUrls] = useState([]);
 
   const getWordsOfThisDay = async () => {
+    // console.log('current day =>', currentDay);
+    // console.log('current day =>', currentDay);
     const ar = [];
     const q = query(
       collection(db, 'words'),
-      where('defaultDay', '==', currentDay),
+      where('defaultDay', '==', 1),
       limit(3),
     );
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach(doc => {
       // doc.data() is never undefined for query doc snapshots
-      console.log(doc.id, ' => ', doc.data().english.audio);
+      console.log(doc.id, ' => ', doc.data()[1].audio);
       let obj = {
         itemId: doc.data().id,
-        url: doc.data().english.audio,
+        url: doc.data()[1].audio,
       };
       ar.push(obj);
     });
+    console.log('urls are =>', ar);
     setUrls(ar);
   };
 
   const downloadAudioOfLearnedLanguage = async () => {
-    console.log('Start Download Audio Of Learned Language');
+    console.log('Start Download Audio Of Learned Language', urls);
     const destinationPath = RNFetchBlob.fs.dirs.DocumentDir + '/' + 'vokab';
     urls.forEach(item => {
       const fileName = item.itemId;
@@ -256,20 +259,27 @@ const Review = () => {
 
         {/* <View style={{ height: '100%', width: 10 }} /> */}
       </View>
-      {/* <ScrollView style={{flex: 6}}>
+      <ScrollView style={{flex: 6}}>
         {files?.map((item, index) => {
-        renderItem(item)
+          return (
+            <TouchableOpacity
+              onPress={() => {
+                playThisFile(item);
+              }}
+              key={index}
+              style={styles.audioItem}></TouchableOpacity>
+          );
         })}
-      </ScrollView> */}
+      </ScrollView>
 
-      <View style={{flex: 6}}>
+      {/* <View style={{flex: 6}}>
         <FlatList
           data={files}
           keyExtractor={(item, index) => String(index)}
           renderItem={renderItem}
           numColumns={3}
         />
-      </View>
+      </View> */}
     </SafeAreaView>
   );
 };
