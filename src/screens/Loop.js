@@ -36,6 +36,8 @@ import Realm from 'realm';
 import ObjectID from 'bson-objectid';
 import ReType from '../components/loopComponents/retype';
 import PlaceHolderComp from '../components/loopComponents/placeholder';
+import Rehide from '../components/loopComponents/rehide';
+import Matching from '../components/loopComponents/matching';
 
 const {useQuery, useObject, useRealm} = RealmContext;
 const mapState = ({loopRedux, loop}) => ({
@@ -365,14 +367,14 @@ const LoopManager = ({route, navigation}) => {
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
-                      <FindIt loopType={idType} />
+                      <Rehide loopType={idType} />
                     </View>
                   );
                 case 6:
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
-                      <FindIt loopType={idType} />
+                      <MissedChar loopType={idType} />
                     </View>
                   );
                 case 7:

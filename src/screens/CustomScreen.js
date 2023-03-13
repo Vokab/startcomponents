@@ -54,7 +54,8 @@ const CustomScreen = () => {
   const words = useQuery(Word);
   const loop = useQuery(Loop);
   const myDaysBags = useQuery(DaysBags);
-  isSubed = user[0].isPremium;
+  // isSubed = user[0].isPremium;
+  isSubed = true;
   const customWords = useQuery(CustomWords)
     .sorted('passedDate', true)
     .filtered('passed != true');
@@ -77,7 +78,7 @@ const CustomScreen = () => {
   const [learnedWord, setLearnedWord] = useState('');
   const [example, setExample] = useState('');
   const [exampleSplited, setExampleSplited] = useState([]);
-  const [exampleIndex, setExampleIndex] = useState(null);
+  const [exampleIndex, setExampleIndex] = useState(-1);
   const [file, setFile] = useState(null);
   const [progressValue, setProgressValue] = useState(0);
   const [load, setLoad] = useState(false);

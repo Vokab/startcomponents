@@ -31,9 +31,12 @@ import {
 import ObjectID from 'bson-objectid';
 import {storage, db} from '../firebase/utils';
 import Sound from 'react-native-sound';
+import loopReduxTypes from '../redux/LoopRedux/loopRedux.types';
+import {useDispatch} from 'react-redux';
 
 const {useQuery, useRealm} = RealmContext;
 const Test = () => {
+  const dispatch = useDispatch();
   const realm = useRealm();
   const loop = useQuery(Loop);
   const daysBags = useQuery(DaysBags);
@@ -211,6 +214,9 @@ const Test = () => {
   };
   const resetCustomRoadAndStep = async () => {
     try {
+      dispatch({
+        type: loopReduxTypes.RESET_CUSTOM_BAG_ARRAY,
+      });
       realm.write(() => {
         loop[0].customWordsBagRoad = [];
         loop[0].isCustomDiscover = 0;

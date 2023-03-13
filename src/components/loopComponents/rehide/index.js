@@ -6,8 +6,9 @@ import {
   TouchableOpacity,
   TextInput,
   Keyboard,
+  Animated,
 } from 'react-native';
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useMemo} from 'react';
 import ShadowEffect from '../../../../assets/shadowImg.png';
 import Suceess from '../../../../assets/suceess.png';
 import Arabic from '../../../../assets/sa.png';
@@ -24,6 +25,9 @@ import {RealmContext} from '../../../realm/models';
 import {Loop} from '../../../realm/models/Loop';
 import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
 
+import LottieView from 'lottie-react-native';
+import Sound from 'react-native-sound';
+
 const {useQuery, useObject, useRealm} = RealmContext;
 
 const mapState = ({loopRedux}) => ({
@@ -35,20 +39,18 @@ const Rehide = () => {
   const realm = useRealm();
   const loop = useQuery(Loop);
   const loopType = 0;
-
   const {loopStep, loopRoad} = useSelector(mapState);
   const dispatch = useDispatch();
-  var wordSpellVariable = '';
   const [darkMode, setDarkMode] = useState(true);
-  const [wordSpell, setWordSpell] = useState('');
-  const [word, setWord] = useState('Erfolg');
   const [text, onChangeText] = React.useState('');
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
-  const wordVar = 'Erfolg';
+  const wordVar = loopRoad[loopStep].wordObj.wordLearnedLang;
   const [wordAsArray, setWordAsArray] = useState(wordVar.split(''));
   const [times, setTimes] = useState(0);
-  // const [isChecked, setIsChecked] = useState(false);
+  const [trueOfFalse, setTrueOfFalse] = useState(false);
+  const [fadeInOut, setFadeInOut] = useState(false);
+
   const howMuch = useRef(0);
   // let times = 0;
   const indicesTab = useRef([]);
@@ -59,6 +61,15 @@ const Rehide = () => {
     backgroundColor: darkMode ? COLORS_THEME.bgWhite : COLORS_THEME.bgDark,
   };
   const color = darkMode ? COLORS_THEME.textWhite : COLORS_THEME.textDark;
+
+  const animElement = useRef();
+  const animElementWrong = useRef();
+
+  const fadeAnimnNative = useRef(new Animated.Value(1)).current;
+  const fadeAnimLearn = useRef(new Animated.Value(0)).current;
+
+  const correctSound = useMemo(() => new Sound('correct.mp3'), []);
+  const wrongSound = useMemo(() => new Sound('wrong.mp3'), []);
 
   const loopExit = async () => {
     // reset loopRedux Step
@@ -86,6 +97,12 @@ const Rehide = () => {
         // update default wordsBag step in the real DB
         realm.write(() => {
           loop[0].stepOfDefaultWordsBag = loop[0].stepOfDefaultWordsBag + 1;
+        });
+      } else if (loopType === 1) {
+        console.log('HERE We Will update custom wordsBag step in the realm DB');
+        // update custom wordsBag step in the realm DB
+        realm.write(() => {
+          loop[0].stepOfCustomWordsBag = loop[0].stepOfCustomWordsBag + 1;
         });
       }
     } else {
@@ -125,6 +142,7 @@ const Rehide = () => {
       // console.warn('Hi there are', howMuch.current);
       if (wordVar === text) {
         console.warn('Yes we are fine');
+        correctSound.play();
         onChangeText('');
         howMuch.current += howMuch.current + 1;
         setTimes(times + 1);
@@ -132,6 +150,7 @@ const Rehide = () => {
       } else {
         // console.warn('No not good at all');
         alert(`Wrong answer : ${text}, Correct answer is: ${wordVar}`);
+        wrongSound.play();
         onChangeText('');
         howMuch.current += howMuch.current + 1;
         setTimes(times + 1);
@@ -140,15 +159,74 @@ const Rehide = () => {
     } else {
       // console.warn('That"s it let go next', howMuch.current);
       alert(`That"s it let go next`);
+      setIsChecked(true);
       onChangeText('');
       if (wordVar === text) {
         console.warn('Yes we are fine');
+        setTrueOfFalse(true);
+        correctSound.play();
       } else {
         alert(`Wrong answer : ${text}, Correct answer is: ${wordVar}`);
+        setTrueOfFalse(false);
+        wrongSound.play();
       }
-      setIsChecked(true);
     }
   };
+  const fadeIn = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 1 in 5 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+  const fadeOut = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 0 in 3 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+  useEffect(() => {
+    if (isChecked) {
+      if (trueOfFalse === true) {
+        try {
+          animElement.current?.play();
+          // correctSound.play();
+        } catch (error) {
+          console.log('error on animElement play', error);
+        }
+      } else {
+        try {
+          animElementWrong.current?.play();
+          // wrongSound.play();
+        } catch (error) {
+          console.log('error on animElementWrong play', error);
+        }
+      }
+    }
+  }, [trueOfFalse, isChecked]);
+
+  useEffect(() => {
+    if (isChecked && !trueOfFalse) {
+      const interval = setInterval(fadeInOut ? fadeIn : fadeOut, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [fadeInOut, isChecked, trueOfFalse]);
+
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       'keyboardDidShow',
@@ -168,6 +246,23 @@ const Rehide = () => {
       keyboardDidShowListener.remove();
     };
   }, []);
+
+  useEffect(() => {
+    if (loopRoad[loopStep].wordObj.wordType === 0) {
+      playAudio();
+    }
+  }, []);
+
+  const playAudio = () => {
+    console.log('play sound now');
+    var audio = new Sound(loopRoad[loopStep].wordObj.audioPath, null, error => {
+      if (error) {
+        console.log('failed to load the sound', error);
+        return;
+      }
+      audio.play();
+    });
+  };
 
   return (
     <View style={[styles.wrapper, containerBg]}>
@@ -193,14 +288,25 @@ const Rehide = () => {
               <FontAwesome5 name="keyboard" size={25} color={'#fff'} />
             </View>
           </View>
-          <View style={styles.wordImgWrapper}>
-            <Image
-              resizeMethod={'resize'}
-              resizeMode="contain"
-              source={Suceess}
-              style={styles.wordImg}
-            />
-          </View>
+
+          {loopRoad[loopStep].wordObj.wordType === 0 ||
+          (loopRoad[loopStep].wordObj.wordType === 1 &&
+            loopRoad[loopStep].wordObj.localImagePath !== '') ? (
+            <View style={styles.wordImgWrapper}>
+              <Image
+                resizeMethod={'resize'}
+                resizeMode="contain"
+                source={{
+                  uri:
+                    loopRoad[loopStep].wordObj.wordType === 1
+                      ? 'file:///' + loopRoad[loopStep].wordObj.localImagePath
+                      : loopRoad[loopStep].wordObj.wordImage,
+                }}
+                // src={}
+                style={styles.wordImg}
+              />
+            </View>
+          ) : null}
         </>
       )}
 
@@ -209,34 +315,93 @@ const Rehide = () => {
           styles.nativeWordBox,
           {backgroundColor: darkMode ? '#00000040' : '#ffffff50'},
         ]}>
-        <View style={styles.nativeWordBoxContent}>
-          <Text style={[styles.nativeWordTxt, {color: color}]}>{'نجاح'}</Text>
+        <Animated.View
+          style={[styles.nativeWordBoxContent, {opacity: fadeAnimnNative}]}>
+          <Text style={[styles.nativeWordTxt, {color: color}]}>
+            {' '}
+            {loopRoad[loopStep].wordObj.wordNativeLang}
+          </Text>
           <Image source={Arabic} style={styles.nativeFlag} />
+        </Animated.View>
+        <Animated.View
+          style={[styles.nativeWordBoxContent, {opacity: fadeAnimLearn}]}>
+          <Image source={English} style={styles.learnedFlag} />
+          <Text style={[styles.nativeWordTxt, {color: color}]}>
+            {' '}
+            {loopRoad[loopStep].wordObj.wordLearnedLang}
+          </Text>
+        </Animated.View>
+      </View>
+      <View
+        style={{
+          width: '100%',
+          // marginTop: 40,
+          justifyContent: 'center',
+          alignItems: 'center',
+          flex: 3,
+        }}>
+        {isChecked ? (
+          trueOfFalse ? (
+            <LottieView
+              ref={animElement}
+              source={require('../../../../assets/animations/correct.json')}
+              autoPlay={false}
+              loop={true}
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                width: '100%',
+                height: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                elevation: 3,
+                zIndex: 3,
+              }}
+            />
+          ) : (
+            <LottieView
+              ref={animElementWrong}
+              source={require('../../../../assets/animations/wrong.json')}
+              autoPlay={false}
+              loop={true}
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                width: '100%',
+                height: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                elevation: 1,
+                zIndex: 1,
+              }}
+            />
+          )
+        ) : null}
+        <View style={styles.foreignWordBox}>
+          <View style={styles.foreignWordBoxContent}>
+            {wordAsArray.map((item, index) => {
+              return (
+                <Text
+                  key={index}
+                  style={[styles.foreignWordTxt, {color: color}]}>
+                  {item}
+                </Text>
+              );
+            })}
+          </View>
+        </View>
+        <View style={styles.inputBox}>
+          <View style={styles.inputBoxSubBox}>
+            <TextInput
+              style={styles.input}
+              onChangeText={onChangeText}
+              value={text}
+              placeholder="write here"
+              placeholderTextColor="#ffffff40"
+            />
+          </View>
         </View>
       </View>
-      <View style={styles.foreignWordBox}>
-        <View style={styles.foreignWordBoxContent}>
-          {wordAsArray.map((item, index) => {
-            return (
-              <Text key={index} style={[styles.foreignWordTxt, {color: color}]}>
-                {item}
-              </Text>
-            );
-          })}
-        </View>
-      </View>
-      <View style={styles.inputBox}>
-        <View style={styles.inputBoxSubBox}>
-          <TextInput
-            style={styles.input}
-            onChangeText={onChangeText}
-            value={text}
-            placeholder="write here"
-            placeholderTextColor="#ffffff40"
-          />
-        </View>
-      </View>
-
       <View style={styles.btnContainer}>
         <View style={styles.blurParrent}>
           {!isChecked ? (
@@ -248,7 +413,7 @@ const Rehide = () => {
           ) : (
             <TouchableOpacity
               style={[styles.btnGo, backgroundColor]}
-              onPress={() => goToNext()}>
+              onPress={() => gotoNext()}>
               <Text style={styles.checkBtnTxt}>Next</Text>
             </TouchableOpacity>
           )}
@@ -488,9 +653,14 @@ const styles = StyleSheet.create({
   },
   nativeWordBoxContent: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
+    width: '100%',
+    // backgroundColor: 'red',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   nativeFlag: {
     width: 40,
@@ -498,6 +668,13 @@ const styles = StyleSheet.create({
     // backgroundColor: 'red',
     marginRight: 10,
     marginLeft: 20,
+  },
+  learnedFlag: {
+    width: 26,
+    height: 26,
+    // backgroundColor: 'red',
+    // marginRight: 10,
+    marginRight: 15,
   },
   nativeWordBox: {
     width: '100%',
@@ -532,6 +709,8 @@ const styles = StyleSheet.create({
     // //***************
     flex: 2,
     // marginHorizontal: '15%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   wordImg: {
     width: '100%',

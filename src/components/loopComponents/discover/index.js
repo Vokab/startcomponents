@@ -101,14 +101,11 @@ const Discover = props => {
     }
   };
   useEffect(() => {
-    if (loopType === 0) {
-      console.log(
-        'type of this word is =====>>',
-        loopRoad[loopStep].wordObj.wordType,
-      );
+    if (loopRoad[loopStep].wordObj.wordType === 0) {
       playAudio();
     }
   }, []);
+
   const playAudio = () => {
     console.log('play sound now');
     var audio = new Sound(loopRoad[loopStep].wordObj.audioPath, null, error => {
@@ -116,13 +113,6 @@ const Discover = props => {
         console.log('failed to load the sound', error);
         return;
       }
-      // if loaded successfully
-      console.log(
-        'duration in seconds: ' +
-          audio.getDuration() +
-          'number of channels: ' +
-          audio.getNumberOfChannels(),
-      );
       audio.play();
     });
   };
@@ -135,16 +125,24 @@ const Discover = props => {
           <AntDesign name="exclamationcircleo" size={18} color={color} />
         </TouchableOpacity>
       </View>
-      <View style={styles.wordImgWrapper}>
-        <Image
-          resizeMethod={'resize'}
-          resizeMode="contain"
-          source={{uri: loopRoad[loopStep].wordObj.wordImage}}
-          // src={}
-          style={styles.wordImg}
-        />
-      </View>
-
+      {loopRoad[loopStep].wordObj.wordType === 0 ||
+      (loopRoad[loopStep].wordObj.wordType === 1 &&
+        loopRoad[loopStep].wordObj.localImagePath !== '') ? (
+        <View style={styles.wordImgWrapper}>
+          <Image
+            resizeMethod={'resize'}
+            resizeMode="contain"
+            source={{
+              uri:
+                loopRoad[loopStep].wordObj.wordType === 1
+                  ? 'file:///' + loopRoad[loopStep].wordObj.localImagePath
+                  : loopRoad[loopStep].wordObj.wordImage,
+            }}
+            // src={}
+            style={styles.wordImg}
+          />
+        </View>
+      ) : null}
       <View
         style={[
           styles.nativeWordBox,
@@ -164,17 +162,19 @@ const Discover = props => {
             {loopRoad[loopStep].wordObj.wordLearnedLang}
           </Text>
         </View>
-        <View style={styles.foreignSpellingBox}>
-          <Text style={styles.foreignSpellingTxt}>kənˈsensəs</Text>
-          <TouchableOpacity
-            onPress={() => {
-              if (loopType === 0) {
-                playAudio();
-              }
-            }}>
-            <Icon name="speaker" size={40} color="#FF4C00" />
-          </TouchableOpacity>
-        </View>
+        {loopRoad[loopStep].wordObj.wordType === 0 && (
+          <View style={styles.foreignSpellingBox}>
+            <Text style={styles.foreignSpellingTxt}>kənˈsensəs</Text>
+            <TouchableOpacity
+              onPress={() => {
+                if (loopType === 0) {
+                  playAudio();
+                }
+              }}>
+              <Icon name="speaker" size={40} color="#FF4C00" />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       <View style={styles.typingAnimBox}>

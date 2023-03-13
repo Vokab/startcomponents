@@ -7,13 +7,12 @@ import {
   Alert,
 } from 'react-native';
 import React, {useEffect, useState, useRef} from 'react';
-import {COLORS_THEME, FONTS} from '../../constants/theme';
-import {SIZES} from '../../constants/theme';
-import ShadowEffect from '../../../assets/shadowImg.png';
+import {COLORS_THEME, FONTS} from '../../../constants/theme';
+import {SIZES} from '../../../constants/theme';
+import ShadowEffect from '../../../../assets/shadowImg.png';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Icon from 'react-native-vector-icons/Ionicons';
-import Arabic from '../../../assets/sa.png';
 
 const Matching = () => {
   const [darkMode, setDarkMode] = useState(true);

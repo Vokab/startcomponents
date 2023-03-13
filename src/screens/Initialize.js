@@ -163,6 +163,12 @@ const Initialize = () => {
     handleDeleteFiles();
   };
 
+  const resetCustomWords = () => {
+    realm.write(() => {
+      // Delete all instances of Cat from the realm.
+      realm.delete(realm.objects('CustomWords'));
+    });
+  };
   return (
     <ScrollView>
       <View style={styles.container}>
@@ -216,6 +222,13 @@ const Initialize = () => {
               resetWords();
             }}>
             <Text style={styles.addWordsTxtBtn}>Reset Words</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.addWordsBtn, {backgroundColor: '#076122'}]}
+            onPress={() => {
+              resetCustomWords();
+            }}>
+            <Text style={styles.addWordsTxtBtn}>Reset Custom Words</Text>
           </TouchableOpacity>
         </View>
         <View

@@ -357,7 +357,7 @@ const Cards = props => {
     });
   };
   useEffect(() => {
-    if (loopType === 0) {
+    if (loopRoad[loopStep].wordObj.wordType === 0) {
       playAudio();
     }
   }, []);

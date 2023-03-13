@@ -13,9 +13,10 @@ export const loopFunct = () => async dispatch => {
 export const constructDef = async (defaultWordsBag, isDefaultDiscover) => {
   let screens = [];
   if (isDefaultDiscover === 0) {
-    screens = [1, 2, 3, 4];
+    // screens = [1, 2, 3, 4];
+    screens = [5, 6, 4, 7];
   } else {
-    screens = [3, 4];
+    screens = [5, 6, 4, 7];
   }
   const roadArray = [];
 

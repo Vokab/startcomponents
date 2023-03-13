@@ -5,11 +5,13 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  Animated,
 } from 'react-native';
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useMemo} from 'react';
 import {COLORS_THEME, FONTS} from '../../../constants/theme';
 import {SIZES} from '../../../constants/theme';
 import Arabic from '../../../../assets/sa.png';
+import English from '../../../../assets/united-states.png';
 import ShadowEffect from '../../../../assets/shadowImg.png';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -27,6 +29,8 @@ import {Loop} from '../../../realm/models/Loop';
 import {RealmContext} from '../../../realm/models';
 import {PassedWords} from '../../../realm/models/PassedWords';
 import LottieView from 'lottie-react-native';
+import Sound from 'react-native-sound';
+
 const {useQuery, useObject, useRealm} = RealmContext;
 const mapState = ({loopRedux}) => ({
   loopStep: loopRedux.loopStep,
@@ -44,16 +48,22 @@ const FindIt = props => {
   const dispatch = useDispatch();
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [words, setWord] = useState('keyboard');
   const [suggWords, setSuggWords] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isChecked, setIsChecked] = useState(false);
   const [trueOfFalse, setTrueOfFalse] = useState(false);
+  const [fadeInOut, setFadeInOut] = useState(false);
 
   const animElement = useRef();
   const animElementWrong = useRef();
-  const word = 'test';
-  // const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id);
+  const fadeAnimnNative = useRef(new Animated.Value(1)).current;
+  const fadeAnimLearn = useRef(new Animated.Value(0)).current;
+
+  const correctSound = useMemo(() => new Sound('correct.mp3'), []);
+  const wrongSound = useMemo(() => new Sound('wrong.mp3'), []);
+
+  const word = loopRoad[loopStep].wordObj.wordLearnedLang;
+  const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id);
   const containerBg = {
     backgroundColor: darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite,
   };
@@ -117,39 +127,77 @@ const FindIt = props => {
     }
   }, [trueOfFalse, isChecked]);
 
+  useEffect(() => {
+    if (isChecked && !trueOfFalse) {
+      const interval = setInterval(fadeInOut ? fadeIn : fadeOut, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [fadeInOut, isChecked, trueOfFalse]);
+
+  const fadeIn = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 1 in 5 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+  const fadeOut = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 0 in 3 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+
   const checkResponse = () => {
     setIsChecked(true);
     if (word === selectedItem) {
       setTrueOfFalse(true);
-      // try {
-      //   realm.write(() => {
-      //     passedWord.score = passedWord.score + 1;
-      //     passedWord.viewNbr = passedWord.viewNbr + 1;
-      //     if (passedWord.prog < 20) {
-      //       passedWord.prog = passedWord.prog + 1;
-      //     }
-      //   });
-      // } catch (err) {
-      //   console.error(
-      //     'Failed to update prog and score and viewNbr of this word',
-      //     err.message,
-      //   );
-      // }
-      Alert.alert('Correct Answer');
+      correctSound.play();
+      try {
+        realm.write(() => {
+          passedWord.score = passedWord.score + 1;
+          passedWord.viewNbr = passedWord.viewNbr + 1;
+          if (passedWord.prog < 20) {
+            passedWord.prog = passedWord.prog + 1;
+          }
+        });
+      } catch (err) {
+        console.error(
+          'Failed to update prog and score and viewNbr of this word',
+          err.message,
+        );
+      }
+      // Alert.alert('Correct Answer');
     } else {
       setTrueOfFalse(false);
-      // try {
-      //   realm.write(() => {
-      //     passedWord.score = passedWord.score - 1;
-      //     passedWord.viewNbr = passedWord.viewNbr + 1;
-      //   });
-      // } catch (err) {
-      //   console.error(
-      //     'Failed to update prog and score and viewNbr of this word',
-      //     err.message,
-      //   );
-      // }
-      Alert.alert('Wrong Answer -- Correct answer is ', word);
+      wrongSound.play();
+      try {
+        realm.write(() => {
+          passedWord.score = passedWord.score - 1;
+          passedWord.viewNbr = passedWord.viewNbr + 1;
+        });
+      } catch (err) {
+        console.error(
+          'Failed to update prog and score and viewNbr of this word',
+          err.message,
+        );
+      }
+      // Alert.alert('Wrong Answer -- Correct answer is ', word);
       if (loopType != 3 && loopType != 4) {
         updateLoopRoad();
       }
@@ -218,6 +266,7 @@ const FindIt = props => {
 
   const goToNext = () => {
     console.log('goToNext start');
+    setSelectedItem(null);
     setIsChecked(false);
     if (loopStep < loopRoad.length - 1) {
       dispatch({
@@ -262,6 +311,21 @@ const FindIt = props => {
     }
   };
 
+  const playAudio = () => {
+    var audio = new Sound(loopRoad[loopStep].wordObj.audioPath, null, error => {
+      if (error) {
+        console.log('failed to load the sound', error);
+        return;
+      }
+      audio.play();
+    });
+  };
+  useEffect(() => {
+    if (loopRoad[loopStep].wordObj.wordType === 0) {
+      playAudio();
+    }
+  }, []);
+
   return (
     <View style={[styles.wrapper, containerBg]}>
       <Image source={ShadowEffect} style={styles.shadowImageBg} />
@@ -291,12 +355,20 @@ const FindIt = props => {
           styles.nativeWordBox,
           {backgroundColor: darkMode ? '#00000040' : '#ffffff50'},
         ]}>
-        <View style={styles.nativeWordBoxContent}>
+        <Animated.View
+          style={[styles.nativeWordBoxContent, {opacity: fadeAnimnNative}]}>
           <Text style={[styles.nativeWordTxt, {color: color}]}>
-            {'oussama'}
+            {loopRoad[loopStep].wordObj.wordNativeLang}
           </Text>
           <Image source={Arabic} style={styles.nativeFlag} />
-        </View>
+        </Animated.View>
+        <Animated.View
+          style={[styles.nativeWordBoxContent, {opacity: fadeAnimLearn}]}>
+          <Image source={English} style={styles.learnedFlag} />
+          <Text style={[styles.nativeWordTxt, {color: color}]}>
+            {loopRoad[loopStep].wordObj.wordLearnedLang}
+          </Text>
+        </Animated.View>
       </View>
       <View style={styles.cardsResponseContainer}>
         {isChecked ? (
@@ -512,6 +584,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
+    width: '100%',
+    // backgroundColor: 'red',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   nativeFlag: {
     width: 26,
@@ -519,6 +596,13 @@ const styles = StyleSheet.create({
     // backgroundColor: 'red',
     // marginRight: 10,
     marginLeft: 15,
+  },
+  learnedFlag: {
+    width: 26,
+    height: 26,
+    // backgroundColor: 'red',
+    // marginRight: 10,
+    marginRight: 15,
   },
   nativeWordBox: {
     width: '100%',
