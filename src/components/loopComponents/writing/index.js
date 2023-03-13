@@ -9,7 +9,7 @@ import {
   Alert,
   Animated,
 } from 'react-native';
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useMemo} from 'react';
 
 import {COLORS_THEME, FONTS} from '../../../constants/theme';
 import {SIZES} from '../../../constants/theme';
@@ -26,6 +26,8 @@ import {RealmContext} from '../../../realm/models';
 import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
 import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
+import Sound from 'react-native-sound';
+import {PassedWords} from '../../../realm/models/PassedWords';
 
 const {useQuery, useObject, useRealm} = RealmContext;
 const mapState = ({loopRedux}) => ({
@@ -33,6 +35,10 @@ const mapState = ({loopRedux}) => ({
   loopRoad: loopRedux.loopRoad,
 });
 const Writing = props => {
+  const realm = useRealm();
+  const loop = useQuery(Loop);
+  let isDefaultDiscover = loop[0].isDefaultDiscover;
+  let isCustomDiscover = loop[0].isCustomDiscover;
   const navigation = useNavigation();
   const {loopStep, loopRoad} = useSelector(mapState);
   const {loopType} = props;
@@ -40,7 +46,7 @@ const Writing = props => {
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [text, onChangeText] = React.useState('');
-  const [word, setWord] = useState('Konsens');
+  const [word, setWord] = useState(loopRoad[loopStep].wordObj.wordLearnedLang);
   const [trueOfFalse, setTrueOfFalse] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [fadeInOut, setFadeInOut] = useState(false);
@@ -50,6 +56,11 @@ const Writing = props => {
 
   const fadeAnimnNative = useRef(new Animated.Value(1)).current;
   const fadeAnimLearn = useRef(new Animated.Value(0)).current;
+
+  const correctSound = useMemo(() => new Sound('correct.mp3'), []);
+  const wrongSound = useMemo(() => new Sound('wrong.mp3'), []);
+  const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id); // REMOVED FOR ANIMATION TESTING
+
   const containerBg = {
     backgroundColor: darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite,
   };
@@ -100,13 +111,75 @@ const Writing = props => {
   const checkResponse = () => {
     setIsChecked(true);
     Keyboard.dismiss();
-    console.log('hello there');
+    console.log('hello there', word, text);
     if (word === text) {
       setTrueOfFalse(true);
-      alert(`Correct Answer ${text}`);
+      correctSound.play();
+      // alert(`Correct Answer ${text}`);
+      try {
+        realm.write(() => {
+          passedWord.score = passedWord.score + 1;
+          passedWord.viewNbr = passedWord.viewNbr + 1;
+          if (passedWord.prog < 20) {
+            passedWord.prog = passedWord.prog + 1;
+          }
+        });
+      } catch (err) {
+        console.error(
+          'Failed to update prog and score and viewNbr of this word',
+          err.message,
+        );
+      }
     } else {
       setTrueOfFalse(false);
-      alert(`Wrong answer : ${text}, Correct answer is: ${word}`);
+      wrongSound.play();
+      // alert(`Wrong answer : ${text}, Correct answer is: ${word}`);
+      try {
+        realm.write(() => {
+          passedWord.score = passedWord.score - 1;
+          passedWord.viewNbr = passedWord.viewNbr + 1;
+        });
+      } catch (err) {
+        console.error(
+          'Failed to update prog and score and viewNbr of this word',
+          err.message,
+        );
+      }
+      if (loopType != 3 && loopType != 4) {
+        updateLoopRoad();
+      }
+    }
+  };
+
+  const updateLoopRoad = () => {
+    // update redux Loop Road
+    loopRoad.push(loopRoad[loopStep]);
+    dispatch({
+      type: loopReduxTypes.UPDATE_LOOP_ROAD,
+      payload: loopRoad,
+    });
+    // update the right road if its default custom or review
+    const newRoad = [];
+    loopRoad.forEach(item => {
+      const myJSON_Object = JSON.stringify(item);
+      newRoad.push(myJSON_Object);
+    });
+
+    if (loopType === 0) {
+      // it means Default
+      realm.write(() => {
+        loop[0].defaultWordsBagRoad = newRoad;
+      });
+    } else if (loopType === 1) {
+      // it means Custom
+      realm.write(() => {
+        loop[0].customWordsBagRoad = newRoad;
+      });
+    } else if (loopType === 2) {
+      // it means Review
+      realm.write(() => {
+        loop[0].reviewWordsBagRoad = newRoad;
+      });
     }
   };
   useEffect(() => {
@@ -148,8 +221,25 @@ const Writing = props => {
     };
   }, []);
 
+  const playAudio = () => {
+    var audio = new Sound(loopRoad[loopStep].wordObj.audioPath, null, error => {
+      if (error) {
+        console.log('failed to load the sound', error);
+        return;
+      }
+      audio.play();
+    });
+  };
+  useEffect(() => {
+    if (loopRoad[loopStep].wordObj.wordType === 0) {
+      playAudio();
+    }
+  }, [loopStep]);
+
   const goToNext = () => {
     console.log('goToNext start');
+    onChangeText('');
+    setFadeInOut(!fadeInOut);
     setIsChecked(false);
     if (loopStep < loopRoad.length - 1) {
       dispatch({
@@ -244,14 +334,6 @@ const Writing = props => {
           </View>
         </View>
       )}
-      <View style={styles.wordImgWrapper}>
-        {/* <Image
-          resizeMethod={'resize'}
-          resizeMode="contain"
-          source={Suceess}
-          style={styles.wordImg}
-        /> */}
-      </View>
 
       <View
         style={[
@@ -260,13 +342,17 @@ const Writing = props => {
         ]}>
         <Animated.View
           style={[styles.nativeWordBoxContent, {opacity: fadeAnimnNative}]}>
-          <Text style={[styles.nativeWordTxt, {color: color}]}>نجاح</Text>
+          <Text style={[styles.nativeWordTxt, {color: color}]}>
+            {loopRoad[loopStep].wordObj.wordNativeLang}
+          </Text>
           <Image source={Arabic} style={styles.nativeFlag} />
         </Animated.View>
         <Animated.View
           style={[styles.nativeWordBoxContent, {opacity: fadeAnimLearn}]}>
           <Image source={English} style={styles.learnedFlag} />
-          <Text style={[styles.nativeWordTxt, {color: color}]}>Konsen</Text>
+          <Text style={[styles.nativeWordTxt, {color: color}]}>
+            {loopRoad[loopStep].wordObj.wordLearnedLang}
+          </Text>
         </Animated.View>
       </View>
       <View

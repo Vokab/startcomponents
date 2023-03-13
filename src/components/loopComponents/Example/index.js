@@ -18,7 +18,7 @@ import Fontisto from 'react-native-vector-icons/Fontisto';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const Writing = () => {
+const Example = () => {
   const [darkMode, setDarkMode] = useState(true);
 
   const containerBg = {
@@ -111,7 +111,7 @@ const Writing = () => {
   );
 };
 
-export default Writing;
+export default Example;
 
 const styles = StyleSheet.create({
   inputBoxSubBox: {

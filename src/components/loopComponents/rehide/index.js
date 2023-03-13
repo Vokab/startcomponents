@@ -141,7 +141,7 @@ const Rehide = () => {
     if (howMuch.current < wordVar.length) {
       // console.warn('Hi there are', howMuch.current);
       if (wordVar === text) {
-        console.warn('Yes we are fine');
+        // console.warn('Yes we are fine');
         correctSound.play();
         onChangeText('');
         howMuch.current += howMuch.current + 1;
@@ -149,7 +149,7 @@ const Rehide = () => {
         // times.current += 1;
       } else {
         // console.warn('No not good at all');
-        alert(`Wrong answer : ${text}, Correct answer is: ${wordVar}`);
+        // alert(`Wrong answer : ${text}, Correct answer is: ${wordVar}`);
         wrongSound.play();
         onChangeText('');
         howMuch.current += howMuch.current + 1;
@@ -158,15 +158,15 @@ const Rehide = () => {
       }
     } else {
       // console.warn('That"s it let go next', howMuch.current);
-      alert(`That"s it let go next`);
+      // alert(`That"s it let go next`);
       setIsChecked(true);
       onChangeText('');
       if (wordVar === text) {
-        console.warn('Yes we are fine');
+        // console.warn('Yes we are fine');
         setTrueOfFalse(true);
         correctSound.play();
       } else {
-        alert(`Wrong answer : ${text}, Correct answer is: ${wordVar}`);
+        // alert(`Wrong answer : ${text}, Correct answer is: ${wordVar}`);
         setTrueOfFalse(false);
         wrongSound.play();
       }
@@ -251,7 +251,7 @@ const Rehide = () => {
     if (loopRoad[loopStep].wordObj.wordType === 0) {
       playAudio();
     }
-  }, []);
+  }, [loopStep]);
 
   const playAudio = () => {
     console.log('play sound now');

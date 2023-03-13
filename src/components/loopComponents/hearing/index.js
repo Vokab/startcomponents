@@ -5,8 +5,9 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  Animated,
 } from 'react-native';
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useMemo} from 'react';
 import {COLORS_THEME, FONTS} from '../../../constants/theme';
 import {SIZES} from '../../../constants/theme';
 import Arabic from '../../../../assets/sa.png';
@@ -42,18 +43,22 @@ const Hearing = props => {
   const dispatch = useDispatch();
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [words, setWord] = useState('keyboard');
   const [suggWords, setSuggWords] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isChecked, setIsChecked] = useState(false);
   const [trueOfFalse, setTrueOfFalse] = useState(false);
-  const audioPath = '/data/user/0/com.startcomponents/files/vokab/1.mp3';
-  const audioPath2 = '/data/user/0/com.startcomponents/files/vokab/10.mp3';
-  const audioPath3 = '/data/user/0/com.startcomponents/files/vokab/0.mp3';
-  const word = 'oussama';
-  const passedWord = [];
+  const [fadeInOut, setFadeInOut] = useState(false);
+
+  const word = loopRoad[loopStep].wordObj.wordLearnedLang;
+  const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id); // REMOVED FOR ANIMATION TESTING
+
   const animElement = useRef();
   const animElementWrong = useRef();
+  const fadeAnimnNative = useRef(new Animated.Value(1)).current;
+  const fadeAnimLearn = useRef(new Animated.Value(0)).current;
+
+  const correctSound = useMemo(() => new Sound('correct.mp3'), []);
+  const wrongSound = useMemo(() => new Sound('wrong.mp3'), []);
   const containerBg = {
     backgroundColor: darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite,
   };
@@ -80,45 +85,73 @@ const Hearing = props => {
     return array;
   };
 
-  const buildSuggWords = async () => {
-    // suggestions words are one by cutting one random char and one by adding random char in random place
+  const buildSuggFromBag = async () => {
     let arr = [];
-    wordToArray = word.split('');
-    wordToArrayForRemove = word.split('');
-    randomItem = wordToArray[Math.floor(Math.random() * wordToArray.length)];
-    randomIndex = Math.floor(Math.random() * wordToArray.length);
-    secRandomIndex = Math.floor(Math.random() * wordToArray.length);
-
-    wordToArray.splice(randomIndex, 0, randomItem);
-    wordToArrayForRemove.splice(secRandomIndex, 1);
-    // console.log('randomIndex =>', randomIndex);
-    // console.log('randomItem =>', randomItem);
-    // console.log('secRandomIndex =>', secRandomIndex);
-    // console.log('wordToArray =>', wordToArray);
-    // console.log('wordToArrayForRemove =>', wordToArrayForRemove);
-    arr.push(
-      wordToArray.join(''),
-      wordToArrayForRemove.join(''),
-      word,
-      wordToArrayForRemove.join(''),
-    );
-    let shuffledArray = await shuffle(arr);
+    let randomArray = [];
+    // console.log('this word bag array =>', loop[0].defaultWordsBag);
+    loop[0].defaultWordsBag.forEach(item => {
+      // console.log('this word is =>', item.wordLearnedLang);
+      arr.push(item.wordLearnedLang);
+    });
+    console.log('array before remove word =>', arr);
+    const index = arr.indexOf(word);
+    arr.splice(index, 1);
+    console.log('array after remove word =>', arr);
+    for (let i = 0; i < 3; i++) {
+      var randomWord = arr[Math.floor(Math.random() * arr.length)];
+      randomArray.push(randomWord);
+      // here we need to remove this random word from the arr array to dont duplicate
+      // let indexOfRandom = arr.indexOf(randomWord);
+      // arr.splice(indexOfRandom, 1);
+    }
+    randomArray.push(word);
+    let shuffledArray = await shuffle(randomArray);
     setSuggWords(shuffledArray);
+    //  item = items[Math.floor(Math.random()*items.length)];
   };
+  useEffect(() => {
+    buildSuggFromBag();
+  }, []);
+
+  // const buildSuggWords = async () => {
+  //   // suggestions words are one by cutting one random char and one by adding random char in random place
+  //   let arr = [];
+  //   wordToArray = word.split('');
+  //   wordToArrayForRemove = word.split('');
+  //   randomItem = wordToArray[Math.floor(Math.random() * wordToArray.length)];
+  //   randomIndex = Math.floor(Math.random() * wordToArray.length);
+  //   secRandomIndex = Math.floor(Math.random() * wordToArray.length);
+
+  //   wordToArray.splice(randomIndex, 0, randomItem);
+  //   wordToArrayForRemove.splice(secRandomIndex, 1);
+  //   // console.log('randomIndex =>', randomIndex);
+  //   // console.log('randomItem =>', randomItem);
+  //   // console.log('secRandomIndex =>', secRandomIndex);
+  //   // console.log('wordToArray =>', wordToArray);
+  //   // console.log('wordToArrayForRemove =>', wordToArrayForRemove);
+  //   arr.push(
+  //     wordToArray.join(''),
+  //     wordToArrayForRemove.join(''),
+  //     word,
+  //     wordToArrayForRemove.join(''),
+  //   );
+  //   let shuffledArray = await shuffle(arr);
+  //   setSuggWords(shuffledArray);
+  // };
   const selectItem = item => {
     console.log('selectItem => ', selectedItem);
     setSelectedItem(item);
   };
-  useEffect(() => {
-    buildSuggWords();
-  }, []);
+  // useEffect(() => {
+  //   // buildSuggWords();
+  // }, []);
 
   const checkResponse = () => {
     setIsChecked(true);
 
     if (word === selectedItem) {
       setTrueOfFalse(true);
-      // animElement.current?.play();
+      correctSound.play();
       try {
         realm.write(() => {
           passedWord.score = passedWord.score + 1;
@@ -133,9 +166,9 @@ const Hearing = props => {
           err.message,
         );
       }
-      Alert.alert('Correct Answer');
     } else {
       setTrueOfFalse(false);
+      wrongSound.play();
       // animElementWrong.current?.play();
       try {
         realm.write(() => {
@@ -148,7 +181,6 @@ const Hearing = props => {
           err.message,
         );
       }
-      Alert.alert('Wrong Answer -- Correct answer is ', word);
       if (loopType != 3 && loopType != 4) {
         updateLoopRoad();
       }
@@ -269,25 +301,118 @@ const Hearing = props => {
       loopExit().then(navigation.navigate('Home'));
     }
   };
-  const playSound = () => {
-    console.log('play sound now');
-    var audio = new Sound(audioPath3, null, error => {
+  const fadeIn = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 1 in 5 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+  const fadeOut = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 0 in 3 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+  useEffect(() => {
+    if (isChecked) {
+      if (trueOfFalse === true) {
+        try {
+          animElement.current?.play();
+          // correctSound.play();
+        } catch (error) {
+          console.log('error on animElement play', error);
+        }
+      } else {
+        try {
+          animElementWrong.current?.play();
+          // wrongSound.play();
+        } catch (error) {
+          console.log('error on animElementWrong play', error);
+        }
+      }
+    }
+  }, [trueOfFalse, isChecked]);
+
+  useEffect(() => {
+    if (isChecked && !trueOfFalse) {
+      const interval = setInterval(fadeInOut ? fadeIn : fadeOut, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [fadeInOut, isChecked, trueOfFalse]);
+
+  const playAudio = () => {
+    var audio = new Sound(loopRoad[loopStep].wordObj.audioPath, null, error => {
       if (error) {
         console.log('failed to load the sound', error);
         return;
       }
-      // if loaded successfully
-      console.log(
-        'duration in seconds: ' +
-          audio.getDuration() +
-          'number of channels: ' +
-          audio.getNumberOfChannels(),
-      );
       audio.play();
     });
   };
+  useEffect(() => {
+    if (loopRoad[loopStep].wordObj.wordType === 0) {
+      playAudio();
+    }
+  }, [loopStep]);
   const cantListen = () => {
     console.log('I cant listen now');
+    if (loopStep < loopRoad.length - 1) {
+      dispatch({
+        type: loopReduxTypes.SET_LOOP_STEP,
+        payload: loopStep + 1,
+      });
+      if (loopType === 0) {
+        console.log(
+          'HERE We Will update default wordsBag step in the realm DB',
+        );
+        // update default wordsBag step in the realm DB
+        realm.write(() => {
+          loop[0].stepOfDefaultWordsBag = loop[0].stepOfDefaultWordsBag + 1;
+        });
+      } else if (loopType === 1) {
+        console.log('HERE We Will update custom wordsBag step in the realm DB');
+        // update custom wordsBag step in the realm DB
+        realm.write(() => {
+          loop[0].stepOfCustomWordsBag = loop[0].stepOfCustomWordsBag + 1;
+        });
+      } else if (loopType === 2) {
+        console.log('HERE We Will update review wordsBag step in the realm DB');
+        // update review wordsBag step in the realm DB
+        realm.write(() => {
+          loop[0].stepOfReviewWordsBag = loop[0].stepOfReviewWordsBag + 1;
+        });
+      }
+    } else {
+      // if custom or default words bag we need to update the isDefaultDiscover variable by add 1
+      // console.log('loopStep =>', loopStep);
+      if (loopType === 0 && isDefaultDiscover < 3) {
+        // add 1 to isDefaultDiscover in the realm DB
+        realm.write(() => {
+          loop[0].isDefaultDiscover = loop[0].isDefaultDiscover + 1;
+        });
+      } else if (loopType === 1 && isCustomDiscover < 3) {
+        realm.write(() => {
+          loop[0].isCustomDiscover = loop[0].isCustomDiscover + 1;
+        });
+      }
+      loopExit().then(navigation.navigate('Home'));
+    }
   };
   return (
     <View style={[styles.wrapper, containerBg]}>
@@ -334,7 +459,7 @@ const Hearing = props => {
         /> */}
         <TouchableOpacity
           onPress={() => {
-            playSound();
+            playAudio();
           }}>
           <View
             style={{

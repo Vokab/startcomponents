@@ -10,13 +10,31 @@ export const loopFunct = () => async dispatch => {
   console.log('loopFunct start');
 };
 
-export const constructDef = async (defaultWordsBag, isDefaultDiscover) => {
+export const constructDef = async (
+  defaultWordsBag,
+  isDefaultDiscover,
+  defOrCus,
+) => {
   let screens = [];
   if (isDefaultDiscover === 0) {
-    // screens = [1, 2, 3, 4];
+    // This is for Default Bag :
+    // screens = [1, 2, 3, 4]; // this is for discover
+    // screens = [5, 6, 4, 7]; // this is for practice
+    // screens = [8, 9, 10, 6]; // this is for master
+
+    // This is for Custom Bag :
+    // screens = [1, 2, 3, 4]; // this is for discover
+    // screens = [5, 6, 4, 7]; // this is for practice
+    // screens = [8, 4, 7, 6]; // this is for master
+    screens = [1, 2, 3, 4];
+  } else if (isDefaultDiscover === 1) {
     screens = [5, 6, 4, 7];
-  } else {
-    screens = [5, 6, 4, 7];
+  } else if (isDefaultDiscover === 2) {
+    if (defOrCus === 0) {
+      screens = [8, 9, 10, 6];
+    } else {
+      screens = [8, 4, 7, 6];
+    }
   }
   const roadArray = [];
 

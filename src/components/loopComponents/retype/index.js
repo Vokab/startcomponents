@@ -106,11 +106,10 @@ const ReType = props => {
     });
   };
   useEffect(() => {
-    if (loopType === 0){
+    if (loopType === 0) {
       playAudio();
     }
-   
-  }, []);
+  }, [loopStep]);
   useEffect(() => {
     // let wordVariable = loopRoad[loopStep].wordObj.wordLearnedLang;
     const getData = async () => {

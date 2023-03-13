@@ -360,7 +360,7 @@ const Cards = props => {
     if (loopRoad[loopStep].wordObj.wordType === 0) {
       playAudio();
     }
-  }, []);
+  }, [loopStep]);
 
   return (
     <View style={[styles.wrapper, containerBg]}>

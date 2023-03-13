@@ -104,7 +104,7 @@ const Discover = props => {
     if (loopRoad[loopStep].wordObj.wordType === 0) {
       playAudio();
     }
-  }, []);
+  }, [loopStep]);
 
   const playAudio = () => {
     console.log('play sound now');

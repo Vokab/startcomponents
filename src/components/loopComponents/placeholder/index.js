@@ -75,7 +75,7 @@ const PlaceHolderComp = props => {
     if (loopType === 0) {
       playAudio();
     }
-  }, []);
+  }, [loopStep]);
 
   const checkResponse = () => {
     setIsChecked(true);

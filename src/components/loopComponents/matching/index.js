@@ -6,25 +6,46 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useMemo} from 'react';
 import {COLORS_THEME, FONTS} from '../../../constants/theme';
 import {SIZES} from '../../../constants/theme';
 import ShadowEffect from '../../../../assets/shadowImg.png';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Icon from 'react-native-vector-icons/Ionicons';
+import {useDispatch, useSelector} from 'react-redux';
+import {useNavigation} from '@react-navigation/native';
+import Sound from 'react-native-sound';
+import {RealmContext} from '../../../realm/models';
+import {Loop} from '../../../realm/models/Loop';
+import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
 
-const Matching = () => {
+const {useQuery, useObject, useRealm} = RealmContext;
+const mapState = ({loopRedux}) => ({
+  loopStep: loopRedux.loopStep,
+  loopRoad: loopRedux.loopRoad,
+});
+
+const Matching = props => {
+  const navigation = useNavigation();
+  const realm = useRealm();
+  const loop = useQuery(Loop);
+  let isDefaultDiscover = loop[0].isDefaultDiscover;
+  let isCustomDiscover = loop[0].isCustomDiscover;
+  const {loopType} = props;
+  const dispatch = useDispatch();
+  const {loopStep, loopRoad} = useSelector(mapState);
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [matchingArray, setMatchingArray] = useState([]);
 
-  const [a1Checked, setA1Checked] = useState(true);
+  const [a1Checked, setA1Checked] = useState(false);
   const [a2Checked, setA2Checked] = useState(false);
   const [a3Checked, setA3Checked] = useState(false);
   const [checkedArray, setCheckedArray] = useState([]);
   const [selectedArray, setSelectedArray] = useState([]);
   const [borderState, setBorderState] = useState('#fff');
+  const correctSound = useMemo(() => new Sound('correct.mp3'), []);
+  const wrongSound = useMemo(() => new Sound('wrong.mp3'), []);
   const dummyData = [
     {
       id: 1,
@@ -51,7 +72,13 @@ const Matching = () => {
 
   const buildArrayFromData = async () => {
     const arr = [];
-    dummyData.forEach((item, index) => {
+    let item;
+
+    let randomArrIndex = Math.floor(Math.random() * 3); // it can be 0 or 1 or 2 //// and if we want it to be from 1 to 9 we writ 10
+    console.log('randomArrIndex is', randomArrIndex);
+
+    for (let i = randomArrIndex; i < 3; i++) {
+      item = loop[0].defaultWordsBag[i];
       let myFirstObj = {
         a: '',
         fKey: '',
@@ -62,14 +89,35 @@ const Matching = () => {
         fKey: '',
         type: '',
       };
-      myFirstObj.a = item.wordLang1;
-      myFirstObj.fKey = `${index + 1}`;
+      myFirstObj.a = item.wordLearnedLang;
+      myFirstObj.fKey = `${i + 1}`;
       myFirstObj.type = 0;
-      mySecondObj.a = item.image;
-      mySecondObj.fKey = `${index + 1}`;
+      mySecondObj.a = item.wordImage;
+      mySecondObj.fKey = `${i + 1}`;
       mySecondObj.type = 1;
       arr.push(myFirstObj, mySecondObj);
-    });
+    }
+
+    // loop[0].defaultWordsBag.forEach((item, index) => {
+    //   // let myFirstObj = {
+    //   //   a: '',
+    //   //   fKey: '',
+    //   //   type: '',
+    //   // };
+    //   // let mySecondObj = {
+    //   //   a: '',
+    //   //   fKey: '',
+    //   //   type: '',
+    //   // };
+    //   // myFirstObj.a = item.wordLearnedLang;
+    //   // myFirstObj.fKey = `${index + 1}`;
+    //   // myFirstObj.type = 0;
+    //   // mySecondObj.a = item.wordImage;
+    //   // mySecondObj.fKey = `${index + 1}`;
+    //   // mySecondObj.type = 1;
+    //   // arr.push(myFirstObj, mySecondObj);
+    // });
+
     let shuffledArray = await shuffle(arr);
     setMatchingArray(shuffledArray);
     console.log('my new array is =>', arr);
@@ -94,56 +142,43 @@ const Matching = () => {
   };
 
   const checkIfFieldsCorrect = item => {
-    console.log('checkedArray =>', checkedArray);
+    // console.log('checkedArray =>', checkedArray);
     if (selectedArray.length >= 1) {
-      console.log('we are here 93');
+      // console.log('we are here 93');
       setSelectedArray([]);
     } else {
-      console.log('we are here 96');
+      // console.log('we are here 96');
       setSelectedArray([...selectedArray, JSON.stringify(item)]);
     }
     if (checkedArray.includes(item.fKey)) {
-      console.log('we are in L 100');
+      // console.log('we are in L 100');
+      correctSound.play();
       switch (item.fKey) {
         case '1':
-          console.log('A1 is TRUE');
           setA1Checked(true);
           break;
         case '2':
-          console.log('A2 is TRUE');
           setA2Checked(true);
           break;
         case '3':
-          console.log('A3 is TRUE');
           setA3Checked(true);
           break;
 
         default:
-          console.log('Default case');
           break;
       }
       setCheckedArray([]);
     } else {
-      console.log('we are in L 121');
+      // console.log('we are in L 121');
       if (checkedArray.length >= 1) {
-        console.log('we are in L 123 Wrongggg Result');
         // alert('Wrong Answer');
-        Alert.alert('Alert Title', 'My Alert Msg', [
-          {
-            text: 'Cancel',
-            onPress: () => console.log('Cancel Pressed'),
-            style: 'cancel',
-          },
-          {text: 'OK', onPress: () => console.log('OK Pressed')},
-        ]);
+        wrongSound.play();
         setCheckedArray([]);
       } else {
-        console.log('we are in L 126');
         setCheckedArray([item.fKey, ...checkedArray]);
       }
       // console.log('checkedArray.includes(item)=>', checkedArray.includes(item));
     }
-    console.log('checkedArray =>', checkedArray);
   };
   useEffect(() => {
     buildArrayFromData();
@@ -158,9 +193,73 @@ const Matching = () => {
   const color = darkMode ? COLORS_THEME.textWhite : COLORS_THEME.textDark;
 
   const checkResponse = () => {
-    console.log('check');
+    console.log('Matching Next');
+    if (loopStep < loopRoad.length - 1) {
+      dispatch({
+        type: loopReduxTypes.SET_LOOP_STEP,
+        payload: loopStep + 1,
+      });
+      if (loopType === 0) {
+        console.log(
+          'HERE We Will update default wordsBag step in the realm DB',
+        );
+        // update default wordsBag step in the realm DB
+        realm.write(() => {
+          loop[0].stepOfDefaultWordsBag = loop[0].stepOfDefaultWordsBag + 1;
+        });
+      } else if (loopType === 1) {
+        console.log('HERE We Will update custom wordsBag step in the realm DB');
+        // update custom wordsBag step in the realm DB
+        realm.write(() => {
+          loop[0].stepOfCustomWordsBag = loop[0].stepOfCustomWordsBag + 1;
+        });
+      } else if (loopType === 2) {
+        console.log('HERE We Will update review wordsBag step in the realm DB');
+        // update review wordsBag step in the realm DB
+        realm.write(() => {
+          loop[0].stepOfReviewWordsBag = loop[0].stepOfReviewWordsBag + 1;
+        });
+      }
+    } else {
+      // if custom or default words bag we need to update the isDefaultDiscover variable by add 1
+      // console.log('loopStep =>', loopStep);
+      if (loopType === 0 && isDefaultDiscover < 3) {
+        // add 1 to isDefaultDiscover in the realm DB
+        realm.write(() => {
+          loop[0].isDefaultDiscover = loop[0].isDefaultDiscover + 1;
+        });
+      } else if (loopType === 1 && isCustomDiscover < 3) {
+        realm.write(() => {
+          loop[0].isCustomDiscover = loop[0].isCustomDiscover + 1;
+        });
+      }
+      loopExit().then(navigation.navigate('Home'));
+    }
   };
 
+  const loopExit = async () => {
+    dispatch({
+      type: loopReduxTypes.RESET_LOOP,
+    });
+    if (loopType === 0) {
+      // update default wordsBag road in the real DB
+      realm.write(() => {
+        loop[0].stepOfDefaultWordsBag = 0;
+      });
+    } else if (loopType === 1) {
+      realm.write(() => {
+        loop[0].stepOfCustomWordsBag = 0;
+      });
+    } else if (loopType === 2) {
+      realm.write(() => {
+        loop[0].stepOfReviewWordsBag = 0;
+        loop[0].reviewWordsBagRoad = [];
+      });
+      dispatch({
+        type: loopReduxTypes.RESET_REVIEW_BAG_ARRAY,
+      });
+    }
+  };
   return (
     <View style={[styles.wrapper, containerBg]}>
       <Image source={ShadowEffect} style={styles.shadowImageBg} />
@@ -243,9 +342,14 @@ const Matching = () => {
       <View style={styles.btnContainer}>
         <View style={styles.blurParrent}>
           <TouchableOpacity
-            style={[styles.btnGo, backgroundColor]}
+            style={[
+              styles.btnGo,
+              backgroundColor,
+              {opacity: !a1Checked || !a2Checked || !a3Checked ? 0.4 : 1},
+            ]}
+            disabled={!a1Checked || !a2Checked || !a3Checked}
             onPress={() => checkResponse()}>
-            <Text style={styles.checkBtnTxt}>check</Text>
+            <Text style={styles.checkBtnTxt}>Next</Text>
           </TouchableOpacity>
         </View>
       </View>

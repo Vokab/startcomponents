@@ -38,6 +38,10 @@ import ReType from '../components/loopComponents/retype';
 import PlaceHolderComp from '../components/loopComponents/placeholder';
 import Rehide from '../components/loopComponents/rehide';
 import Matching from '../components/loopComponents/matching';
+import Writing from '../components/loopComponents/writing';
+import CardsImg from '../components/loopComponents/cardsImg';
+import Hearing from '../components/loopComponents/hearing';
+import SingleImg from '../components/loopComponents/singleImg';
 
 const {useQuery, useObject, useRealm} = RealmContext;
 const mapState = ({loopRedux, loop}) => ({
@@ -264,7 +268,7 @@ const LoopManager = ({route, navigation}) => {
 
   const updateDefaultRoad = async () => {
     try {
-      const road = await constructDef(defaultWordsBag, isDefaultDiscover);
+      const road = await constructDef(defaultWordsBag, isDefaultDiscover, 0);
       realm.write(() => {
         loop[0].defaultWordsBagRoad = road;
       });
@@ -288,7 +292,7 @@ const LoopManager = ({route, navigation}) => {
         addThisBagToDaysBagss(customWordsBag);
       }
 
-      const road = await constructDef(customWordsBag, isCustomDiscover);
+      const road = await constructDef(customWordsBag, isCustomDiscover, 1);
       realm.write(() => {
         loop[0].customWordsBagRoad = road;
       });
@@ -388,41 +392,41 @@ const LoopManager = ({route, navigation}) => {
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
-                      <FindIt loopType={idType} />
+                      <Writing loopType={idType} />
                     </View>
                   );
                 case 9:
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
-                      <FindIt loopType={idType} />
+                      <Hearing loopType={idType} />
                     </View>
                   );
                 case 10:
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
-                      <FindIt loopType={idType} />
+                      <SingleImg loopType={idType} />
                     </View>
                   );
                 case 11:
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
-                      <FindIt loopType={idType} />
+                      <Matching loopType={idType} />
                     </View>
                   );
                 case 12:
                   return (
                     <View style={{width: '100%', height: '100%'}}>
                       {/* <Text>Hello There {loopRoad[loopStep].screen}</Text> */}
-                      <FindIt loopType={idType} />
+                      <CardsImg loopType={idType} />
                     </View>
                   );
                 default:
                   return (
                     <View>
-                      <Text>Hello There Default</Text>
+                      <Text>Error !</Text>
                     </View>
                   );
               }

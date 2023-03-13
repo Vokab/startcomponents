@@ -62,7 +62,7 @@ const CardsImg = props => {
   const fadeAnimnNative = useRef(new Animated.Value(1)).current;
   const fadeAnimLearn = useRef(new Animated.Value(0)).current;
 
-  const wordVar = 'oussama';
+  const wordVar = loopRoad[loopStep].wordObj.wordLearnedLang;
   // const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id); // REMOVED FOR ANIMATION TESTING
   const cardsPos = [
     {bottom: '50%', left: '20%'},

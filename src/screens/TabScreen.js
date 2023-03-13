@@ -22,6 +22,7 @@ import CardsImg from '../components/loopComponents/cardsImg';
 import ReType from '../components/loopComponents/retype';
 import Hearing from '../components/loopComponents/hearing';
 import Initialize from './Initialize';
+import Matching from '../components/loopComponents/matching';
 const Tab = createBottomTabNavigator();
 
 const TabScreen = () => {
@@ -100,7 +101,7 @@ const TabScreen = () => {
       />
       <Tab.Screen
         name="CustomScreen"
-        component={Profile}
+        component={SingleImg}
         options={{
           tabBarLabel: 'CustomScreen',
           tabBarIcon: ({focused}) => (

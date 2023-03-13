@@ -5,8 +5,9 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  Animated,
 } from 'react-native';
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useMemo} from 'react';
 import {COLORS_THEME, FONTS} from '../../../constants/theme';
 import {SIZES} from '../../../constants/theme';
 import Arabic from '../../../../assets/sa.png';
@@ -17,12 +18,12 @@ import {wrapper} from '../../besmart/firstAlgo';
 import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
 import Suceess from '../../../../assets/suceess.png';
-
+import English from '../../../../assets/united-states.png';
 import loopReduxTypes from '../../../redux/LoopRedux/loopRedux.types';
 import {Loop} from '../../../realm/models/Loop';
 import {RealmContext} from '../../../realm/models';
 import {PassedWords} from '../../../realm/models/PassedWords';
-
+import Sound from 'react-native-sound';
 import LottieView from 'lottie-react-native';
 
 const {useQuery, useObject, useRealm} = RealmContext;
@@ -42,16 +43,23 @@ const SingleImg = props => {
   const dispatch = useDispatch();
   const [darkMode, setDarkMode] = useState(true);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [words, setWord] = useState('keyboard');
   const [suggWords, setSuggWords] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isChecked, setIsChecked] = useState(false);
   const [trueOfFalse, setTrueOfFalse] = useState(false);
+  const [fadeInOut, setFadeInOut] = useState(false);
+  const passedWord = useObject(PassedWords, loopRoad[loopStep].wordObj._id); // REMOVED FOR ANIMATION TESTING
 
-  const word = 'oussama';
-  const passedWord = [];
+  const word = loopRoad[loopStep].wordObj.wordLearnedLang;
   const animElement = useRef();
   const animElementWrong = useRef();
+
+  const fadeAnimnNative = useRef(new Animated.Value(1)).current;
+  const fadeAnimLearn = useRef(new Animated.Value(0)).current;
+
+  const correctSound = useMemo(() => new Sound('correct.mp3'), []);
+  const wrongSound = useMemo(() => new Sound('wrong.mp3'), []);
+
   const containerBg = {
     backgroundColor: darkMode ? COLORS_THEME.bgDark : COLORS_THEME.bgWhite,
   };
@@ -78,39 +86,44 @@ const SingleImg = props => {
     return array;
   };
 
-  const buildSuggWords = async () => {
-    // suggestions words are one by cutting one random char and one by adding random char in random place
+  const buildSuggFromBag = async () => {
     let arr = [];
-    wordToArray = word.split('');
-    wordToArrayForRemove = word.split('');
-    randomItem = wordToArray[Math.floor(Math.random() * wordToArray.length)];
-    randomIndex = Math.floor(Math.random() * wordToArray.length);
-    secRandomIndex = Math.floor(Math.random() * wordToArray.length);
-
-    wordToArray.splice(randomIndex, 0, randomItem);
-    wordToArrayForRemove.splice(secRandomIndex, 1);
-    // console.log('randomIndex =>', randomIndex);
-    // console.log('randomItem =>', randomItem);
-    // console.log('secRandomIndex =>', secRandomIndex);
-    // console.log('wordToArray =>', wordToArray);
-    // console.log('wordToArrayForRemove =>', wordToArrayForRemove);
-    arr.push(wordToArray.join(''), wordToArrayForRemove.join(''), word);
-    let shuffledArray = await shuffle(arr);
+    let randomArray = [];
+    // console.log('this word bag array =>', loop[0].defaultWordsBag);
+    loop[0].defaultWordsBag.forEach(item => {
+      // console.log('this word is =>', item.wordLearnedLang);
+      arr.push(item.wordLearnedLang);
+    });
+    console.log('array before remove word =>', arr);
+    const index = arr.indexOf(word);
+    arr.splice(index, 1);
+    console.log('array after remove word =>', arr);
+    for (let i = 0; i < 2; i++) {
+      var randomWord = arr[Math.floor(Math.random() * arr.length)];
+      randomArray.push(randomWord);
+      // here we need to remove this random word from the arr array to dont duplicate
+      // let indexOfRandom = arr.indexOf(randomWord);
+      // arr.splice(indexOfRandom, 1);
+    }
+    randomArray.push(word);
+    let shuffledArray = await shuffle(randomArray);
     setSuggWords(shuffledArray);
+    //  item = items[Math.floor(Math.random()*items.length)];
   };
+  useEffect(() => {
+    buildSuggFromBag();
+  }, []);
   const selectItem = item => {
     console.log('selectItem => ', selectedItem);
     setSelectedItem(item);
   };
-  useEffect(() => {
-    buildSuggWords();
-  }, []);
 
   const checkResponse = () => {
     setIsChecked(true);
 
     if (word === selectedItem) {
       setTrueOfFalse(true);
+      correctSound.play();
       // animElement.current?.play();
       try {
         realm.write(() => {
@@ -126,9 +139,10 @@ const SingleImg = props => {
           err.message,
         );
       }
-      Alert.alert('Correct Answer');
+      // Alert.alert('Correct Answer');
     } else {
       setTrueOfFalse(false);
+      wrongSound.play();
       // animElementWrong.current?.play();
       try {
         realm.write(() => {
@@ -141,7 +155,7 @@ const SingleImg = props => {
           err.message,
         );
       }
-      Alert.alert('Wrong Answer -- Correct answer is ', word);
+      // Alert.alert('Wrong Answer -- Correct answer is ', word);
       if (loopType != 3 && loopType != 4) {
         updateLoopRoad();
       }
@@ -158,6 +172,7 @@ const SingleImg = props => {
       // wrongSound.play();
     }
   }, [trueOfFalse, isChecked]);
+
   const updateLoopRoad = () => {
     // update redux Loop Road
     loopRoad.push(loopRoad[loopStep]);
@@ -263,6 +278,75 @@ const SingleImg = props => {
     }
   };
 
+  const fadeIn = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 1 in 5 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+  const fadeOut = () => {
+    setFadeInOut(!fadeInOut);
+    // Will change fadeAnim value to 0 in 3 seconds
+    Animated.timing(fadeAnimnNative, {
+      toValue: 0,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(fadeAnimLearn, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  };
+  useEffect(() => {
+    if (isChecked) {
+      if (trueOfFalse === true) {
+        try {
+          animElement.current?.play();
+          // correctSound.play();
+        } catch (error) {
+          console.log('error on animElement play', error);
+        }
+      } else {
+        try {
+          animElementWrong.current?.play();
+          // wrongSound.play();
+        } catch (error) {
+          console.log('error on animElementWrong play', error);
+        }
+      }
+    }
+  }, [trueOfFalse, isChecked]);
+
+  useEffect(() => {
+    if (isChecked && !trueOfFalse) {
+      const interval = setInterval(fadeInOut ? fadeIn : fadeOut, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [fadeInOut, isChecked, trueOfFalse]);
+
+  const playAudio = () => {
+    var audio = new Sound(loopRoad[loopStep].wordObj.audioPath, null, error => {
+      if (error) {
+        console.log('failed to load the sound', error);
+        return;
+      }
+      audio.play();
+    });
+  };
+  useEffect(() => {
+    if (loopRoad[loopStep].wordObj.wordType === 0) {
+      playAudio();
+    }
+  }, [loopStep]);
   return (
     <View style={[styles.wrapper, containerBg]}>
       <Image source={ShadowEffect} style={styles.shadowImageBg} />
@@ -289,23 +373,31 @@ const SingleImg = props => {
           </View>
         </View>
       )}
-      {/* <View
+      <View
         style={[
           styles.nativeWordBox,
           {backgroundColor: darkMode ? '#00000040' : '#ffffff50'},
         ]}>
-        <View style={styles.nativeWordBoxContent}>
-          <Text style={[styles.nativeWordTxt, {color: color}]}>Oussama</Text>
-          <Image source={Arabic} style={styles.nativeFlag} />
-        </View>
-      </View> */}
-      <View style={styles.wordImgWrapper}>
-        <Image
-          resizeMethod={'resize'}
-          resizeMode="contain"
-          source={Suceess}
-          style={styles.wordImg}
-        />
+        <Animated.View
+          style={[styles.nativeWordBoxContent, {opacity: fadeAnimnNative}]}>
+          {/* <Text style={[styles.nativeWordTxt, {color: color}]}>نجاح</Text> */}
+          <View style={styles.wordImgWrapper}>
+            <Image
+              resizeMethod={'resize'}
+              resizeMode="contain"
+              source={Suceess}
+              style={styles.wordImg}
+            />
+          </View>
+          {/* <Image source={Arabic} style={styles.nativeFlag} /> */}
+        </Animated.View>
+        <Animated.View
+          style={[styles.nativeWordBoxContent, {opacity: fadeAnimLearn}]}>
+          <Image source={English} style={styles.learnedFlag} />
+          <Text style={[styles.nativeWordTxt, {color: color}]}>
+            {loopRoad[loopStep].wordObj.wordLearnedLang}
+          </Text>
+        </Animated.View>
       </View>
       <View style={styles.cardsResponseContainer}>
         {isChecked ? (
@@ -419,9 +511,8 @@ const styles = StyleSheet.create({
     // backgroundColor: '#00e2f7',
     // width: '100%',
     // //***************
-    flex: 2,
+    height: '100%',
     // marginHorizontal: '15%',
-    marginTop: 20,
   },
 
   suggCardText: {
@@ -498,7 +589,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     // backgroundColor: 'blue',
     // marginTop: 40,
-    flex: 2,
+    flex: 1.5,
     // //***************
     // backgroundColor: 'red',
     // width: '100%',
@@ -543,6 +634,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
+    width: '100%',
+    // backgroundColor: 'red',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   nativeFlag: {
     width: 26,
@@ -554,7 +650,7 @@ const styles = StyleSheet.create({
   nativeWordBox: {
     width: '100%',
     // height: 80,
-    flex: 1.5,
+    flex: 2.5,
     // //***************
     // backgroundColor: '#ce3207',
     // width: '100%',

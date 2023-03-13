@@ -54,8 +54,8 @@ const CustomScreen = () => {
   const words = useQuery(Word);
   const loop = useQuery(Loop);
   const myDaysBags = useQuery(DaysBags);
-  // isSubed = user[0].isPremium;
-  isSubed = true;
+  const isSubed = user[0].isPremium;
+  // isSubed = true;
   const customWords = useQuery(CustomWords)
     .sorted('passedDate', true)
     .filtered('passed != true');
@@ -143,7 +143,7 @@ const CustomScreen = () => {
             setLearnedWord('');
             setExample('');
             setExampleSplited([]);
-            setExampleIndex(null);
+            setExampleIndex(-1);
             setFile(null);
             setLoad(false);
           });
@@ -220,7 +220,7 @@ const CustomScreen = () => {
       setLearnedWord('');
       setExample('');
       setExampleSplited([]);
-      setExampleIndex(null);
+      setExampleIndex(-1);
       setFile(null);
       setLoad(false);
     } catch (error) {
@@ -229,7 +229,7 @@ const CustomScreen = () => {
       setLearnedWord('');
       setExample('');
       setExampleSplited([]);
-      setExampleIndex(null);
+      setExampleIndex(-1);
       setFile(null);
       setLoad(false);
     }
